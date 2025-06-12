@@ -1,0 +1,2301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Dashboard</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Specific Styles */
+        .dashboard-main {
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-message h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-message p {
+            color: var(--text-secondary);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Dashboard Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            border-left: 4px solid transparent;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-attendance {
+            border-left-color: var(--primary);
+        }
+
+        .stat-projects {
+            border-left-color: var(--secondary);
+        }
+
+        .stat-performance {
+            border-left-color: var(--warning);
+        }
+
+        .stat-leave {
+            border-left-color: var(--info);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            font-size: 1.5rem;
+        }
+
+        .stat-attendance .stat-icon {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-projects .stat-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .stat-performance .stat-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-leave .stat-icon {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .skeleton-loading {
+            animation: skeleton-loading 1.5s infinite alternate;
+            background-color: #e5e7eb;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0.9;
+            }
+        }
+        
+        /* Activity styles */
+        .activity-card {
+            margin-bottom: 2rem;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .icon-report {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .icon-leave {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .icon-project {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .icon-review {
+            background-color: rgba(236, 72, 153, 0.1);
+            color: #ec4899;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .activity-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .activity-action {
+            font-size: 0.875rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .activity-action:hover {
+            text-decoration: underline;
+        }
+        
+        /* Project Card Styles */
+        .project-card {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .project-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .project-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-completed {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .project-dates {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .project-progress {
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-percentage {
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--bg-light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-value {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .progress-low {
+            background-color: var(--danger);
+        }
+
+        .progress-medium {
+            background-color: var(--warning);
+        }
+
+        .progress-high {
+            background-color: var(--success);
+        }
+
+        .project-team {
+            display: flex;
+            align-items: center;
+        }
+
+        .team-member {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: -0.5rem;
+            border: 2px solid white;
+        }
+        
+        /* Calendar styles */
+        .calendar-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .calendar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .calendar-btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .calendar-body {
+            padding: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+
+        .calendar-day-name {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: var(--bg-light);
+        }
+
+        .calendar-day.today {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .calendar-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+        
+        /* Notifications Styles */
+        .notifications-list {
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0.5rem;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-title {
+            font-weight: 500;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .notification-body {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .notification-action {
+            font-size: 0.75rem;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .notification-action:hover {
+            text-decoration: underline;
+        }
+
+        /* Two-column layout */
+        .dashboard-columns {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .dashboard-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .quick-actions {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            
+            .quick-actions .btn {
+                white-space: nowrap;
+            }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { transform: translateY(100%); opacity: 0; }
+            15% { transform: translateY(0); opacity: 1; }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/static/dashboard.html" class="nav-link active">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/projects.html" class="nav-link">
+                            <i>📁</i>
+                            Projects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/daily-reports.html" class="nav-link">
+                            <i>📝</i>
+                            Daily Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/team.html" class="nav-link">
+                            <i>👥</i>
+                            Team
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/performance-reviews.html" class="nav-link">
+                            <i>⭐</i>
+                            Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/leave-requests.html" class="nav-link">
+                            <i>📅</i>
+                            Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/settings.html" class="nav-link">
+                            <i>⚙️</i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">soherunow</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Dashboard</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">SN</div>
+                    <span id="userTimeDisplay">06:55 - soherunow</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <div class="dashboard-header">
+                    <div class="welcome-message">
+                        <h1 id="welcomeMessage">Welcome back, soherunow!</h1>
+                        <p>Here's what's happening with your team today.</p>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" id="checkInBtn">
+                            <i>🕒</i> <span id="attendanceActionText">Check In</span>
+                        </button>
+                        <button class="btn btn-primary" id="newReportBtn">
+                            <i>📝</i> New Report
+                        </button>
+                        <button class="btn btn-outline" id="viewReportsBtn">
+                            <i>📊</i> View Reports
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-attendance">
+                        <div class="stat-icon">🕒</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="attendanceValue">
+                                <div class="skeleton-loading" style="width: 60px; height: 30px;"></div>
+                            </div>
+                            <div class="stat-label">Team Attendance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-projects">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="projectsValue">
+                                <div class="skeleton-loading" style="width: 30px; height: 30px;"></div>
+                            </div>
+                            <div class="stat-label">Active Projects</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-performance">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="ratingValue">
+                                <div class="skeleton-loading" style="width: 40px; height: 30px;"></div>
+                            </div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-leave">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="leaveValue">
+                                <div class="skeleton-loading" style="width: 30px; height: 30px;"></div>
+                            </div>
+                            <div class="stat-label">Leave Requests</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Two Column Layout -->
+                <div class="dashboard-columns">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <!-- Activity Feed -->
+                        <div class="card activity-card">
+                            <div class="card-header">
+                                <h2 class="card-title">Team Activity</h2>
+                                <button class="btn btn-sm btn-outline" id="viewAllActivityBtn">View All</button>
+                            </div>
+                            <div class="card-body">
+                                <ul class="activity-list" id="activityList">
+                                    <!-- Activity items will be loaded dynamically -->
+                                    <div class="skeleton-loading" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                                    <div class="skeleton-loading" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                                    <div class="skeleton-loading" style="width: 100%; height: 80px;"></div>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Projects -->
+                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Active Projects</h3>
+                        <div id="projectsContainer">
+                            <div class="skeleton-loading" style="width: 100%; height: 150px; margin-bottom: 1rem;"></div>
+                            <div class="skeleton-loading" style="width: 100%; height: 150px; margin-bottom: 1rem;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <!-- Calendar -->
+                        <div class="calendar-card">
+                            <div class="calendar-header">
+                                <h3 class="calendar-title" id="calendarMonth">June 2025</h3>
+                                <div class="calendar-actions">
+                                    <button class="calendar-btn" id="prevMonthBtn">◄</button>
+                                    <button class="calendar-btn" id="nextMonthBtn">►</button>
+                                </div>
+                            </div>
+                            <div class="calendar-body">
+                                <div class="calendar-grid" id="calendarGrid">
+                                    <!-- Calendar will be generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upcoming Events -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Upcoming Events</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul id="eventsContainer" style="list-style: none;">
+                                    <div class="skeleton-loading" style="width: 100%; height: 50px; margin-bottom: 1rem;"></div>
+                                    <div class="skeleton-loading" style="width: 100%; height: 50px; margin-bottom: 1rem;"></div>
+                                    <div class="skeleton-loading" style="width: 100%; height: 50px;"></div>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Notifications -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Notifications</h2>
+                                <button class="btn btn-sm btn-outline" id="markAllReadBtn">Mark All Read</button>
+                            </div>
+                            <div class="card-body">
+                                <ul class="notifications-list" id="notificationsList">
+                                    <!-- Notifications will be loaded dynamically -->
+                                    <div class="skeleton-loading" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                                    <div class="skeleton-loading" style="width: 100%; height: 80px;"></div>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Check-out Modal -->
+    <div id="checkoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background-color: white; border-radius: var(--border-radius); width: 90%; max-width: 500px; padding: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h2 style="margin-bottom: 1rem;">Check Out</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Work Summary</label>
+                <textarea id="checkoutSummary" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); height: 100px;" placeholder="Summarize your work for today..."></textarea>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Location</label>
+                <input type="text" id="checkoutLocation" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);" placeholder="Where are you working from?">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button id="cancelCheckout" class="btn btn-outline">Cancel</button>
+                <button id="confirmCheckout" class="btn btn-primary">Check Out</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Check authentication state
+        const token = localStorage.getItem('bhoomitechzone_token');
+        if (!token) {
+            window.location.href = '/app/login';
+            return;
+        }
+        
+        // Current date/time
+        const currentDateTime = '2025-06-11 10:48:51';
+        const currentTime = formatTimeFromISO(currentDateTime);
+        
+        try {
+            // Get user data first, before initializing the UI
+            const userData = await fetchUserData();
+            
+            if (userData) {
+                // Use real user data
+                const initials = getInitials(userData.first_name, userData.last_name);
+                const displayName = userData.first_name || userData.username;
+                const userRole = userData.position || 'Employee';
+                
+                // Update UI with user data
+                document.getElementById('userInitials').textContent = initials;
+                document.getElementById('userTimeDisplay').textContent = `${currentTime} - ${userData.username}`;
+                document.getElementById('welcomeMessage').textContent = `Welcome back, ${displayName}!`;
+                document.getElementById('sidebar-username').textContent = userData.username;
+                document.getElementById('sidebar-position').textContent = userRole;
+                
+                // Store user ID for later use (needed for check-in API)
+                window.currentUserId = userData.id;
+            } else {
+                // Fallback if user data can't be loaded
+                document.getElementById('userInitials').textContent = 'S';
+                document.getElementById('userTimeDisplay').textContent = `${currentTime} - soheru`;
+                document.getElementById('welcomeMessage').textContent = 'Welcome back, soheru!';
+                document.getElementById('sidebar-username').textContent = 'soheru';
+            }
+            
+            // Load dashboard data
+            await loadDashboardData();
+            
+            // Setup attendance button
+            await setupAttendanceButton();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Generate calendar
+            generateCalendar();
+            
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            showToast('Error loading dashboard data');
+        }
+    });
+        
+    function formatTimeFromISO(isoString) {
+        const date = new Date(isoString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+    
+    async function fetchUserData() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const response = await fetch('/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Unauthorized - redirect to login
+                    localStorage.removeItem('bhoomitechzone_token');
+                    window.location.href = '/static/login.html';
+                    return null;
+                }
+                throw new Error('Failed to fetch user data');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            return null;
+        }
+    }
+        
+    async function loadDashboardData() {
+        try {
+            // Load stats data
+            await loadStats();
+            
+            // Load team activity
+            await loadTeamActivity();
+            
+            // Load active projects
+            await loadActiveProjects();
+            
+            // Load upcoming events
+            await loadUpcomingEvents();
+            
+            // Load notifications
+            await loadNotifications();
+            
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            showToast('Error loading dashboard data');
+        }
+    }
+        
+    async function loadStats() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            
+            // Get projects count
+            const projectsResponse = await fetch('/projects/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (projectsResponse.ok) {
+                const projects = await projectsResponse.json();
+                const activeProjects = projects.filter(p => p.status === 'active');
+                document.getElementById('projectsValue').textContent = activeProjects.length;
+            } else {
+                document.getElementById('projectsValue').textContent = '0';
+            }
+            
+            // Get performance rating
+            const performanceResponse = await fetch('/performance-reviews/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (performanceResponse.ok) {
+                const performanceStats = await performanceResponse.json();
+                document.getElementById('ratingValue').textContent = 
+                    performanceStats.average_rating ? performanceStats.average_rating.toFixed(1) : 'N/A';
+            } else {
+                document.getElementById('ratingValue').textContent = 'N/A';
+            }
+            
+            try {
+                // Get attendance stats - handle 403 errors gracefully
+                const today = new Date().toISOString().split('T')[0];
+                const attendanceResponse = await fetch(`/attendance/team?for_date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (attendanceResponse.ok) {
+                    const attendanceData = await attendanceResponse.json();
+                    const presentCount = attendanceData.filter(a => a.status === 'present').length;
+                    const teamSize = await getTeamSize();
+                    const attendanceRate = Math.round((presentCount / teamSize) * 100);
+                    document.getElementById('attendanceValue').textContent = `${attendanceRate}%`;
+                } else if (attendanceResponse.status === 403) {
+                    // Not a team lead/manager, get personal attendance stats
+                    await loadPersonalAttendanceStats();
+                } else {
+                    document.getElementById('attendanceValue').textContent = 'N/A';
+                }
+            } catch (e) {
+                // Handle errors from attendance endpoint
+                console.error("Error fetching team attendance:", e);
+                await loadPersonalAttendanceStats();
+            }
+            
+            try {
+                // Get leave requests - handle 403 errors gracefully
+                const leaveResponse = await fetch('/leave-requests/pending-approval', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (leaveResponse.ok) {
+                    const leaveRequests = await leaveResponse.json();
+                    document.getElementById('leaveValue').textContent = leaveRequests.length;
+                } else if (leaveResponse.status === 403) {
+                    // Not a team lead/manager, show personal leave balance
+                    await loadPersonalLeaveBalance();
+                } else {
+                    document.getElementById('leaveValue').textContent = '0';
+                }
+            } catch (e) {
+                // Handle errors from leave endpoint
+                console.error("Error fetching leave requests:", e);
+                await loadPersonalLeaveBalance();
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            // Set fallback values
+            document.getElementById('attendanceValue').textContent = 'N/A';
+            document.getElementById('projectsValue').textContent = '0';
+            document.getElementById('ratingValue').textContent = 'N/A';
+            document.getElementById('leaveValue').textContent = '0';
+        }
+    }
+    
+    async function loadPersonalAttendanceStats() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            const start = firstDayOfMonth.toISOString().split('T')[0];
+            const end = today.toISOString().split('T')[0];
+            
+            const response = await fetch(`/attendance/stats?start_date=${start}&end_date=${end}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('attendanceValue').textContent = 
+                    data.attendance_rate ? `${Math.round(data.attendance_rate)}%` : '100%';
+            } else {
+                document.getElementById('attendanceValue').textContent = '100%';
+            }
+        } catch (error) {
+            console.error('Error fetching personal attendance stats:', error);
+            document.getElementById('attendanceValue').textContent = '100%';
+        }
+    }
+    
+    async function loadPersonalLeaveBalance() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const response = await fetch('/leave-requests/balance', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('leaveValue').textContent = data.total_available;
+            } else {
+                document.getElementById('leaveValue').textContent = '0';
+            }
+        } catch (error) {
+            console.error('Error fetching leave balance:', error);
+            document.getElementById('leaveValue').textContent = '0';
+        }
+    }
+        
+    async function getTeamSize() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const response = await fetch('/users/team', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const team = await response.json();
+                return team.length;
+            } else {
+                return 5; // Default fallback
+            }
+        } catch (error) {
+            return 5; // Default fallback
+        }
+    }
+
+    async function loadTeamActivity(userRole) {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            
+            // For demo purposes, create a mix of activities
+            const activities = [];
+            
+            // Get team reports (if team lead)
+            try {
+                const reportsResponse = await fetch('/daily-reports/team/today', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (reportsResponse.ok) {
+                    const reports = await reportsResponse.json();
+                    for (const report of reports.slice(0, 2)) {
+                        activities.push({
+                            type: 'report',
+                            title: `${report.user_id} submitted a daily report`,
+                            subtitle: report.summary,
+                            time: new Date(report.created_at),
+                            action: 'View Report',
+                            url: `/static/daily-reports.html?id=${report._id}`
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Not authorized for team reports.");
+            }
+            
+            // Get pending leave requests (if team lead)
+            try {
+                const leaveResponse = await fetch('/leave-requests/pending-approval', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (leaveResponse.ok) {
+                    const leaves = await leaveResponse.json();
+                    for (const leave of leaves.slice(0, 2)) {
+                        activities.push({
+                            type: 'leave',
+                            title: `${leave.user_id} requested leave`,
+                            subtitle: `${leave.leave_type}: ${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
+                            time: new Date(leave.created_at),
+                            action: 'Review Request',
+                            url: `/static/leave-requests.html?id=${leave._id}`
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Not authorized for leave approvals.");
+            }
+            
+            // Get project milestones
+            const projectsResponse = await fetch('/projects/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (projectsResponse.ok) {
+                const projects = await projectsResponse.json();
+                for (const project of projects.slice(0, 2)) {
+                    // Find recent milestones
+                    const milestones = project.milestones || [];
+                    const recentMilestones = milestones
+                        .filter(m => m.status === 'completed')
+                        .sort((a, b) => new Date(b.completion_date) - new Date(a.completion_date));
+                    
+                    if (recentMilestones.length > 0) {
+                        const milestone = recentMilestones[0];
+                        activities.push({
+                            type: 'project',
+                            title: `${project.name} milestone completed`,
+                            subtitle: `${milestone.title} has been completed`,
+                            time: new Date(milestone.completion_date || '2025-06-10'),
+                            action: 'View Project',
+                            url: `/static/projects.html?id=${project._id}`
+                        });
+                    }
+                }
+            }
+            
+            // Add a performance review activity for demo
+            activities.push({
+                type: 'review',
+                title: `Mid-year performance reviews due`,
+                subtitle: `Team performance reviews are due by June 30, 2025`,
+                time: new Date('2025-06-01'),
+                action: 'Start Reviews',
+                url: `/static/performance-reviews.html`
+            });
+            
+            // Sort by most recent first
+            activities.sort((a, b) => b.time - a.time);
+            
+            // Populate the activity list
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '';
+            
+            if (activities.length === 0) {
+                activityList.innerHTML = '<p>No recent activity found.</p>';
+                return;
+            }
+            
+            // Show up to 4 activities
+            activities.slice(0, 4).forEach(activity => {
+                const iconClass = `icon-${activity.type}`;
+                let iconContent = '📝';
+                
+                switch(activity.type) {
+                    case 'report': iconContent = '📝'; break;
+                    case 'leave': iconContent = '📅'; break;
+                    case 'project': iconContent = '📁'; break;
+                    case 'review': iconContent = '⭐'; break;
+                }
+                
+                activityList.innerHTML += `
+                    <li class="activity-item">
+                        <div class="activity-icon ${iconClass}">${iconContent}</div>
+                        <div class="activity-content">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-subtitle">${activity.subtitle}</div>
+                            <div class="activity-meta">
+                                <div class="activity-time">${getTimeAgo(activity.time)}</div>
+                                <a href="${activity.url}" class="activity-action">${activity.action}</a>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            
+        } catch (error) {
+            console.error('Error loading team activity:', error);
+            document.getElementById('activityList').innerHTML = 
+                '<p>Could not load activity feed. Please try again later.</p>';
+        }
+    }
+        
+    async function loadActiveProjects() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const response = await fetch('/projects/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch projects');
+            }
+            
+            const projects = await response.json();
+            const activeProjects = projects.filter(p => p.status === 'active');
+            
+            const projectsContainer = document.getElementById('projectsContainer');
+            projectsContainer.innerHTML = '';
+            
+            if (activeProjects.length === 0) {
+                projectsContainer.innerHTML = '<p>No active projects found.</p>';
+                return;
+            }
+            
+            // Show up to 3 active projects
+            activeProjects.slice(0, 3).forEach(project => {
+                // Determine progress class
+                let progressClass = 'progress-low';
+                if (project.progress >= 70) {
+                    progressClass = 'progress-high';
+                } else if (project.progress >= 40) {
+                    progressClass = 'progress-medium';
+                }
+                
+                // Format dates
+                const startDate = formatDate(project.start_date);
+                const endDate = formatDate(project.end_date);
+                
+                // Generate team members HTML
+                let teamMembersHTML = '';
+                const members = project.members || [];
+                members.slice(0, 3).forEach((member, index) => {
+                    const initials = member.user_id.substring(0, 2).toUpperCase();
+                    const bgColor = getRandomColor(member.user_id);
+                    teamMembersHTML += `
+                        <div class="team-member" style="background-color: ${bgColor}; z-index: ${3-index}">
+                            ${initials}
+                        </div>
+                    `;
+                });
+                
+                // If more members exist
+                if (members.length > 3) {
+                    teamMembersHTML += `
+                        <div class="team-member" style="background-color: #6b7280; z-index: 0">
+                            +${members.length - 3}
+                        </div>
+                    `;
+                }
+                
+                projectsContainer.innerHTML += `
+                    <div class="project-card">
+                        <div class="project-header">
+                            <h3 class="project-title">${project.name}</h3>
+                            <div class="project-badge badge-active">Active</div>
+                        </div>
+                        <div class="project-dates">${startDate} - ${endDate}</div>
+                        <div class="project-progress">
+                            <div class="progress-label">
+                                <div>Progress</div>
+                                <div class="progress-percentage">${project.progress}%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value ${progressClass}" style="width: ${project.progress}%;"></div>
+                            </div>
+                        </div>
+                        <div class="project-team">
+                            ${teamMembersHTML}
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error('Error loading projects:', error);
+            document.getElementById('projectsContainer').innerHTML = 
+                '<p>Could not load projects. Please try again later.</p>';
+        }
+    }
+        
+    async function loadUpcomingEvents() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const events = [];
+            
+            // Get project milestones
+            const projectsResponse = await fetch('/projects/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (projectsResponse.ok) {
+                const projects = await projectsResponse.json();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                projects.forEach(project => {
+                    (project.milestones || []).forEach(milestone => {
+                        if (milestone.status !== 'completed' && milestone.due_date) {
+                            const dueDate = new Date(milestone.due_date);
+                            dueDate.setHours(0, 0, 0, 0);
+                            
+                            if (dueDate >= today) {
+                                events.push({
+                                    title: milestone.title,
+                                    date: dueDate,
+                                    description: `${project.name} - Due date`
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Get approved leave dates
+            const leavesResponse = await fetch('/leave-requests/?status=approved', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (leavesResponse.ok) {
+                const leaves = await leavesResponse.json();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                leaves.forEach(leave => {
+                    const startDate = new Date(leave.start_date);
+                    startDate.setHours(0, 0, 0, 0);
+                    
+                    if (startDate >= today) {
+                        events.push({
+                            title: `${leave.leave_type} Leave`,
+                            date: startDate,
+                            description: `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`
+                        });
+                    }
+                });
+            }
+            
+            // Add performance review deadline
+            const reviewDeadline = new Date('2025-06-30');
+            events.push({
+                title: 'Mid-Year Review Deadline',
+                date: reviewDeadline,
+                description: 'June 30, 2025'
+            });
+            
+            // Sort events by date
+            events.sort((a, b) => a.date - b.date);
+            
+            // Display events
+            const eventsContainer = document.getElementById('eventsContainer');
+            eventsContainer.innerHTML = '';
+            
+            if (events.length === 0) {
+                eventsContainer.innerHTML = '<p>No upcoming events found.</p>';
+                return;
+            }
+            
+            // Show up to 4 events
+            events.slice(0, 4).forEach(event => {
+                eventsContainer.innerHTML += `
+                    <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">${event.title}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">${event.description}</div>
+                    </li>
+                `;
+            });
+            
+        } catch (error) {
+            console.error('Error loading events:', error);
+            document.getElementById('eventsContainer').innerHTML = 
+                '<p>Could not load events. Please try again later.</p>';
+        }
+    }
+        
+    async function loadNotifications() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const notificationsList = document.getElementById('notificationsList');
+            const notifications = [];
+            
+            // Get pending leave requests (if team lead)
+            try {
+                const leaveResponse = await fetch('/leave-requests/pending-approval', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (leaveResponse.ok) {
+                    const leaves = await leaveResponse.json();
+                    
+                    leaves.forEach(leave => {
+                        notifications.push({
+                            title: 'Leave Request Pending',
+                            body: `${leave.user_id} has requested leave for ${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}. Review required.`,
+                            time: new Date(leave.created_at),
+                            actions: [
+                                { label: 'View', url: `/static/leave-requests.html?id=${leave._id}` },
+                                { label: 'Dismiss', action: 'dismissNotification' }
+                            ]
+                        });
+                    });
+                }
+            } catch (e) {
+                console.log("Not authorized for leave approvals.");
+            }
+            
+            // Check for upcoming project deadlines
+            const projectsResponse = await fetch('/projects/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (projectsResponse.ok) {
+                const projects = await projectsResponse.json();
+                const today = new Date();
+                
+                projects.forEach(project => {
+                    (project.milestones || []).forEach(milestone => {
+                        if (milestone.status !== 'completed' && milestone.due_date) {
+                            const dueDate = new Date(milestone.due_date);
+                            const daysUntilDue = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+                            
+                            if (daysUntilDue >= 0 && daysUntilDue <= 7) {
+                                notifications.push({
+                                    title: 'Project Milestone Alert',
+                                    body: `${project.name} ${milestone.title} is due on ${formatDate(milestone.due_date)}.`,
+                                    time: today,
+                                    actions: [
+                                        { label: 'View Project', url: `/static/projects.html?id=${project._id}` },
+                                        { label: 'Dismiss', action: 'dismissNotification' }
+                                    ]
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Add performance review notification
+            notifications.push({
+                title: 'Mid-Year Review Season',
+                body: `Mid-year performance reviews are due by June 30, 2025.`,
+                time: new Date('2025-06-01'),
+                actions: [
+                    { label: 'Start Reviews', url: `/static/performance-reviews.html` },
+                    { label: 'Dismiss', action: 'dismissNotification' }
+                ]
+            });
+            
+            // Sort by most recent first
+            notifications.sort((a, b) => b.time - a.time);
+            
+            // Display notifications
+            notificationsList.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notificationsList.innerHTML = '<p>No notifications at this time.</p>';
+                return;
+            }
+            
+            // Show up to 3 notifications
+            notifications.slice(0, 3).forEach((notification, index) => {
+                const actionsHtml = notification.actions.map(action => {
+                    if (action.url) {
+                        return `<a href="${action.url}" class="notification-action">${action.label}</a>`;
+                    } else {
+                        return `<a href="#" class="notification-action" data-action="${action.action}" data-index="${index}">${action.label}</a>`;
+                    }
+                }).join('');
+                
+                notificationsList.innerHTML += `
+                    <li class="notification-item">
+                        <div class="notification-header">
+                            <div class="notification-title">${notification.title}</div>
+                            <div class="notification-time">${getTimeAgo(notification.time)}</div>
+                        </div>
+                        <div class="notification-body">${notification.body}</div>
+                        <div class="notification-actions">
+                            ${actionsHtml}
+                        </div>
+                    </li>
+                `;
+            });
+            
+            // Add event listeners for notification actions
+            document.querySelectorAll('.notification-action[data-action]').forEach(element => {
+                element.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const action = this.getAttribute('data-action');
+                    
+                    if (action === 'dismissNotification') {
+                        // Remove the notification from the list
+                        this.closest('.notification-item').remove();
+                        
+                        // If no notifications left, show message
+                        if (notificationsList.children.length === 0) {
+                            notificationsList.innerHTML = '<p>No notifications at this time.</p>';
+                        }
+                    }
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+            document.getElementById('notificationsList').innerHTML = 
+                '<p>Could not load notifications. Please try again later.</p>';
+        }
+    }
+
+    async function setupAttendanceButton() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const checkInBtn = document.getElementById('checkInBtn');
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Get today's attendance status
+            const response = await fetch(`/attendance/history?start_date=${today}&end_date=${today}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const attendanceData = await response.json();
+                
+                if (attendanceData.length > 0) {
+                    const attendance = attendanceData[0];
+                    
+                    if (attendance.is_complete) {
+                        // Already checked out
+                        checkInBtn.innerHTML = `<i>✓</i> Checked Out`;
+                        checkInBtn.classList.remove('btn-primary');
+                        checkInBtn.classList.add('btn-success');
+                        checkInBtn.disabled = true;
+                    } else {
+                        // Checked in but not checked out
+                        checkInBtn.innerHTML = `<i>🕒</i> Check Out`;
+                        checkInBtn.classList.remove('btn-primary');
+                        checkInBtn.classList.add('btn-warning');
+                    }
+                } else {
+                    // Not checked in yet
+                    checkInBtn.innerHTML = `<i>🕒</i> Check In`;
+                }
+            }
+            
+            // Add event listener for check in/out
+            checkInBtn.addEventListener('click', async function() {
+                // Check current button text to determine action
+                const buttonText = this.textContent.trim();
+                
+                if (buttonText.includes('Check Out')) {
+                    // Show the checkout modal
+                    document.getElementById('checkoutModal').style.display = 'flex';
+                } else {
+                    // Perform check in
+                    await performCheckIn();
+                }
+            });
+            
+            // Handle checkout confirmation
+            document.getElementById('confirmCheckout').addEventListener('click', async function() {
+                await performCheckOut();
+            });
+            
+            // Handle checkout cancellation
+            document.getElementById('cancelCheckout').addEventListener('click', function() {
+                document.getElementById('checkoutModal').style.display = 'none';
+            });
+            
+        } catch (error) {
+            console.error('Error setting up attendance button:', error);
+        }
+    }
+
+
+    async function checkUserRoleAndPermissions() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        
+        // Get user data
+        const userResponse = await fetch('/users/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (userResponse.ok) {
+            const userData = await userResponse.json();
+            
+            // Display user role information
+            console.log('User role information:');
+            console.log('Username:', userData.username);
+            console.log('Role:', userData.role);
+            console.log('Position:', userData.position);
+            
+            // Create a toast to display the role
+            showToast(`Your role: ${userData.role}, Position: ${userData.position || 'N/A'}`);
+            
+            return userData.role;
+        } else {
+            console.error('Failed to fetch user data');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error checking user role:', error);
+        return null;
+    }
+}
+
+// Update loadDashboardData to include role check
+async function loadDashboardData() {
+    try {
+        // Check user role first
+        const userRole = await checkUserRoleAndPermissions();
+        console.log("Current user role:", userRole);
+        
+        // Load stats data
+        await loadStats();
+        
+        // Load team activity with explicit role check
+        await loadTeamActivity(userRole);
+        
+        // Load active projects
+        await loadActiveProjects();
+        
+        // Load upcoming events
+        await loadUpcomingEvents();
+        
+        // Load notifications with explicit role check
+        await loadNotifications(userRole);
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showToast('Error loading dashboard data');
+    }
+}
+        
+    async function performCheckIn() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const location = 'Office, Mumbai'; // Default location
+        
+        // Get current user ID for the check-in request
+        const userData = await fetchUserData();
+        if (!userData) {
+            showToast('Error: Unable to retrieve user information.');
+            return;
+        }
+        
+        // Create a properly formatted date string (YYYY-MM-DD)
+        const today = new Date();
+        const formattedDate = today.getFullYear() + '-' + 
+                             String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                             String(today.getDate()).padStart(2, '0');
+        
+        const response = await fetch('/attendance/check-in', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: userData.id, // Required by your API
+                check_in_location: location,
+                check_in_note: 'Checked in via dashboard',
+                date: formattedDate // Explicitly formatted string, not a Date object
+            })
+        });
+        
+        if (response.ok) {
+            showToast('Successfully checked in');
+            
+            // Update button
+            const checkInBtn = document.getElementById('checkInBtn');
+            checkInBtn.innerHTML = `<i>🕒</i> Check Out`;
+            checkInBtn.classList.remove('btn-primary');
+            checkInBtn.classList.add('btn-warning');
+        } else {
+            const data = await response.json();
+            showToast(`Check-in failed: ${data.detail || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error performing check-in:', error);
+        showToast('Check-in failed. Please try again.');
+    }
+}
+        
+    async function performCheckOut() {
+        try {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const summary = document.getElementById('checkoutSummary').value;
+            const location = document.getElementById('checkoutLocation').value || 'Office, Mumbai';
+            
+            const response = await fetch('/attendance/check-out', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    check_out_location: location,
+                    check_out_note: 'Checked out via dashboard',
+                    work_summary: summary
+                })
+            });
+            
+            // Hide the modal
+            document.getElementById('checkoutModal').style.display = 'none';
+            
+            if (response.ok) {
+                showToast('Successfully checked out');
+                
+                // Update button
+                const checkInBtn = document.getElementById('checkInBtn');
+                checkInBtn.innerHTML = `<i>✓</i> Checked Out`;
+                checkInBtn.classList.remove('btn-warning');
+                checkInBtn.classList.add('btn-success');
+                checkInBtn.disabled = true;
+                
+                // Ask if they want to create a daily report
+                setTimeout(() => {
+                    if (confirm('Would you like to create a daily report now?')) {
+                        window.location.href = '/static/daily-reports.html?new=true';
+                    }
+                }, 1000);
+            } else {
+                const data = await response.json();
+                showToast(`Check-out failed: ${data.detail || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error performing check-out:', error);
+            showToast('Check-out failed. Please try again.');
+        }
+    }
+        
+    function setupEventListeners() {
+        // Sidebar toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+        }
+        
+        // User menu dropdown
+        const userMenu = document.getElementById('userMenu');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userMenu) {
+            userMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('active');
+            });
+            
+            // Prevent closing when clicking inside the dropdown
+            userDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+        // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+        }
+        
+        // New report button
+        const newReportBtn = document.getElementById('newReportBtn');
+        if (newReportBtn) {
+            newReportBtn.addEventListener('click', function() {
+                window.location.href = '/static/daily-reports.html?new=true';
+            });
+        }
+        
+        // View reports button
+        const viewReportsBtn = document.getElementById('viewReportsBtn');
+        if (viewReportsBtn) {
+            viewReportsBtn.addEventListener('click', function() {
+                window.location.href = '/static/daily-reports.html';
+            });
+        }
+        
+        // View all activity button
+        const viewAllActivityBtn = document.getElementById('viewAllActivityBtn');
+        if (viewAllActivityBtn) {
+            viewAllActivityBtn.addEventListener('click', function() {
+                // In a real app, this would go to an activity page
+                showToast('Activity feed refreshed');
+                loadTeamActivity();
+            });
+        }
+        
+        // Mark all read button
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function() {
+                document.getElementById('notificationsList').innerHTML = '<p>No notifications at this time.</p>';
+                showToast('All notifications marked as read');
+            });
+        }
+    }
+        
+    function generateCalendar() {
+        const calendarGrid = document.getElementById('calendarGrid');
+        const calendarMonth = document.getElementById('calendarMonth');
+        
+        // Current date for selected month - updated to current timestamp
+        const date = new Date('2025-06-11');
+        let currentMonth = date.getMonth();
+        let currentYear = date.getFullYear();
+        
+        function renderCalendar() {
+            // Update month title
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            calendarMonth.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            // Clear previous calendar
+            calendarGrid.innerHTML = '';
+            
+            // Add day names
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day-name';
+                dayElement.textContent = day;
+                calendarGrid.appendChild(dayElement);
+            });
+            
+            // Get first day of month
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const startDay = firstDayOfMonth.getDay(); // 0-6, starting from Sunday
+            
+            // Get total days in month
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+            const totalDays = lastDayOfMonth.getDate();
+            
+            // Add empty cells for days before start of month
+            for (let i = 0; i < startDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of month
+            for (let i = 1; i <= totalDays; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = i;
+                
+                // Mark current day
+                if (currentYear === date.getFullYear() && 
+                    currentMonth === date.getMonth() && 
+                    i === date.getDate()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Mark days with events
+                // For demo, mark some specific days in June 2025
+                if (currentMonth === 5 && currentYear === 2025) { // June is month 5 (zero-based)
+                    if ([11, 12, 19, 20, 30].includes(i)) {
+                        dayElement.classList.add('has-event');
+                    }
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+        
+        // Initial render
+        renderCalendar();
+        
+        // Navigation event handlers
+        document.getElementById('prevMonthBtn').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+        
+        document.getElementById('nextMonthBtn').addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+    }
+        
+    // Helper Functions
+        
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString(undefined, options);
+    }
+        
+    function getTimeAgo(date) {
+        const now = new Date('2025-06-11T10:48:51'); // Updated to current timestamp
+        const seconds = Math.floor((now - new Date(date)) / 1000);
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        
+        return "Just now";
+    }
+        
+    function getInitials(firstName, lastName) {
+        if (firstName && lastName) {
+            return `${firstName[0]}${lastName[0]}`.toUpperCase();
+        } else if (firstName) {
+            return firstName.substring(0, 2).toUpperCase();
+        } else {
+            // Default for soheru
+            return 'S';
+        }
+    }
+        
+    function getRandomColor(seed) {
+        // Simple hash function to get consistent color for same seed
+        const hash = String(seed).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const colors = [
+            '#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', 
+            '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#06b6d4'
+        ];
+        return colors[hash % colors.length];
+    }
+        
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+</script>
+</body>
+</html>

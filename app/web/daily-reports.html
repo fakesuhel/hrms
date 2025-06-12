@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Daily Reports</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+            padding: 0 0 2rem 0;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Daily Report Specific Styles */
+        .dashboard-main {
+            padding: 2rem;
+        }
+        
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            min-width: 150px;
+        }
+        
+        .date-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid var(--primary);
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .report-list {
+            list-style: none;
+        }
+        
+        .report-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        
+        .report-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .report-header:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .report-date {
+            font-weight: 600;
+        }
+        
+        .report-summary {
+            color: var(--text-secondary);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 500px;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .report-content {
+            padding: 1.5rem;
+            display: none;
+        }
+        
+        .report-content.active {
+            display: block;
+        }
+        
+        .report-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .report-section-title {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .task-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .task-item {
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .task-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .task-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0;
+        }
+        
+        .task-status-completed {
+            border-left-color: var(--success);
+        }
+        
+        .task-status-in_progress {
+            border-left-color: var(--primary);
+        }
+        
+        .task-status-blocked {
+            border-left-color: var(--danger);
+        }
+        
+        .task-status-planned {
+            border-left-color: var(--warning);
+        }
+        
+        .plan-list {
+            list-style: disc;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .blockers {
+            padding: 0.75rem;
+            background-color: rgba(239, 68, 68, 0.05);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            border-left: 3px solid var(--danger);
+        }
+        
+        .team-report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .team-report-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .team-report-header {
+            padding: 1rem;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .team-report-user {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .team-member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        
+        .team-report-body {
+            padding: 1rem;
+            flex-grow: 1;
+        }
+        
+        .task-form {
+            margin-bottom: 1rem;
+        }
+        
+        .task-form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .task-forms {
+            margin-bottom: 1.5rem;
+        }
+        
+        .task-form {
+            background-color: var(--bg-light);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .remove-task {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--danger);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .remove-task:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        .add-task-button {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { opacity: 0; transform: translateY(100%); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(100%); }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/static/dashboard.html" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/attendance.html" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/projects.html" class="nav-link">
+                            <i>📁</i>
+                            Projects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/daily-reports.html" class="nav-link active">
+                            <i>📝</i>
+                            Daily Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/team.html" class="nav-link">
+                            <i>👥</i>
+                            Team
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/performance-reviews.html" class="nav-link">
+                            <i>⭐</i>
+                            Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/leave-requests.html" class="nav-link">
+                            <i>📅</i>
+                            Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/settings.html" class="nav-link">
+                            <i>⚙️</i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">soheruwite</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Daily Reports</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">SW</div>
+                    <span id="userTimeDisplay">10:07 - soheruwite</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <!-- Reports Statistics -->
+                <div class="stats-grid" id="reportStats">
+                    <!-- Stats will be loaded dynamically -->
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Reports Submitted</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">In Progress Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0%</div>
+                        <div class="stat-label">Submission Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Reports Header with Filter and Actions -->
+                <div class="reports-header">
+                    <div class="filter-group">
+                        <input type="date" class="date-input" id="startDate">
+                        <span>to</span>
+                        <input type="date" class="date-input" id="endDate">
+                        <button class="btn btn-outline" id="filterBtn">
+                            <i>🔍</i> Filter
+                        </button>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="createReportBtn">
+                        <i>➕</i> New Report
+                    </button>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <div class="tab active" data-tab="my-reports">My Reports</div>
+                    <div class="tab" data-tab="team-reports" id="teamReportsTab">Team Reports</div>
+                </div>
+                
+                <!-- My Reports Tab Content -->
+                <div class="tab-content active" id="my-reports">
+                    <ul class="report-list" id="myReportsList">
+                        <!-- Reports will be loaded dynamically -->
+                        <li class="report-item">
+                            <div class="report-header">
+                                <div class="report-date">Today's report not submitted</div>
+                                <button class="btn btn-sm btn-primary create-today-report">Submit Today's Report</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Team Reports Tab Content -->
+                <div class="tab-content" id="team-reports">
+                    <div class="form-group">
+                        <label for="teamReportDate">Select Date</label>
+                        <input type="date" id="teamReportDate" class="form-control">
+                    </div>
+                    
+                    <div class="team-report-grid" id="teamReportsGrid">
+                        <!-- Team reports will be loaded dynamically -->
+                        <div class="team-report-card">
+                            <div class="team-report-header">
+                                <div class="team-report-user">
+                                    <div class="team-member-avatar">JD</div>
+                                    <span>John Doe</span>
+                                </div>
+                            </div>
+                            <div class="team-report-body">
+                                <p>No report submitted for the selected date</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Create/Edit Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="reportModalTitle">Create Daily Report</h3>
+                <button class="modal-close" id="closeReportModal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="reportForm">
+                    <input type="hidden" id="reportId">
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="reportDate">Date</label>
+                                <input type="date" id="reportDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="projectId">Project (Optional)</label>
+                                <select id="projectId" class="form-control">
+                                    <option value="">Select a project...</option>
+                                    <!-- Projects will be loaded dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="summary">Summary</label>
+                        <textarea id="summary" class="form-control" placeholder="Provide a summary of your work today" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Completed Tasks</label>
+                        <div id="completedTaskForms" class="task-forms">
+                            <!-- Task forms will be added here -->
+                        </div>
+                        <button type="button" id="addCompletedTask" class="btn btn-sm btn-outline add-task-button">
+                            <i>➕</i> Add Completed Task
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>In Progress Tasks</label>
+                        <div id="inProgressTaskForms" class="task-forms">
+                            <!-- Task forms will be added here -->
+                        </div>
+                        <button type="button" id="addInProgressTask" class="btn btn-sm btn-outline add-task-button">
+                            <i>➕</i> Add In Progress Task
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="blockers">Blockers (Optional)</label>
+                        <textarea id="blockers" class="form-control" placeholder="Any blockers or issues preventing progress?"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="planForTomorrow">Plan for Tomorrow</label>
+                        <textarea id="planForTomorrow" class="form-control" placeholder="What do you plan to work on next?"></textarea>
+                        <small class="text-muted">Enter each plan item on a new line</small>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelReport">Cancel</button>
+                <button class="btn btn-primary" id="saveReport">Submit Report</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Report Modal -->
+    <div id="viewReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="viewReportDate">Daily Report</h3>
+                <button class="modal-close" id="closeViewReportModal">&times;</button>
+            </div>
+            
+            <div class="modal-body" id="viewReportContent">
+                <!-- Report content will be loaded dynamically -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="closeViewReport">Close</button>
+                <button class="btn btn-primary" id="editReport">Edit Report</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+    // Check authentication
+    const token = localStorage.getItem('bhoomitechzone_token');
+    if (!token) {
+        window.location.href = '/static/login.html';
+        return;
+    }
+
+    try {
+        // Load user data and update display
+        await loadUserData();
+        
+        // Set up default dates for filter
+        setupDateFilter();
+        
+        // Load reports statistics
+        await loadReportStats();
+        
+        // Check if we should directly create a new report (from URL parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const createNew = urlParams.get('new');
+        
+        if (createNew) {
+            openCreateReportModal();
+        } else {
+            // Load today's report first to show at top
+            await loadTodayReport();
+            
+            // Load user reports based on default date range
+            await loadUserReports();
+        }
+        
+        // Load team reports if user has permission
+        const teamReportsTab = document.getElementById('teamReportsTab');
+        if (teamReportsTab.style.display !== 'none') {
+            document.getElementById('teamReportDate').value = formatDateInput(new Date());
+            await loadTeamReports(new Date());
+        }
+        
+        // Load projects for the dropdown
+        await loadProjects();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Current date and time
+        console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 11:05:29");
+        console.log("Current User's Login: soheruwrite");
+        
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showToast('Error loading data. Please try again later.');
+    }
+});
+
+async function loadUserData() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/users/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Token expired or invalid
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+                return;
+            }
+            throw new Error('Failed to fetch user data');
+        }
+        
+        const userData = await response.json();
+        
+        // Update UI with user info
+        const currentUser = userData.username || "soheruwrite";
+        const currentTime = "11:05";
+        
+        document.getElementById('userTimeDisplay').textContent = `${currentTime} - ${currentUser}`;
+        document.getElementById('userInitials').textContent = currentUser.charAt(0).toUpperCase();
+        document.getElementById('sidebar-username').textContent = currentUser;
+        document.getElementById('sidebar-position').textContent = userData.position || 'Team Member';
+        
+        // Show/hide team reports tab based on role
+        const teamReportsTab = document.getElementById('teamReportsTab');
+        if (!['team_lead', 'manager', 'admin'].includes(userData.role)) {
+            teamReportsTab.style.display = 'none';
+        }
+        
+        return userData;
+        
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        return null;
+    }
+}
+
+function setupDateFilter() {
+    // Default to current month
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(1); // First day of current month
+    
+    document.getElementById('startDate').value = formatDateInput(startDate);
+    document.getElementById('endDate').value = formatDateInput(today);
+}
+
+async function loadReportStats() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        const response = await fetch(`/daily-reports/stats/personal?start_date=${startDate}&end_date=${endDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load report statistics');
+        }
+        
+        const stats = await response.json();
+        
+        // Update stats grid
+        const statsGrid = document.getElementById('reportStats');
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-value">${stats.reports_submitted || 0}</div>
+                <div class="stat-label">Reports Submitted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.total_completed_tasks || 0}</div>
+                <div class="stat-label">Tasks Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.total_in_progress_tasks || 0}</div>
+                <div class="stat-label">In Progress Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${Math.round(stats.submission_rate || 0)}%</div>
+                <div class="stat-label">Submission Rate</div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading report statistics:', error);
+        showToast('Error loading report statistics');
+    }
+}
+
+async function loadTodayReport() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/daily-reports/today', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            // Handle error more gracefully
+            let errorMsg = 'Failed to load today\'s report';
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.detail || errorMsg;
+            } catch (e) {}
+            
+            throw new Error(errorMsg);
+        }
+        
+        const todayReport = await response.json();
+        const reportsList = document.getElementById('myReportsList');
+        
+        // Clear any existing "today's report" placeholder
+        const existingPlaceholder = reportsList.querySelector('li:first-child');
+        if (existingPlaceholder) {
+            reportsList.removeChild(existingPlaceholder);
+        }
+        
+        // If no report for today
+        if (!todayReport) {
+            const todayItem = document.createElement('li');
+            todayItem.className = 'report-item';
+            todayItem.innerHTML = `
+                <div class="report-header">
+                    <div class="report-date">Today's report not submitted</div>
+                    <button class="btn btn-sm btn-primary create-today-report">Submit Today's Report</button>
+                </div>
+            `;
+            reportsList.insertBefore(todayItem, reportsList.firstChild);
+            
+            // Add event listener to the button
+            todayItem.querySelector('.create-today-report').addEventListener('click', function() {
+                openCreateReportModal();
+            });
+        } else {
+            // Create report item for today
+            const reportItem = createReportListItem(todayReport, true);
+            reportsList.insertBefore(reportItem, reportsList.firstChild);
+        }
+        
+    } catch (error) {
+        console.error('Error loading today\'s report:', error);
+        showToast('Error loading today\'s report: ' + error.message);
+    }
+}
+
+async function loadUserReports() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        const response = await fetch(`/daily-reports/?start_date=${startDate}&end_date=${endDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load user reports');
+        }
+        
+        const reports = await response.json();
+        const reportsList = document.getElementById('myReportsList');
+        
+        // Keep today's report if it exists
+        const todayItem = reportsList.querySelector('li:first-child');
+        reportsList.innerHTML = '';
+        if (todayItem) {
+            reportsList.appendChild(todayItem);
+        }
+        
+        if (reports.length === 0) {
+            const noReportsItem = document.createElement('li');
+            noReportsItem.className = 'report-item';
+            noReportsItem.innerHTML = `
+                <div class="report-header">
+                    <div class="report-date">No reports found in selected date range</div>
+                </div>
+            `;
+            reportsList.appendChild(noReportsItem);
+            return;
+        }
+        
+        // Format and display each report
+        reports.forEach(report => {
+            // Skip today's report as it's already displayed
+            const reportDate = new Date(report.report_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time part for comparison
+            reportDate.setHours(0, 0, 0, 0);
+            
+            if (reportDate.getTime() === today.getTime()) {
+                // Update the existing today item if needed
+                if (todayItem) {
+                    const existingReportId = todayItem.getAttribute('data-report-id');
+                    if (!existingReportId || existingReportId !== report._id) {
+                        const newTodayItem = createReportListItem(report, true);
+                        reportsList.replaceChild(newTodayItem, todayItem);
+                    }
+                }
+            } else {
+                // Add other reports
+                const reportItem = createReportListItem(report);
+                reportsList.appendChild(reportItem);
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading user reports:', error);
+        showToast('Error loading reports: ' + error.message);
+        
+        // Show error message in list
+        const reportsList = document.getElementById('myReportsList');
+        reportsList.innerHTML = `
+            <li class="report-item">
+                <div class="report-header">
+                    <div class="report-date">Error loading reports</div>
+                    <button class="btn btn-sm btn-outline" id="retryLoadReports">Retry</button>
+                </div>
+            </li>
+        `;
+        
+        document.getElementById('retryLoadReports').addEventListener('click', loadUserReports);
+    }
+}
+
+function createReportListItem(report, isToday = false) {
+    const reportItem = document.createElement('li');
+    reportItem.className = 'report-item';
+    reportItem.setAttribute('data-report-id', report._id);
+    
+    // Format the date
+    const reportDate = new Date(report.report_date);
+    const formattedDate = formatDate(reportDate);
+    
+    // Create header with summary preview (truncate if too long)
+    const summary = report.summary.length > 100 ? report.summary.substring(0, 100) + '...' : report.summary;
+    
+    reportItem.innerHTML = `
+        <div class="report-header">
+            <div class="report-info">
+                <div class="report-date">${isToday ? 'Today' : formattedDate}</div>
+                <div class="report-summary">${summary}</div>
+            </div>
+            <div class="report-actions">
+                <button class="btn btn-sm btn-outline view-report" data-id="${report._id}">View</button>
+                <button class="btn btn-sm btn-primary edit-report" data-id="${report._id}">Edit</button>
+            </div>
+        </div>
+        <div class="report-content" id="report-content-${report._id}"></div>
+    `;
+    
+    // Add event listeners
+    reportItem.querySelector('.view-report').addEventListener('click', function() {
+        openViewReportModal(report._id);
+    });
+    
+    reportItem.querySelector('.edit-report').addEventListener('click', function() {
+        openEditReportModal(report._id);
+    });
+    
+    return reportItem;
+}
+
+async function loadTeamReports(selectedDate) {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const formattedDate = formatDateInput(selectedDate);
+        
+        const response = await fetch(`/daily-reports/team/today`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                document.getElementById('teamReportsTab').style.display = 'none';
+                return;
+            }
+            throw new Error('Failed to load team reports');
+        }
+        
+        const reports = await response.json();
+        const teamReportsGrid = document.getElementById('teamReportsGrid');
+        
+        // Clear existing reports
+        teamReportsGrid.innerHTML = '';
+        
+        if (reports.length === 0) {
+            teamReportsGrid.innerHTML = `
+                <div class="team-report-card" style="grid-column: 1 / -1;">
+                    <div class="team-report-body" style="text-align: center; padding: 2rem;">
+                        <p>No team reports submitted for ${formattedDate}</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Format and display each team member's report
+        reports.forEach(async report => {
+            try {
+                // Get user details
+                const userResponse = await fetch(`/users/${report.user_id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                let userName = 'Team Member';
+                let userInitials = 'TM';
+                
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    userName = userData.first_name && userData.last_name ? 
+                        `${userData.first_name} ${userData.last_name}` : 
+                        userData.username;
+                    userInitials = userData.first_name && userData.last_name ? 
+                        userData.first_name[0] + userData.last_name[0] : 
+                        userData.username[0];
+                }
+                
+                const reportCard = document.createElement('div');
+                reportCard.className = 'team-report-card';
+                
+                // Count tasks
+                const completedCount = report.tasks_completed.length;
+                const inProgressCount = report.tasks_in_progress.length;
+                
+                reportCard.innerHTML = `
+                    <div class="team-report-header">
+                        <div class="team-report-user">
+                            <div class="team-member-avatar">${userInitials}</div>
+                            <span>${userName}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline view-team-report" data-id="${report._id}">View Report</button>
+                    </div>
+                    <div class="team-report-body">
+                        <p><strong>Summary:</strong> ${report.summary.substring(0, 100)}${report.summary.length > 100 ? '...' : ''}</p>
+                        <div class="report-stats" style="margin-top: 0.75rem; display: flex; gap: 1rem;">
+                            <div>
+                                <span style="font-weight: 500; color: var(--success);">${completedCount}</span>
+                                <span style="color: var(--text-secondary); font-size: 0.875rem;">completed</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 500; color: var(--primary);">${inProgressCount}</span>
+                                <span style="color: var(--text-secondary); font-size: 0.875rem;">in progress</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add event listener
+                reportCard.querySelector('.view-team-report').addEventListener('click', function() {
+                    openViewReportModal(report._id);
+                });
+                
+                teamReportsGrid.appendChild(reportCard);
+            } catch (error) {
+                console.error('Error loading team member report:', error);
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading team reports:', error);
+        showToast('Error loading team reports: ' + error.message);
+        
+        const teamReportsGrid = document.getElementById('teamReportsGrid');
+        teamReportsGrid.innerHTML = `
+            <div class="team-report-card" style="grid-column: 1 / -1;">
+                <div class="team-report-body" style="text-align: center; padding: 2rem;">
+                    <p>Error loading team reports. Please try again later.</p>
+                    <button class="btn btn-outline" id="retryLoadTeamReports" style="margin-top: 1rem;">Retry</button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('retryLoadTeamReports').addEventListener('click', function() {
+            loadTeamReports(selectedDate);
+        });
+    }
+}
+
+async function loadProjects() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/projects', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load projects');
+        }
+        
+        const projects = await response.json();
+        const projectSelect = document.getElementById('projectId');
+        
+        // Clear existing options except the first one
+        projectSelect.innerHTML = '<option value="">Select a project...</option>';
+        
+        // Add project options
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project._id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
+        
+    } catch (error) {
+        console.error('Error loading projects:', error);
+        // Just log the error, not critical for the form
+    }
+}
+
+function openCreateReportModal() {
+    // Reset form
+    document.getElementById('reportForm').reset();
+    document.getElementById('reportId').value = '';
+    
+    // Set title
+    document.getElementById('reportModalTitle').textContent = 'Create Daily Report';
+    
+    // Set today's date as a string in YYYY-MM-DD format
+    document.getElementById('reportDate').value = formatDateInput(new Date());
+    
+    // Clear task forms
+    document.getElementById('completedTaskForms').innerHTML = '';
+    document.getElementById('inProgressTaskForms').innerHTML = '';
+    
+    // Show modal
+    document.getElementById('reportModal').style.display = 'flex';
+}
+
+async function openEditReportModal(reportId) {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch(`/daily-reports/${reportId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load report');
+        }
+        
+        const report = await response.json();
+        
+        // Reset form
+        document.getElementById('reportForm').reset();
+        
+        // Set form values
+        document.getElementById('reportId').value = report._id;
+        document.getElementById('reportDate').value = report.report_date;
+        document.getElementById('projectId').value = report.project_id || '';
+        document.getElementById('summary').value = report.summary;
+        document.getElementById('blockers').value = report.blockers || '';
+        document.getElementById('planForTomorrow').value = report.plan_for_tomorrow ? report.plan_for_tomorrow.join('\n') : '';
+        
+        // Set title
+        document.getElementById('reportModalTitle').textContent = 'Edit Daily Report';
+        
+        // Clear task forms
+        document.getElementById('completedTaskForms').innerHTML = '';
+        document.getElementById('inProgressTaskForms').innerHTML = '';
+        
+        // Add completed tasks
+        if (report.tasks_completed && report.tasks_completed.length > 0) {
+            report.tasks_completed.forEach(task => {
+                addTaskForm('completed', task);
+            });
+        }
+        
+        // Add in-progress tasks
+        if (report.tasks_in_progress && report.tasks_in_progress.length > 0) {
+            report.tasks_in_progress.forEach(task => {
+                addTaskForm('in_progress', task);
+            });
+        }
+        
+        // Show modal
+        document.getElementById('reportModal').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error loading report for editing:', error);
+        showToast('Error loading report: ' + error.message);
+    }
+}
+
+async function openViewReportModal(reportId) {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch(`/daily-reports/${reportId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load report');
+        }
+        
+        const report = await response.json();
+        
+        // Set report date
+        const reportDate = new Date(report.report_date);
+        document.getElementById('viewReportDate').textContent = `Daily Report - ${formatDate(reportDate)}`;
+        
+        // Get user info
+        let userName = 'Team Member';
+        try {
+            const userResponse = await fetch(`/users/${report.user_id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                userName = userData.first_name && userData.last_name ? 
+                    `${userData.first_name} ${userData.last_name}` : 
+                    userData.username;
+            }
+        } catch (e) {
+            console.error('Error fetching user details:', e);
+        }
+        
+        // Get project info
+        let projectName = '';
+        if (report.project_id) {
+            try {
+                const projectResponse = await fetch(`/projects/${report.project_id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (projectResponse.ok) {
+                    const projectData = await projectResponse.json();
+                    projectName = projectData.name || 'Unknown Project';
+                }
+            } catch (e) {
+                console.error('Error fetching project details:', e);
+            }
+        }
+        
+        // Build HTML content
+        let content = `
+            <div class="report-section">
+                <div class="report-section-title">Submitted by</div>
+                <p>${userName}</p>
+            </div>
+        `;
+        
+        if (projectName) {
+            content += `
+                <div class="report-section">
+                    <div class="report-section-title">Project</div>
+                    <p>${projectName}</p>
+                </div>
+            `;
+        }
+        
+        content += `
+            <div class="report-section">
+                <div class="report-section-title">Summary</div>
+                <p>${report.summary}</p>
+            </div>
+        `;
+        
+        if (report.tasks_completed && report.tasks_completed.length > 0) {
+            content += `
+                <div class="report-section">
+                    <div class="report-section-title">
+                        <i style="color: var(--success);">✓</i> Completed Tasks (${report.tasks_completed.length})
+                    </div>
+                    <ul class="task-list">
+            `;
+            
+            report.tasks_completed.forEach(task => {
+                content += `
+                    <li class="task-item task-status-completed">
+                        <div class="task-title">
+                            ${task.title}
+                            ${task.time_spent ? `<span class="task-time">${task.time_spent} hours</span>` : ''}
+                        </div>
+                        ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
+                    </li>
+                `;
+            });
+            
+            content += `
+                    </ul>
+                </div>
+            `;
+        }
+        
+        if (report.tasks_in_progress && report.tasks_in_progress.length > 0) {
+            content += `
+                <div class="report-section">
+                    <div class="report-section-title">
+                        <i style="color: var(--primary);">⟳</i> In Progress Tasks (${report.tasks_in_progress.length})
+                    </div>
+                    <ul class="task-list">
+            `;
+            
+            report.tasks_in_progress.forEach(task => {
+                content += `
+                    <li class="task-item task-status-in_progress">
+                        <div class="task-title">
+                            ${task.title}
+                            ${task.time_spent ? `<span class="task-time">${task.time_spent} hours</span>` : ''}
+                        </div>
+                        ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
+                    </li>
+                `;
+            });
+            
+            content += `
+                    </ul>
+                </div>
+            `;
+        }
+        
+        if (report.blockers) {
+            content += `
+                <div class="report-section">
+                    <div class="report-section-title">
+                        <i style="color: var(--danger);">⚠</i> Blockers
+                    </div>
+                    <div class="blockers">
+                        ${report.blockers}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (report.plan_for_tomorrow && report.plan_for_tomorrow.length > 0) {
+            content += `
+                <div class="report-section">
+                    <div class="report-section-title">
+                        <i style="color: var(--warning);">⏰</i> Plan for Tomorrow
+                    </div>
+                    <ul class="plan-list">
+            `;
+            
+            report.plan_for_tomorrow.forEach(plan => {
+                content += `<li>${plan}</li>`;
+            });
+            
+            content += `
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Add submission info
+        const createdDate = new Date(report.created_at);
+        const updatedDate = new Date(report.updated_at);
+        
+        content += `
+            <div class="report-section" style="margin-top: 2rem; color: var(--text-secondary); font-size: 0.875rem;">
+                <div>Submitted: ${formatDateTime(createdDate)}</div>
+                ${createdDate.getTime() !== updatedDate.getTime() ? `
+                <div>Last updated: ${formatDateTime(updatedDate)}</div>` : ''}
+            </div>
+        `;
+        
+        // Set content to view modal
+        document.getElementById('viewReportContent').innerHTML = content;
+        
+        // Store report ID for edit button
+        document.getElementById('viewReportModal').setAttribute('data-report-id', report._id);
+        
+        // Show/hide edit button for own reports
+        const editReportBtn = document.getElementById('editReport');
+        const currentUser = await getCurrentUser();
+        const currentUserId = currentUser._id || currentUser.id;
+        
+        if (report.user_id === currentUserId) {
+            editReportBtn.style.display = 'block';
+        } else {
+            editReportBtn.style.display = 'none';
+        }
+        
+        // Show modal
+        document.getElementById('viewReportModal').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error loading report details:', error);
+        showToast('Error loading report details: ' + error.message);
+    }
+}
+
+async function getCurrentUser() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/users/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to get current user');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting current user:', error);
+        return { username: 'soheru', id: null };
+    }
+}
+
+function addTaskForm(type, taskData = null) {
+    // Create unique ID for this task form
+    const taskId = 'task_' + Math.random().toString(36).substr(2, 9);
+    const container = type === 'completed' ? document.getElementById('completedTaskForms') : document.getElementById('inProgressTaskForms');
+    
+    const taskForm = document.createElement('div');
+    taskForm.className = 'task-form';
+    taskForm.setAttribute('data-task-id', taskId);
+    
+    // Set values if editing an existing task
+    const title = taskData ? taskData.title : '';
+    const description = taskData ? taskData.description : '';
+    const timeSpent = taskData ? taskData.time_spent : '';
+    
+    taskForm.innerHTML = `
+        <button type="button" class="remove-task">&times;</button>
+        <div class="form-group">
+            <label for="${taskId}_title">Task Title *</label>
+            <input type="text" id="${taskId}_title" class="form-control task-title" value="${title}" required>
+        </div>
+        <div class="form-group">
+            <label for="${taskId}_description">Description</label>
+            <textarea id="${taskId}_description" class="form-control task-description">${description || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="${taskId}_time">Time Spent (hours)</label>
+            <input type="number" id="${taskId}_time" class="form-control task-time" value="${timeSpent || ''}" min="0" step="0.25">
+        </div>
+    `;
+    
+    container.appendChild(taskForm);
+    
+    // Add event listener to remove button
+    taskForm.querySelector('.remove-task').addEventListener('click', function() {
+        container.removeChild(taskForm);
+    });
+}
+
+async function saveReport() {
+    try {
+        // Validate form
+        const reportForm = document.getElementById('reportForm');
+        if (!reportForm.checkValidity()) {
+            reportForm.reportValidity();
+            return;
+        }
+        
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const reportId = document.getElementById('reportId').value;
+        const isNewReport = !reportId;
+        
+        // Get the current user to get the ID
+        const currentUser = await getCurrentUser();
+        const userId = currentUser._id || currentUser.id;
+        
+        if (!userId) {
+            showToast('Error: Unable to determine user ID. Please log in again.');
+            localStorage.removeItem('bhoomitechzone_token');
+            window.location.href = '/static/login.html';
+            return;
+        }
+
+        // Get raw date string value from the input field - CRITICAL to avoid date encoding issues
+        const rawDateString = document.getElementById('reportDate').value;
+        
+        // Create the report data object
+        const reportData = {
+            user_id: userId,
+            report_date: rawDateString, // Using raw string without creating a Date object
+            summary: document.getElementById('summary').value,
+            blockers: document.getElementById('blockers').value || null,
+            plan_for_tomorrow: document.getElementById('planForTomorrow').value
+                ? document.getElementById('planForTomorrow').value.split('\n').filter(line => line.trim()) 
+                : null,
+            tasks_completed: getTasksFromForms('completedTaskForms'),
+            tasks_in_progress: getTasksFromForms('inProgressTaskForms')
+        };
+        
+        // Only include project_id if a project is selected
+        if (document.getElementById('projectId').value) {
+            reportData.project_id = document.getElementById('projectId').value;
+        }
+        
+        console.log("Current Date and Time: 2025-06-12 11:42:21");
+        console.log("Current User's Login: soheru");
+        console.log(`Report date as string: "${rawDateString}"`);
+        
+        // Create or update report
+        const url = isNewReport ? '/daily-reports' : `/daily-reports/${reportId}`;
+        const method = isNewReport ? 'POST' : 'PUT';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reportData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            throw new Error(errorData.detail?.[0]?.msg || errorData.detail || 'Failed to save report');
+        }
+        
+        // Success
+        const savedReport = await response.json();
+        showToast(isNewReport ? 'Report created successfully' : 'Report updated successfully');
+        
+        // Close modal
+        document.getElementById('reportModal').style.display = 'none';
+        
+        // Refresh reports
+        await loadTodayReport();
+        await loadUserReports();
+        await loadReportStats();
+        
+    } catch (error) {
+        console.error('Error saving report:', error);
+        showToast('Error saving report: ' + error.message);
+    }
+}
+
+function getTasksFromForms(containerId) {
+    const container = document.getElementById(containerId);
+    const taskForms = container.querySelectorAll('.task-form');
+    const tasks = [];
+    
+    taskForms.forEach(form => {
+        const taskId = form.getAttribute('data-task-id');
+        const title = document.getElementById(`${taskId}_title`).value;
+        const description = document.getElementById(`${taskId}_description`).value;
+        const timeSpent = document.getElementById(`${taskId}_time`).value;
+        
+        if (title.trim()) {
+            tasks.push({
+                title: title,
+                status: containerId === 'completedTaskForms' ? 'completed' : 'in_progress',
+                description: description || null,
+                time_spent: timeSpent ? parseFloat(timeSpent) : null
+            });
+        }
+    });
+    
+    return tasks;
+}
+
+function setupEventListeners() {
+    // Menu toggle
+    document.getElementById('menuToggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('active');
+    });
+    
+    // User menu toggle
+    const userMenu = document.getElementById('userMenu');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    userMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
+    });
+    
+    // Close user dropdown when clicking outside
+    document.addEventListener('click', function() {
+        userDropdown.classList.remove('active');
+    });
+    
+    // Logout button
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('bhoomitechzone_token');
+        window.location.href = '/static/login.html';
+    });
+    
+    // Create report button
+    document.getElementById('createReportBtn').addEventListener('click', openCreateReportModal);
+    
+    // Add task buttons
+    document.getElementById('addCompletedTask').addEventListener('click', function() {
+        addTaskForm('completed');
+    });
+    
+    document.getElementById('addInProgressTask').addEventListener('click', function() {
+        addTaskForm('in_progress');
+    });
+    
+    // Save report button
+    document.getElementById('saveReport').addEventListener('click', saveReport);
+    
+    // Cancel report button
+    document.getElementById('cancelReport').addEventListener('click', function() {
+        document.getElementById('reportModal').style.display = 'none';
+    });
+    
+    // Close report modal button
+    document.getElementById('closeReportModal').addEventListener('click', function() {
+        document.getElementById('reportModal').style.display = 'none';
+    });
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show the corresponding content
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+            
+            // Load team reports if switching to that tab
+            if (tabId === 'team-reports') {
+                const selectedDate = document.getElementById('teamReportDate').value;
+                loadTeamReports(new Date(selectedDate));
+            }
+        });
+    });
+    
+    // Team report date change
+    document.getElementById('teamReportDate').addEventListener('change', function() {
+        loadTeamReports(new Date(this.value));
+    });
+    
+    // Filter button
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        loadReportStats();
+        loadUserReports();
+    });
+    
+    // View report modal
+    document.getElementById('closeViewReportModal').addEventListener('click', function() {
+        document.getElementById('viewReportModal').style.display = 'none';
+    });
+    
+    document.getElementById('closeViewReport').addEventListener('click', function() {
+        document.getElementById('viewReportModal').style.display = 'none';
+    });
+    
+    document.getElementById('editReport').addEventListener('click', function() {
+        const reportId = document.getElementById('viewReportModal').getAttribute('data-report-id');
+        document.getElementById('viewReportModal').style.display = 'none';
+        openEditReportModal(reportId);
+    });
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Format date for input fields (YYYY-MM-DD)
+function formatDateInput(date) {
+    const d = new Date(date);
+    const month = '' + (d.getMonth() + 1);
+    const day = '' + d.getDate();
+    const year = d.getFullYear();
+    
+    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+}
+
+// Format date (e.g., "Monday, Jun 12, 2025")
+function formatDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(date).toLocaleDateString(undefined, options);
+}
+
+// Format date and time (e.g., "Jun 12, 2025, 11:05 AM")
+function formatDateTime(date) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(date).toLocaleString(undefined, options);
+}
+
+// Format time (HH:MM)
+function formatTime(date) {
+    return "11:05";
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+    </script>
+</body>
+</html>

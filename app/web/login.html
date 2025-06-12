@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Login</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Login specific styles */
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo svg {
+            margin-right: 0.75rem;
+        }
+
+        .company-name {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .login-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .login-header {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid;
+            background-color: #fff;
+            display: none;
+        }
+
+        .alert-danger {
+            border-left-color: var(--danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .alert-success {
+            border-left-color: var(--success);
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .time-display {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+            margin-right: 0.5rem;
+            display: none;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn.loading .spinner-border {
+            display: inline-block;
+        }
+
+        /* Tab styles for login/register toggle */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-logo">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <path d="M24 6L42 24L24 42L6 24L24 6Z" fill="#2563eb" />
+                <path d="M24 15L33 24L24 33L15 24L24 15Z" fill="#1d4ed8" />
+            </svg>
+            <div class="company-name">Bhoomi TechZone</div>
+        </div>
+        
+        <div class="login-card">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Sign In</div>
+                <div class="auth-tab" data-tab="register">Register</div>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="auth-form active" id="loginForm">
+                <div class="login-header">
+                    <h1 class="login-title">Welcome Back</h1>
+                    <p class="login-subtitle">Enter your credentials to access your account</p>
+                </div>
+                
+                <div class="alert alert-danger" id="loginAlert"></div>
+                
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <input type="text" class="form-control" id="loginUsername" placeholder="Enter your username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="loginButton">
+                        <span class="spinner-border" id="loginSpinner"></span>
+                        Sign In
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Register Form -->
+            <div class="auth-form" id="registerForm">
+                <div class="login-header">
+                    <h1 class="login-title">Create Account</h1>
+                    <p class="login-subtitle">Fill out the form to create a new account</p>
+                </div>
+                
+                <div class="alert alert-danger" id="registerAlert"></div>
+                <div class="alert alert-success" id="registerSuccess"></div>
+                
+                <form id="registerFormElement">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="firstName">First Name</label>
+                                <input type="text" class="form-control" id="firstName" placeholder="Enter first name" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="lastName">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" placeholder="Enter last name" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="registerUsername">Username</label>
+                        <input type="text" class="form-control" id="registerUsername" placeholder="Choose a username" required value="soherucreate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="registerPassword">Password</label>
+                        <input type="password" class="form-control" id="registerPassword" placeholder="Create a password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="position">Position</label>
+                        <select class="form-control" id="position" required>
+                            <option value="">Select position</option>
+                            <option value="Developer">Developer</option>
+                            <option value="Designer">Designer</option>
+                            <option value="Project Manager">Project Manager</option>
+                            <option value="Team Lead">Team Lead</option>
+                            <option value="HR Manager">HR Manager</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="department">Department</label>
+                        <select class="form-control" id="department" required>
+                            <option value="">Select department</option>
+                            <option value="Development">Development</option>
+                            <option value="Design">Design</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="HR">HR</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="registerButton">
+                        <span class="spinner-border" id="registerSpinner"></span>
+                        Create Account
+                    </button>
+                </form>
+            </div>
+            
+            <div class="login-footer">
+                <p>© 2025 Bhoomi TechZone. All rights reserved.</p>
+            </div>
+        </div>
+        
+        <div class="time-display" id="timeDisplay">
+            2025-06-11 05:27:00 UTC
+        </div>
+    </div>
+
+    <script src="/static/js/user-manager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update time display
+            const timeDisplay = document.getElementById('timeDisplay');
+            timeDisplay.textContent = '2025-06-11 05:27:00 UTC';
+            
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.auth-tab');
+            const forms = document.querySelectorAll('.auth-form');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and forms
+                    tabs.forEach(t => t.classList.remove('active'));
+                    forms.forEach(f => f.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding form
+                    this.classList.add('active');
+                    document.getElementById(tabId + 'Form').classList.add('active');
+                    
+                    // Hide any alerts
+                    document.getElementById('loginAlert').style.display = 'none';
+                    document.getElementById('registerAlert').style.display = 'none';
+                    document.getElementById('registerSuccess').style.display = 'none';
+                });
+            });
+            
+            // Redirect to dashboard if already authenticated
+            if (UserManager.isAuthenticated()) {
+                window.location.href = 'dashboard';
+                return;
+            }
+            
+            // Login form submission
+            const loginFormElement = document.getElementById('loginFormElement');
+            const loginButton = document.getElementById('loginButton');
+            const loginAlert = document.getElementById('loginAlert');
+            
+            loginFormElement.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                // Set loading state
+                loginButton.classList.add('loading');
+                loginButton.disabled = true;
+                loginAlert.style.display = 'none';
+                
+                try {
+                    // Login using UserManager
+                    const result = await UserManager.login(username, password);
+                    
+                    if (result.success) {
+                        // Redirect to dashboard
+                        window.location.href = 'dashboard';
+                    } else {
+                        // Show error message
+                        loginAlert.textContent = result.error;
+                        loginAlert.style.display = 'block';
+                    }
+                } catch (error) {
+                    // Show error message
+                    loginAlert.textContent = error.message;
+                    loginAlert.style.display = 'block';
+                } finally {
+                    // Reset loading state
+                    loginButton.classList.remove('loading');
+                    loginButton.disabled = false;
+                }
+            });
+            
+            // Registration form submission
+            const registerFormElement = document.getElementById('registerFormElement');
+            const registerButton = document.getElementById('registerButton');
+            const registerAlert = document.getElementById('registerAlert');
+            const registerSuccess = document.getElementById('registerSuccess');
+            
+            registerFormElement.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const userData = {
+                    username: document.getElementById('registerUsername').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('registerPassword').value,
+                    first_name: document.getElementById('firstName').value,
+                    last_name: document.getElementById('lastName').value,
+                    position: document.getElementById('position').value,
+                    department: document.getElementById('department').value,
+                    role: "employee"  // Default role for new users
+                };
+                
+                // Set loading state
+                registerButton.classList.add('loading');
+                registerButton.disabled = true;
+                registerAlert.style.display = 'none';
+                registerSuccess.style.display = 'none';
+                
+                try {
+                    // Register using UserManager
+                    const result = await UserManager.registerUser(userData);
+                    
+                    if (result.success) {
+                        // Show success message
+                        registerSuccess.textContent = 'Account created successfully! You can now log in.';
+                        registerSuccess.style.display = 'block';
+                        
+                        // Clear form
+                        registerFormElement.reset();
+                        
+                        // Switch to login tab after a delay
+                        setTimeout(() => {
+                            document.querySelector('.auth-tab[data-tab="login"]').click();
+                        }, 3000);
+                    } else {
+                        // Show error message
+                        registerAlert.textContent = result.error;
+                        registerAlert.style.display = 'block';
+                    }
+                } catch (error) {
+                    // Show error message
+                    registerAlert.textContent = error.message;
+                    registerAlert.style.display = 'block';
+                } finally {
+                    // Reset loading state
+                    registerButton.classList.remove('loading');
+                    registerButton.disabled = false;
+                }
+            });
+            
+            // Pre-fill the registration form for demo purposes
+            document.getElementById('registerUsername').value = 'soherucreate';
+            document.getElementById('firstName').value = 'Soheru';
+            document.getElementById('lastName').value = 'Create';
+            document.getElementById('email').value = 'soherucreate@bhoomitechzone.com';
+        });
+    </script>
+</body>
+</html>
