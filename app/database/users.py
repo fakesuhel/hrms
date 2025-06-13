@@ -182,6 +182,28 @@ class DatabaseUsers:
         return result.deleted_count > 0
     
     @staticmethod
+    async def update_last_login(user_id: str) -> Optional[UserInDB]:
+        """Update last login timestamp for a user"""
+        if isinstance(user_id, str) and ObjectId.is_valid(user_id):
+            id_obj = ObjectId(user_id)
+        else:
+            id_obj = user_id
+        
+        now = datetime.utcnow()
+        
+        result = users_collection.update_one(
+            {"_id": id_obj},
+            {"$set": {"last_login": now, "updated_at": now}}
+        )
+        
+        if result.modified_count:
+            updated_user = users_collection.find_one({"_id": id_obj})
+            if updated_user:
+                return UserInDB(**updated_user)
+        
+        return None
+    
+    @staticmethod
     async def get_all_users() -> List[UserInDB]:
         users = list(users_collection.find())
         return [UserInDB(**user) for user in users]
