@@ -69,7 +69,7 @@ async def get_all_users(current_user = Depends(get_current_user)):
 async def create_user(user: UserCreate):
     """
     Create a new user account.
-    This endpoint is used for user registration.
+    This endpoint is used for public user registration.
     """
     try:
         # Check if email exists
@@ -110,6 +110,61 @@ async def create_user(user: UserCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating user: {str(e)}",
+        )
+
+@router.post("/employees", response_model=UserResponse)
+async def create_employee(user: UserCreate, current_user = Depends(get_current_user)):
+    """
+    Create a new employee account.
+    This endpoint is used by privileged users to create employee accounts.
+    Requires team_lead, manager, director, or hr role.
+    """
+    # Check if user has permission to create employees
+    if current_user.role not in ['team_lead', 'manager', 'director', 'hr', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to create employee accounts",
+        )
+    
+    try:
+        # Check if email exists
+        existing_user = await DatabaseUsers.get_user_by_email(user.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+        
+        # Check if username exists
+        existing_user = await DatabaseUsers.get_user_by_username(user.username)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken",
+            )
+        
+        # Log the employee creation attempt
+        print(f"Employee creation by {current_user.username}: {user.username} at 2025-06-17 09:24:54")
+        
+        # Create the employee
+        user_in_db = await DatabaseUsers.create_user(user)
+        
+        # Fix: Convert the document properly, ensuring the id field is included
+        user_dict = user_in_db.dict(by_alias=True)
+        # Explicitly set 'id' field from '_id' for UserResponse
+        user_dict["id"] = str(user_dict.pop("_id"))
+        
+        return UserResponse(**user_dict)
+    
+    except HTTPException as e:
+        # Re-raise HTTP exceptions
+        raise e
+    except Exception as e:
+        # Log the error
+        print(f"Employee creation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating employee: {str(e)}",
         )
 
 @router.get("/me", response_model=UserResponse)
@@ -158,3 +213,91 @@ async def get_team_members(current_user = Depends(get_current_user)):
         response_members.append(UserResponse(**member_dict))
     
     return response_members
+
+@router.put("/me/preferences", response_model=dict)
+async def update_user_preferences(
+    preferences_data: dict,
+    current_user = Depends(get_current_user)
+):
+    """Update user preferences"""
+    try:
+        # Import here to avoid circular imports
+        from app.database.settings import DatabaseSettings, UserSettingsUpdate
+        
+        # Extract preferences from nested structure
+        prefs = preferences_data.get('preferences', {})
+        
+        # Map frontend structure to backend structure
+        settings_data = UserSettingsUpdate(
+            theme=prefs.get('theme'),
+            color_accent=prefs.get('color_accent'),
+            language=prefs.get('language'),
+            timezone=prefs.get('time_zone'),
+            date_format=prefs.get('date_format'),
+            notification_preferences=prefs.get('notifications', prefs.get('notification_preferences'))
+        )
+        
+        # Update settings using database
+        updated_settings = await DatabaseSettings.update_user_settings(
+            str(current_user.id),
+            settings_data
+        )
+        
+        if not updated_settings:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update preferences"
+            )
+        
+        # Return in the format expected by frontend
+        return {
+            "theme": updated_settings.theme,
+            "color_accent": updated_settings.color_accent,
+            "language": updated_settings.language,
+            "time_zone": updated_settings.timezone,
+            "date_format": updated_settings.date_format,
+            "notifications": updated_settings.notification_preferences
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update preferences: {str(e)}"
+        )
+
+@router.get("/me/preferences", response_model=dict)
+async def get_user_preferences(current_user = Depends(get_current_user)):
+    """Get user preferences"""
+    try:
+        # Import here to avoid circular imports
+        from app.database.settings import DatabaseSettings
+        
+        # Get settings from database
+        settings = await DatabaseSettings.get_user_settings(str(current_user.id))
+        
+        # Return in the format expected by frontend
+        return {
+            "theme": settings.theme,
+            "color_accent": settings.color_accent,
+            "language": settings.language,
+            "time_zone": settings.timezone,
+            "date_format": settings.date_format,
+            "notifications": settings.notification_preferences
+        }
+        
+    except Exception as e:
+        # Return default preferences if none exist
+        return {
+            "theme": "light",
+            "color_accent": "blue",
+            "language": "en",
+            "time_zone": "Asia/Kolkata",
+            "date_format": "DD/MM/YYYY",
+            "notifications": {
+                "email_project_updates": True,
+                "email_leave_requests": True,
+                "email_daily_reports": False,
+                "browser_notifications": True,
+                "sound_alerts": False
+            }
+        }

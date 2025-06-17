@@ -1777,16 +1777,17 @@
         async function loadTeamMembers() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users', {
+                // Use new endpoint to get only eligible users for review
+                const response = await fetch('/performance-reviews/eligible-users', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to load team members');
+                    throw new Error('Failed to load eligible users');
                 }
                 
                 const users = await response.json();
-                console.log("Loaded users:", users); // Debug log
+                console.log("Loaded eligible users:", users); // Debug log
                 
                 // Populate employee select
                 const employeeSelect = document.getElementById('employeeSelect');
@@ -1794,20 +1795,16 @@
                 
                 users.forEach(user => {
                     // Skip the current user, we don't want to review ourselves
-                    if (user.username !== 'soherunot') { 
+                    if (user.username !== window.currentUser?.username) {
                         const option = document.createElement('option');
-                        // Use _id or id as available in your API response
                         option.value = user._id || user.id;
-                        // Use username as display text, or first_name + last_name if available
-                        option.textContent = user.username || 
-                            ((user.first_name || '') + ' ' + (user.last_name || '')).trim();
+                        option.textContent = user.full_name || user.name || user.username || ((user.first_name || '') + ' ' + (user.last_name || '')).trim();
                         employeeSelect.appendChild(option);
                     }
                 });
-                
             } catch (error) {
-                console.error('Error loading team members:', error);
-                showToast('Error loading team members');
+                console.error('Error loading eligible users:', error);
+                showToast('Error loading eligible users');
             }
         }
         
@@ -2143,6 +2140,8 @@
             let initials = '';
             if (firstName) initials += firstName.charAt(0).toUpperCase();
             if (lastName) initials += lastName.charAt(0).toUpperCase();
+            
+
             
             return initials || 'SN';
         }

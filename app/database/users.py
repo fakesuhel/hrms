@@ -33,21 +33,50 @@ class UserBase(BaseModel):
     email: EmailStr
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    display_name: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    birthday: Optional[str] = None  # Store as string in YYYY-MM-DD format
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: Optional[str] = None
     position: Optional[str] = None
     department: Optional[str] = None
+    employment_type: Optional[str] = None
+    joining_date: Optional[str] = None  # Store as string in YYYY-MM-DD format
+    employee_id: Optional[str] = None
+    salary: Optional[float] = None
     role: str = "employee"  # "employee", "team_lead", "manager", "admin"
     manager_id: Optional[str] = None
     is_active: bool = True
     
 class UserCreate(UserBase):
     password: str
+    employee_id: Optional[str] = None  # Auto-generate if not provided
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    display_name: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    birthday: Optional[str] = None
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: Optional[str] = None
     position: Optional[str] = None
     department: Optional[str] = None
+    employment_type: Optional[str] = None
+    joining_date: Optional[str] = None
+    employee_id: Optional[str] = None
+    salary: Optional[float] = None
     role: Optional[str] = None
     manager_id: Optional[str] = None
     is_active: Optional[bool] = None
@@ -124,10 +153,20 @@ class DatabaseUsers:
         # Hash password
         hashed_password = pwd_context.hash(user_data.password)
         
+        # Generate employee ID if not provided
+        employee_id = user_data.employee_id
+        if not employee_id:
+            # Generate a unique employee ID (EMP + timestamp + random)
+            import random
+            timestamp = str(int(datetime.utcnow().timestamp()))[-6:]
+            random_num = str(random.randint(100, 999))
+            employee_id = f"EMP{timestamp}{random_num}"
+        
         # Create user document
         now = datetime.utcnow()
         user_dict = user_data.dict(exclude={"password"})
         user_dict.update({
+            "employee_id": employee_id,
             "hashed_password": hashed_password,
             "created_at": now,
             "updated_at": now

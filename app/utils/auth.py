@@ -53,6 +53,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
+async def has_team_access(current_user: UserInDB) -> bool:
+    """
+    Check if the current user has access to team-related resources.
+    Team leads, managers, and admins have access.
+    """
+    if current_user.role in ['team_lead', 'manager', 'admin']:
+        return True
+    return False
+
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

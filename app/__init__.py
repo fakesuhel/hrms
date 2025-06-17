@@ -23,7 +23,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app/web"), name="static")
 
 # Import and include all routers
-from app.routes import users, attendance, projects,web, teams, daily_reports, leave_requests, performance_reviews, settings
+from app.routes import users, attendance, projects, web, teams, daily_reports, leave_requests, performance_reviews, settings, dashboard
 
 app.include_router(users.router)
 app.include_router(attendance.router)
@@ -34,6 +34,7 @@ app.include_router(daily_reports.router)
 app.include_router(leave_requests.router)
 app.include_router(performance_reviews.router)
 app.include_router(settings.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 async def root():

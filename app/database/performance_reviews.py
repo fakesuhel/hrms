@@ -50,6 +50,12 @@ class PerformanceReviewInDB(PerformanceReviewBase):
     user_comments: Optional[str] = None
     
     class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            datetime: lambda v: v.isoformat(),
+            date: lambda v: v.isoformat()
+        }
         json_schema_extra = {
             "example": {
                 "_id": "60d21b4967d0d8820c43e777",
@@ -125,7 +131,7 @@ class PerformanceReviewResponse(BaseModel):
     review_type: str
     start_date: date
     end_date: date
-    ratings: List[Dict[str, Union[str, float]]] = []
+    ratings: List[Dict[str, Union[str, float, None]]] = []
     strengths: List[str] = []
     areas_for_improvement: List[str] = []
     overall_comments: Optional[str] = None
@@ -138,9 +144,46 @@ class PerformanceReviewResponse(BaseModel):
     acknowledged_by_user: bool
     acknowledged_at: Optional[datetime] = None
     user_comments: Optional[str] = None
+    
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            date: lambda v: v.isoformat()
+        }
 
 class DatabasePerformanceReviews:
     collection: Collection = performance_reviews_collection
+    
+    @classmethod
+    def _convert_dates_from_db(cls, review_data: dict) -> dict:
+        """Convert string dates from MongoDB to date objects"""
+        if isinstance(review_data.get('start_date'), str):
+            try:
+                review_data['start_date'] = datetime.fromisoformat(review_data['start_date']).date()
+            except (ValueError, AttributeError):
+                pass
+        if isinstance(review_data.get('end_date'), str):
+            try:
+                review_data['end_date'] = datetime.fromisoformat(review_data['end_date']).date()
+            except (ValueError, AttributeError):
+                pass
+        return review_data
+    
+    @classmethod
+    async def get_latest_review(cls, user_id: str) -> Optional[PerformanceReviewInDB]:
+        """Get the latest performance review for a user"""
+        review_data = cls.collection.find_one(
+            {"user_id": ObjectId(user_id)},
+            sort=[("created_at", -1)]
+        )
+        if review_data:
+            review_data = cls._convert_dates_from_db(review_data)
+            return PerformanceReviewInDB(**review_data)
+        return None
+    
+    @classmethod
+    
     
     @classmethod
     async def create_review(cls, review_data: PerformanceReviewCreate) -> PerformanceReviewInDB:
@@ -154,13 +197,31 @@ class DatabasePerformanceReviews:
         if existing:
             raise ValueError(f"Review already exists for period {review_data.review_period}")
         
+        # Convert review_data to dict and handle date serialization
+        review_dict = review_data.dict()
+        
+        # Convert date objects to strings for MongoDB storage
+        if isinstance(review_dict.get('start_date'), date):
+            review_dict['start_date'] = review_dict['start_date'].isoformat()
+        if isinstance(review_dict.get('end_date'), date):
+            review_dict['end_date'] = review_dict['end_date'].isoformat()
+        
         review_in_db = PerformanceReviewInDB(
-            **review_data.dict(),
+            **review_dict,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
         
-        result = cls.collection.insert_one(review_in_db.dict(by_alias=True))
+        # Convert to dict for MongoDB insertion, ensuring proper serialization
+        insert_dict = review_in_db.dict(by_alias=True)
+        
+        # Ensure dates are strings
+        if isinstance(insert_dict.get('start_date'), date):
+            insert_dict['start_date'] = insert_dict['start_date'].isoformat()
+        if isinstance(insert_dict.get('end_date'), date):
+            insert_dict['end_date'] = insert_dict['end_date'].isoformat()
+        
+        result = cls.collection.insert_one(insert_dict)
         review_in_db.id = result.inserted_id
         return review_in_db
     
@@ -169,12 +230,14 @@ class DatabasePerformanceReviews:
         """Get a review by ID"""
         review_data = cls.collection.find_one({"_id": ObjectId(review_id)})
         if review_data:
+            review_data = cls._convert_dates_from_db(review_data)
             return PerformanceReviewInDB(**review_data)
         return None
     
     @classmethod
     async def update_review(cls, review_id: str, review_data: PerformanceReviewUpdate) -> Optional[PerformanceReviewInDB]:
-        """Update a review's information"""
+        """Update a review's information with upsert logic for missing fields"""
+        # Create update operations
         update_data = {k: v for k, v in review_data.dict().items() if v is not None}
         update_data["updated_at"] = datetime.now()
         
@@ -182,12 +245,28 @@ class DatabasePerformanceReviews:
         if update_data.get("status") == "completed":
             update_data["completed_at"] = datetime.now()
         
+        # Use $set for existing fields and $setOnInsert for default values if document doesn't exist
+        set_data = update_data.copy()
+        set_on_insert = {
+            "ratings": [],
+            "strengths": [],
+            "areas_for_improvement": [],
+            "goals_for_next_period": [],
+            "status": "draft",
+            "acknowledged_by_user": False,
+            "created_at": datetime.now()
+        }
+        
         result = cls.collection.update_one(
             {"_id": ObjectId(review_id)},
-            {"$set": update_data}
+            {
+                "$set": set_data,
+                "$setOnInsert": set_on_insert
+            },
+            upsert=False  # Don't create new document, just update existing
         )
         
-        if result.modified_count:
+        if result.matched_count > 0:  # Check if document was found and potentially modified
             return await cls.get_review_by_id(review_id)
         return None
     
@@ -214,18 +293,26 @@ class DatabasePerformanceReviews:
     async def get_user_reviews(cls, user_id: str) -> List[PerformanceReviewInDB]:
         """Get all reviews for a user"""
         cursor = cls.collection.find({"user_id": ObjectId(user_id)}).sort("created_at", -1)
-        return [PerformanceReviewInDB(**review) for review in cursor]
-    
+        reviews = []
+        for review_data in cursor:
+            review_data = cls._convert_dates_from_db(review_data)
+            reviews.append(PerformanceReviewInDB(**review_data))
+        return reviews
+
     @classmethod
     async def get_reviews_by_reviewer(cls, reviewer_id: str, status: Optional[str] = None) -> List[PerformanceReviewInDB]:
         """Get all reviews conducted by a reviewer"""
         query = {"reviewer_id": ObjectId(reviewer_id)}
         if status:
             query["status"] = status
-            
+        
         cursor = cls.collection.find(query).sort("created_at", -1)
-        return [PerformanceReviewInDB(**review) for review in cursor]
-    
+        reviews = []
+        for review_data in cursor:
+            review_data = cls._convert_dates_from_db(review_data)
+            reviews.append(PerformanceReviewInDB(**review_data))
+        return reviews
+
     @classmethod
     async def get_team_reviews(cls, team_members: List[str], review_period: str) -> List[PerformanceReviewInDB]:
         """Get reviews for a team for a specific period"""
@@ -236,7 +323,11 @@ class DatabasePerformanceReviews:
             "review_period": review_period
         })
         
-        return [PerformanceReviewInDB(**review) for review in cursor]
+        reviews = []
+        for review_data in cursor:
+            review_data = cls._convert_dates_from_db(review_data)
+            reviews.append(PerformanceReviewInDB(**review_data))
+        return reviews
     
     @classmethod
     async def get_performance_stats(cls, user_id: str, periods: int = 4) -> Dict[str, Any]:
@@ -247,7 +338,10 @@ class DatabasePerformanceReviews:
             "status": "completed"
         }).sort("created_at", -1).limit(periods)
         
-        reviews = [PerformanceReviewInDB(**review) for review in cursor]
+        reviews = []
+        for review_data in cursor:
+            review_data = cls._convert_dates_from_db(review_data)
+            reviews.append(PerformanceReviewInDB(**review_data))
         
         # Calculate stats
         if not reviews:

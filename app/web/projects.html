@@ -1242,8 +1242,10 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="projectTeamMembers">Team Members</label>
-                    <input type="text" id="projectTeamMembers" class="form-control" placeholder="Enter user IDs separated by commas">
+                    <label for="teamMembersSelect">Team Members</label>
+                    <select id="teamMembersSelect" class="form-control" multiple>
+                        <!-- Users will be dynamically loaded here -->
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -1314,8 +1316,10 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="editProjectTeamMembers">Team Members</label>
-                    <input type="text" id="editProjectTeamMembers" class="form-control" placeholder="Enter user IDs separated by commas">
+                    <label for="editTeamMembersSelect">Team Members</label>
+                    <select id="editTeamMembersSelect" class="form-control" multiple>
+                        <!-- Users will be dynamically loaded here -->
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -1369,11 +1373,10 @@
             </div>
             
             <div class="form-group">
-                <label for="taskAssignee">Assigned To</label>
-                <div class="user-search-container">
-                    <input type="text" id="taskAssignee" class="form-control" placeholder="Search by name or username...">
-                    <!-- Search results will be added here -->
-                </div>
+                <label for="taskAssigneeSelect">Assigned To</label>
+                <select id="taskAssigneeSelect" class="form-control" multiple>
+                    <!-- Users will be dynamically loaded here -->
+                </select>
             </div>
             
             <div class="form-group">
@@ -1422,11 +1425,10 @@
             </div>
             
             <div class="form-group">
-                <label for="editTaskAssignee">Assigned To</label>
-                <div class="user-search-container">
-                    <input type="text" id="editTaskAssignee" class="form-control" placeholder="Search by name or username...">
-                    <!-- Search results will be added here -->
-                </div>
+                <label for="editTaskAssigneeSelect">Assigned To</label>
+                <select id="editTaskAssigneeSelect" class="form-control" multiple>
+                    <!-- Users will be dynamically loaded here -->
+                </select>
             </div>
             
             <div class="form-group">
@@ -1473,6 +1475,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('userInitials').textContent = initials;
             document.getElementById('sidebar-username').textContent = currentUser.username;
             document.getElementById('sidebar-position').textContent = currentUser.position || 'Team Member';
+            
+            // Setup role-based UI
+            setupRoleBasedUI(currentUser);
         }
     } catch (error) {
         console.error('Error getting current user:', error);
@@ -1621,6 +1626,125 @@ function getTodayFormatted() {
 }
 
 // ========================
+// Role-Based Access Control
+// ========================
+
+// Setup UI based on user role
+function setupRoleBasedUI(currentUser) {
+    const isEmployee = currentUser.role === 'employee';
+    
+    // Hide/show UI elements based on role
+    if (isEmployee) {
+        // Hide "New Project" button for employees
+        const createProjectBtn = document.getElementById('createProjectBtn');
+        if (createProjectBtn) {
+            createProjectBtn.style.display = 'none';
+        }
+        
+        // Hide project edit button in detail view (will be checked when viewing project)
+        const editProjectBtn = document.getElementById('editProjectBtn');
+        if (editProjectBtn) {
+            editProjectBtn.style.display = 'none';
+        }
+        
+        // Add note about limited access
+        const projectsHeader = document.querySelector('.projects-header');
+        if (projectsHeader && !document.getElementById('employee-note')) {
+            const note = document.createElement('div');
+            note.id = 'employee-note';
+            note.style.cssText = `
+                background-color: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                margin-bottom: 1rem;
+                color: var(--info);
+                font-size: 0.875rem;
+            `;
+            note.innerHTML = `
+                <strong>Employee View:</strong> You can see projects you're assigned to and tasks you can work on. You can add tasks to projects you created and update status of your assigned tasks.
+            `;
+            projectsHeader.parentNode.insertBefore(note, projectsHeader.nextSibling);
+        }
+    }
+    
+    // Store user role globally for other functions
+    window.currentUserRole = currentUser.role;
+    window.currentUserId = currentUser._id;
+}
+
+// Check if current user can edit a project
+function canEditProject(project, currentUser) {
+    if (!currentUser || !project) return false;
+    
+    // Admins, directors, managers, team leads can edit any project
+    if (['admin', 'director', 'manager', 'team_lead', 'hr'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can only edit projects they created
+    if (currentUser.role === 'employee') {
+        return project.created_by === currentUser._id;
+    }
+    
+    return false;
+}
+
+// Check if current user can add tasks to a project
+function canAddTasksToProject(project, currentUser) {
+    if (!currentUser || !project) return false;
+    
+    // Admins, directors, managers, team leads can add tasks to any project
+    if (['admin', 'director', 'manager', 'team_lead', 'hr'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can add tasks to projects they created or are team members of
+    if (currentUser.role === 'employee') {
+        const isCreator = project.created_by === currentUser._id;
+        const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+        return isCreator || isTeamMember;
+    }
+    
+    return false;
+}
+
+// Check if current user can edit a specific task
+function canEditTask(task, project, currentUser) {
+    if (!currentUser || !task) return false;
+    
+    // Admins, directors, managers, team leads can edit any task
+    if (['admin', 'director', 'manager', 'team_lead', 'hr'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can edit tasks assigned to them or tasks in projects they created
+    if (currentUser.role === 'employee') {
+        const isAssigned = task.assigned_to && (
+            (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+            task.assigned_to === currentUser._id
+        );
+        const isProjectCreator = project && project.created_by === currentUser._id;
+        return isAssigned || isProjectCreator;
+    }
+    
+    return false;
+}
+
+// Get allowed task assignees based on user role
+function getAllowedTaskAssignees(project, currentUser) {
+    if (!currentUser) return [];
+    
+    // Non-employees can assign tasks to anyone in the system
+    if (currentUser.role !== 'employee') {
+        return userListCache; // Return all users
+    }
+    
+    // Employees can only assign tasks to themselves
+    return userListCache.filter(user => user._id === currentUser._id);
+}
+
+// ========================
 // Project Operations
 // ========================
 
@@ -1675,6 +1799,8 @@ async function loadProjectStats() {
 async function loadProjects() {
     try {
         const token = localStorage.getItem('bhoomitechzone_token');
+        const currentUser = await getCurrentUser();
+        
         const response = await fetch('/projects', {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -1685,13 +1811,43 @@ async function loadProjects() {
             throw new Error('Failed to load projects');
         }
         
-        const projects = await response.json();
+        const allProjects = await response.json();
         const projectsGrid = document.getElementById('projectsGrid');
         
+        // Filter projects based on user role
+        let projects = [];
+        if (currentUser.role === 'employee') {
+            // Employees can only see projects they are assigned to or have tasks in
+            projects = allProjects.filter(project => {
+                // Check if user is in team members
+                const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+                
+                // Check if user has tasks in this project
+                const hasAssignedTasks = project.tasks && project.tasks.some(task => 
+                    task.assigned_to && (
+                        (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+                        task.assigned_to === currentUser._id
+                    )
+                );
+                
+                // Check if user created the project (unlikely for employee but possible)
+                const isCreator = project.created_by === currentUser._id;
+                
+                return isTeamMember || hasAssignedTasks || isCreator;
+            });
+        } else {
+            // Team leads, managers, directors, HR can see all projects
+            projects = allProjects;
+        }
+        
         if (projects.length === 0) {
+            const emptyMessage = currentUser.role === 'employee' 
+                ? 'No assigned projects found. You will see projects here when you are assigned to them or have tasks assigned to you.'
+                : 'No projects found. Click "New Project" to create one.';
+            
             projectsGrid.innerHTML = `
                 <div style="grid-column: span 3; text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    No projects found. Click "New Project" to create one.
+                    ${emptyMessage}
                 </div>
             `;
             return;
@@ -1909,6 +2065,39 @@ async function loadProjectDetails(projectId) {
         // Populate task board
         populateTaskBoard(project.tasks);
         
+        // Check permissions and setup UI accordingly
+        const currentUser = await getCurrentUser();
+        
+        // Show/hide edit project button based on permissions
+        const editProjectBtn = document.getElementById('editProjectBtn');
+        if (editProjectBtn) {
+            if (canEditProject(project, currentUser)) {
+                editProjectBtn.style.display = 'inline-flex';
+            } else {
+                editProjectBtn.style.display = 'none';
+            }
+        }
+        
+        // Show/hide add task button based on permissions
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        if (addTaskBtn) {
+            if (canAddTasksToProject(project, currentUser)) {
+                addTaskBtn.style.display = 'inline-flex';
+            } else {
+                addTaskBtn.style.display = 'none';
+            }
+        }
+        
+        // Hide add task cards in columns for employees who can't add tasks
+        const addTaskCards = document.querySelectorAll('.add-task-card');
+        addTaskCards.forEach(card => {
+            if (canAddTasksToProject(project, currentUser)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
         // Switch to project detail view
         document.getElementById('projects-view').style.display = 'none';
         document.getElementById('project-detail-view').style.display = 'block';
@@ -1952,12 +2141,12 @@ async function createProject() {
         const startDate = document.getElementById('projectStartDate').value;
         const endDate = document.getElementById('projectEndDate').value;
         
-        const teamMembersInput = document.getElementById('projectTeamMembers').value.trim();
+        // Get team members from Select2
+        const teamMembers = getSelectedTeamMemberIds();
         const budget = document.getElementById('projectBudget').value;
         const technologiesInput = document.getElementById('projectTechnologies').value.trim();
         
-        // Process team members and technologies
-        const teamMembers = teamMembersInput ? teamMembersInput.split(',').map(id => id.trim()) : [];
+        // Process technologies
         const technologies = technologiesInput ? technologiesInput.split(',').map(tech => tech.trim()) : [];
         
         // Prepare project data - send dates as strings
@@ -2003,7 +2192,8 @@ async function createProject() {
         document.getElementById('projectStatus').value = 'active';
         document.getElementById('projectStartDate').value = '';
         document.getElementById('projectEndDate').value = '';
-        document.getElementById('projectTeamMembers').value = '';
+        // Reset Select2 dropdown
+        $('#teamMembersSelect').val(null).trigger('change');
         document.getElementById('projectBudget').value = '';
         document.getElementById('projectTechnologies').value = '';
         
@@ -2038,12 +2228,12 @@ async function updateProject() {
         const startDate = document.getElementById('editProjectStartDate').value;
         const endDate = document.getElementById('editProjectEndDate').value;
         
-        const teamMembersInput = document.getElementById('editProjectTeamMembers').value.trim();
+        // Get team members from edit Select2
+        const teamMembers = getSelectedEditTeamMemberIds();
         const budget = document.getElementById('editProjectBudget').value;
         const technologiesInput = document.getElementById('editProjectTechnologies').value.trim();
         
-        // Process team members and technologies
-        const teamMembers = teamMembersInput ? teamMembersInput.split(',').map(id => id.trim()) : [];
+        // Process technologies
         const technologies = technologiesInput ? technologiesInput.split(',').map(tech => tech.trim()) : [];
         
         // Prepare project data
@@ -2159,18 +2349,47 @@ function populateTaskBoard(tasks) {
         taskElement.setAttribute('data-task-id', task._id);
         
         const dueDate = task.due_date ? formatDate(task.due_date) : 'No due date';
-        const assigneeName = task.assigned_to || 'Unassigned';
-        const assigneeInitial = assigneeName !== 'Unassigned' ? assigneeName.charAt(0).toUpperCase() : 'U';
+        
+        // Handle multiple assignees
+        let assigneeHtml = '<div class="task-assignee">Unassigned</div>';
+        
+        if (task.assigned_to && task.assigned_to.length > 0) {
+            // Find user names from cache
+            const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+            const assigneeNames = assignees.map(id => {
+                const user = userListCache.find(u => u._id === id);
+                return user ? (user.name || user.username) : id;
+            });
+            
+            // Create avatars for up to 3 assignees
+            const avatarsHtml = assignees.slice(0, 3).map(id => {
+                const user = userListCache.find(u => u._id === id);
+                const name = user ? (user.name || user.username) : id;
+                const initial = name.charAt(0).toUpperCase();
+                return `<div class="assignee-avatar" title="${name}">${initial}</div>`;
+            }).join('');
+            
+            // Show how many more assignees there are
+            const extraAssignees = assignees.length > 3 ? `+${assignees.length - 3}` : '';
+            const extraHtml = extraAssignees ? `<div class="assignee-avatar more-assignees" title="${assignees.length} assignees">${extraAssignees}</div>` : '';
+            
+            assigneeHtml = `
+                <div class="task-assignee">
+                    <span>${assigneeNames.length > 1 ? 'Multiple assignees' : assigneeNames[0]}</span>
+                    <div class="team-avatars">
+                        ${avatarsHtml}
+                        ${extraHtml}
+                    </div>
+                </div>
+            `;
+        }
         
         taskElement.innerHTML = `
             <h4 class="task-title">${task.title}</h4>
             <p class="task-description">${task.description || 'No description'}</p>
             <div class="task-meta">
                 <div class="task-due-date">Due: ${dueDate}</div>
-                <div class="task-assignee">
-                    ${assigneeName}
-                    <div class="assignee-avatar" title="${assigneeName}">${assigneeInitial}</div>
-                </div>
+                ${assigneeHtml}
             </div>
         `;
         
@@ -2212,8 +2431,8 @@ async function createTask() {
         const description = document.getElementById('taskDescription').value.trim();
         const status = document.getElementById('taskStatus').value;
         
-        // Get assigned user ID
-        const assignedTo = document.getElementById('taskAssignee').value.trim();
+        // Get assigned user IDs from Select2
+        const assignedTo = getSelectedTaskAssignees();
         
         // Get due date as a string - no conversion needed
         const dueDate = document.getElementById('taskDueDate').value;
@@ -2223,7 +2442,7 @@ async function createTask() {
             title,
             description,
             status,
-            assigned_to: assignedTo,
+            assigned_to: assignedTo.length > 0 ? assignedTo[0] : '', // Send only the first assignee as a string
             due_date: dueDate
         };
         
@@ -2253,7 +2472,8 @@ async function createTask() {
         document.getElementById('taskTitle').value = '';
         document.getElementById('taskDescription').value = '';
         document.getElementById('taskStatus').value = 'todo';
-        document.getElementById('taskAssignee').value = '';
+        // Reset Select2 dropdown
+        $('#taskAssigneeSelect').val(null).trigger('change');
         document.getElementById('taskDueDate').value = '';
         
         // Remove selected user info if exists
@@ -2289,8 +2509,8 @@ async function updateTask() {
         const description = document.getElementById('editTaskDescription').value.trim();
         const status = document.getElementById('editTaskStatus').value;
         
-        // Get assigned user ID
-        const assignedTo = document.getElementById('editTaskAssignee').value.trim();
+        // Get assigned user IDs from Select2
+        const assignedTo = getSelectedEditTaskAssignees();
         
         // Get due date as a string - no conversion needed
         const dueDate = document.getElementById('editTaskDueDate').value;
@@ -2300,7 +2520,7 @@ async function updateTask() {
             title,
             description,
             status,
-            assigned_to: assignedTo,
+            assigned_to: assignedTo.length > 0 ? assignedTo[0] : '', // Send only the first assignee as a string
             due_date: dueDate
         };
         
@@ -2493,25 +2713,16 @@ function initializeUserSearch(inputElement, resultsContainer) {
 
 // Setup user search fields on the page
 function setupUserSearchFields() {
+    // Fetch all users at startup to populate our cache
+    fetchAllUsers();
+    
+    // For backward compatibility, keep the old search functionality
     // Create results containers
     const createContainer = document.createElement('div');
     createContainer.className = 'search-results';
     
     const editContainer = document.createElement('div');
     editContainer.className = 'search-results';
-    
-    // Add to DOM
-    const taskAssigneeInput = document.getElementById('taskAssignee');
-    if (taskAssigneeInput) {
-        taskAssigneeInput.parentNode.appendChild(createContainer);
-        initializeUserSearch(taskAssigneeInput, createContainer);
-    }
-    
-    const editTaskAssigneeInput = document.getElementById('editTaskAssignee');
-    if (editTaskAssigneeInput) {
-        editTaskAssigneeInput.parentNode.appendChild(editContainer);
-        initializeUserSearch(editTaskAssigneeInput, editContainer);
-    }
 }
 
 // ========================
@@ -2528,89 +2739,78 @@ function openCreateTaskModal(initialStatus) {
     defaultDueDate.setDate(defaultDueDate.getDate() + 7);
     document.getElementById('taskDueDate').value = formatDateInput(defaultDueDate);
     
+    // Get current user and project for permission checking
+    getCurrentUser().then(currentUser => {
+        // For employees, set themselves as the default assignee
+        if (currentUser.role === 'employee') {
+            populateTaskAssigneeDropdown('taskAssigneeSelect', [currentUser._id]);
+        } else {
+            populateTaskAssigneeDropdown('taskAssigneeSelect', []);
+        }
+    });
+    
     document.getElementById('createTaskModal').style.display = 'flex';
 }
 
 // Open edit task modal
 function openEditTaskModal(task) {
-    // Populate form with task data
-    document.getElementById('editTaskId').value = task._id;
-    document.getElementById('editTaskProjectId').value = document.getElementById('taskProjectId').value;
-    document.getElementById('editTaskTitle').value = task.title || '';
-    document.getElementById('editTaskDescription').value = task.description || '';
-    document.getElementById('editTaskStatus').value = task.status || 'todo';
-    
-    // Handle assignee
-    const assigneeInput = document.getElementById('editTaskAssignee');
-    assigneeInput.value = task.assigned_to || '';
-    
-    // Remove previous selected user info if exists
-    const selectedUserInfo = assigneeInput.parentNode.querySelector('.selected-user-info');
-    if (selectedUserInfo) {
-        selectedUserInfo.remove();
-    }
-    
-    // Show assignee input
-    assigneeInput.style.display = 'block';
-    
-    // If task has assignee, create selected user display
-    if (task.assigned_to) {
-        // Try to get user details
-        (async () => {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch(`/users/${task.assigned_to}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const user = await response.json();
-                    
-                    // Create selected user info
-                    const selectedUserInfo = document.createElement('div');
-                    selectedUserInfo.className = 'selected-user-info';
-                    
-                    const displayName = user.first_name && user.last_name ? 
-                        `${user.first_name} ${user.last_name}` : user.username;
-                    
-                    selectedUserInfo.innerHTML = `
-                        <div class="selected-user-avatar">${displayName.charAt(0).toUpperCase()}</div>
-                        <div class="selected-user-details">
-                            <div class="selected-user-name">${displayName}</div>
-                            <div class="selected-user-username">@${user.username}</div>
-                        </div>
-                        <button class="clear-selection" type="button">&times;</button>
-                    `;
-                    
-                    // Clear selection button
-                    const clearButton = selectedUserInfo.querySelector('.clear-selection');
-                    clearButton.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        assigneeInput.value = '';
-                        selectedUserInfo.remove();
-                        assigneeInput.style.display = 'block';
-                    });
-                    
-                    // Add to DOM and hide input
-                    assigneeInput.parentNode.insertBefore(selectedUserInfo, assigneeInput.nextSibling);
-                    assigneeInput.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error fetching user details:', error);
+    // Check permissions first
+    getCurrentUser().then(async currentUser => {
+        const projectId = document.getElementById('taskProjectId').value;
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectResponse = await fetch(`/projects/${projectId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const project = await projectResponse.json();
+        
+        if (!canEditTask(task, project, currentUser)) {
+            showToast('You do not have permission to edit this task');
+            return;
+        }
+        
+        // Populate form with task data
+        document.getElementById('editTaskId').value = task._id;
+        document.getElementById('editTaskProjectId').value = projectId;
+        document.getElementById('editTaskTitle').value = task.title || '';
+        document.getElementById('editTaskDescription').value = task.description || '';
+        document.getElementById('editTaskStatus').value = task.status || 'todo';
+        
+        // Handle assignees with Select2
+        const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : 
+                         (task.assigned_to ? [task.assigned_to] : []);
+        
+        // For employees, limit editing capabilities
+        if (currentUser.role === 'employee') {
+            // Employees can only change status, not title, description, or assignees
+            document.getElementById('editTaskTitle').disabled = true;
+            document.getElementById('editTaskDescription').disabled = true;
+            document.getElementById('editTaskDueDate').disabled = true;
+            
+            // Only allow status change if they are assigned to the task
+            const isAssigned = assignees.includes(currentUser._id);
+            if (!isAssigned && project.created_by !== currentUser._id) {
+                showToast('You can only edit tasks assigned to you or in projects you created');
+                return;
             }
-        })();
-    }
-    
-    // Set due date
-    if (task.due_date) {
-        document.getElementById('editTaskDueDate').value = formatDateInput(task.due_date);
-    } else {
-        document.getElementById('editTaskDueDate').value = '';
-    }
-    
-    document.getElementById('editTaskModal').style.display = 'flex';
+        } else {
+            // Re-enable all fields for non-employees
+            document.getElementById('editTaskTitle').disabled = false;
+            document.getElementById('editTaskDescription').disabled = false;
+            document.getElementById('editTaskDueDate').disabled = false;
+        }
+        
+        // Initialize and populate task assignee dropdown
+        populateTaskAssigneeDropdown('editTaskAssigneeSelect', assignees);
+        
+        // Set due date
+        if (task.due_date) {
+            document.getElementById('editTaskDueDate').value = formatDateInput(task.due_date);
+        } else {
+            document.getElementById('editTaskDueDate').value = '';
+        }
+        
+        document.getElementById('editTaskModal').style.display = 'flex';
+    });
 }
 
 // Open edit project modal with current project data
@@ -2648,7 +2848,9 @@ async function openEditProjectModal(projectId) {
             document.getElementById('editProjectEndDate').value = '';
         }
         
-        document.getElementById('editProjectTeamMembers').value = project.team_members.join(', ');
+        // Initialize team members dropdown with current values
+        setupEditTeamMembersDropdown(project.team_members);
+        
         document.getElementById('editProjectBudget').value = project.budget || '';
         document.getElementById('editProjectTechnologies').value = project.technologies.join(', ');
         
@@ -2809,6 +3011,9 @@ function setupEventListeners() {
         endDate.setMonth(endDate.getMonth() + 3); // Default to 3 months from now
         document.getElementById('projectEndDate').value = formatDateInput(endDate);
         
+        // Initialize team members dropdown
+        setupTeamMembersDropdownForProjectEdit([]);
+        
         document.getElementById('createProjectModal').style.display = 'flex';
     });
     
@@ -2896,6 +3101,201 @@ function showToast(message) {
         toast.classList.remove('show');
     }, 3000);
 }
+
+// Projects Module - Continued
+
+function populateEditTeamMembersDropdown(selectedUserIds = []) {
+    const select = document.getElementById('editTeamMembersSelect');
+    select.innerHTML = '';
+    userListCache.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = user.name || user.username || user._id;
+        if (selectedUserIds.includes(user._id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    // Initialize Select2 with enhanced search
+    $(select).select2({
+        placeholder: "Select team members",
+        allowClear: true,
+        width: '100%',
+        // Enhanced search configuration
+        matcher: function(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            // Skip if there is no 'text' property
+            if (typeof data.text !== 'string') {
+                return null;
+            }
+            
+            // `params.term` should be the term that is used for searching
+            // `data.text` is the text that is displayed for the data object
+            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                // Return modified object so Select2 can highlight the matches
+                return data;
+            }
+            
+            // Return `null` if the term should not be displayed
+            return null;
+        }
+    });
+}
+
+// Get selected team members from edit form
+function getSelectedEditTeamMemberIds() {
+    return $('#editTeamMembersSelect').val() || [];
+}
+
+// Setup edit team members dropdown
+async function setupEditTeamMembersDropdown(existingUserIds = []) {
+    await fetchAllUsers();
+    populateEditTeamMembersDropdown(existingUserIds);
+}
     </script>
+
+<!-- Include Select2 for a better multi-select experience -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+let userListCache = [];
+
+async function fetchAllUsers() {
+    const token = localStorage.getItem('bhoomitechzone_token');
+    try {
+        const response = await fetch('/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        userListCache = await response.json();
+        return userListCache;
+    } catch (err) {
+        console.error('Error loading users:', err);
+        showToast('Error loading users');
+        return [];
+    }
+}
+
+function populateTeamMembersDropdown(selectedUserIds = []) {
+    const select = document.getElementById('teamMembersSelect');
+    select.innerHTML = '';
+    userListCache.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = user.name || user.username || user._id;
+        if (selectedUserIds.includes(user._id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    // Initialize Select2 with enhanced search
+    $(select).select2({
+        placeholder: "Select team members",
+        allowClear: true,
+        width: '100%',
+        // Enhanced search configuration
+        matcher: function(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            // Skip if there is no 'text' property
+            if (typeof data.text !== 'string') {
+                return null;
+            }
+            
+            // `params.term` should be the term that is used for searching
+            // `data.text` is the text that is displayed for the data object
+            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                // Return modified object so Select2 can highlight the matches
+                return data;
+            }
+            
+            // Return `null` if the term should not be displayed
+            return null;
+        }
+    });
+}
+
+// Call this function whenever you open the Project modal for Add/Edit
+async function setupTeamMembersDropdownForProjectEdit(existingUserIds = []) {
+    await fetchAllUsers();
+    populateTeamMembersDropdown(existingUserIds);
+}
+
+// When submitting the form, get selected user IDs like this:
+function getSelectedTeamMemberIds() {
+    return $('#teamMembersSelect').val() || [];
+}
+
+// Get selected task assignees
+function getSelectedTaskAssignees() {
+    return $('#taskAssigneeSelect').val() || [];
+}
+
+// Get selected task assignees for edit form
+function getSelectedEditTaskAssignees() {
+    return $('#editTaskAssigneeSelect').val() || [];
+}
+
+// Populate the task assignee dropdown
+function populateTaskAssigneeDropdown(selectId, selectedUserIds = []) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '';
+    
+    // Get allowed assignees based on current user role
+    getCurrentUser().then(currentUser => {
+        const allowedUsers = getAllowedTaskAssignees(null, currentUser);
+        
+        allowedUsers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user._id;
+            option.textContent = user.name || user.username || user._id;
+            if (selectedUserIds.includes(user._id)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        // Initialize Select2 with enhanced search
+        $(select).select2({
+            placeholder: "Select assignees",
+            allowClear: true,
+            width: '100%',
+            // Enhanced search configuration
+            matcher: function(params, data) {
+                // If there are no search terms, return all of the data
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+            
+                // Skip if there is no 'text' property
+                if (typeof data.text !== 'string') {
+                    return null;
+                }
+                
+                // `params.term` should be the term that is used for searching
+                // `data.text` is the text that is displayed for the data object
+                if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                    // Return modified object so Select2 can highlight the matches
+                    return data;
+                }
+                
+                // Return `null` if the term should not be displayed
+                return null;
+            }
+        });
+    });
+}
+</script>
 </body>
 </html>

@@ -87,6 +87,30 @@ class AttendanceResponse(BaseModel):
 
 class DatabaseAttendance:
     @staticmethod
+    async def get_attendance_by_date_range(
+        user_id: str, start_date: date, end_date: date
+    ) -> List[Attendance]:
+        # Ensure user_id is string
+        user_id = str(user_id)
+        
+        # Convert dates to strings for MongoDB query
+        start_date_str = start_date.isoformat() if isinstance(start_date, date) else start_date
+        end_date_str = end_date.isoformat() if isinstance(end_date, date) else end_date
+        
+        print(f"Getting attendance for user {user_id} from {start_date_str} to {end_date_str}")
+        
+        # Find attendance records in date range
+        cursor = attendance_collection.find({
+            "user_id": user_id,
+            "date": {"$gte": start_date_str, "$lte": end_date_str}
+        }).sort("date", -1)
+        
+        # Use list() instead of to_list() for synchronous PyMongo
+        attendance_records = list(cursor)
+        return [Attendance(**record) for record in attendance_records]
+    
+    
+    @staticmethod
     async def check_in(check_in_data: AttendanceCheckIn) -> Attendance:
         # Use the user_id from check_in_data if provided, otherwise use None
         user_id = str(check_in_data.user_id) if check_in_data.user_id else None

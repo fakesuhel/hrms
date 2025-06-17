@@ -133,6 +133,24 @@ class UserSearchResult(BaseModel):
 
 class DatabaseProjects:
     @staticmethod
+    async def get_user_projects(user_id: str) -> List[Project]:
+        """
+        Get all projects where the user is either a manager or a team member.
+        """
+        query = {
+            "$or": [
+                {"manager_id": user_id},
+                {"team_members": user_id}
+            ]
+        }
+        
+        cursor = projects_collection.find(query).sort("created_at", -1)
+        projects = list(cursor)
+        
+        return [Project(**project) for project in projects]
+    
+    
+    @staticmethod
     async def create_project(project_data: ProjectCreate, manager_id: str) -> Project:
         # Keep dates as strings
         start_date = project_data.start_date if project_data.start_date else None
@@ -465,3 +483,53 @@ class DatabaseProjects:
             "upcoming_tasks": upcoming_tasks,
             "timestamp": current_time
         }
+    
+    @classmethod
+    async def get_users_from_active_projects_and_tasks(cls, reviewer_id: str) -> List[str]:
+        """
+        Get all users who are either:
+        1. Team members in any active project where the reviewer is a manager
+        2. Assigned to any active task (not completed) in those projects
+        
+        Args:
+            reviewer_id: The ID of the reviewer (team lead, manager, or director)
+            
+        Returns:
+            List of user IDs
+        """
+        # Convert reviewer_id to string if it's not already
+        reviewer_id_str = str(reviewer_id)
+        
+        # Find all active projects where this user is the manager
+        projects_cursor = projects_collection.find({
+            "manager_id": reviewer_id_str,
+            "status": "active"
+        })
+        
+        projects = list(projects_cursor)
+        
+        # Set to store unique user IDs
+        user_ids = set()
+        
+        for project in projects:
+            # Add all team members
+            if project.get("team_members"):
+                for member in project["team_members"]:
+                    user_ids.add(str(member))
+            
+            # Add all task assignees for non-completed tasks
+            if project.get("tasks"):
+                for task in project["tasks"]:
+                    if task.get("status") != "completed" and task.get("assigned_to"):
+                        # Handle both string and list assignees
+                        if isinstance(task["assigned_to"], list):
+                            for assignee in task["assigned_to"]:
+                                user_ids.add(str(assignee))
+                        else:
+                            user_ids.add(str(task["assigned_to"]))
+        
+        # Remove the reviewer from the list
+        if reviewer_id_str in user_ids:
+            user_ids.remove(reviewer_id_str)
+            
+        return list(user_ids)

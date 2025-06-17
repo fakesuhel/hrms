@@ -11,6 +11,26 @@ from app.database.performance_reviews import (
 )
 from app.utils.auth import get_current_user
 
+def convert_review_to_response(review) -> dict:
+    """Convert a review object to response format with proper field conversions"""
+    response_data = review.dict(by_alias=True)
+    response_data["_id"] = str(response_data["_id"])
+    response_data["user_id"] = str(response_data["user_id"])
+    response_data["reviewer_id"] = str(response_data["reviewer_id"])
+    
+    # Convert ratings to proper format
+    if "ratings" in response_data and response_data["ratings"]:
+        response_data["ratings"] = [
+            {
+                "category": rating.get("category", ""),
+                "rating": rating.get("rating", 0.0),
+                "comments": rating.get("comments")  # Allow None
+            }
+            for rating in response_data["ratings"]
+        ]
+    
+    return response_data
+
 router = APIRouter(
     prefix="/performance-reviews",
     tags=["performance_reviews"],
@@ -23,7 +43,7 @@ async def create_performance_review(
     current_user = Depends(get_current_user)
 ):
     # Verify user has permission to create reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to create performance reviews"
@@ -36,20 +56,31 @@ async def create_performance_review(
             detail="Reviewer must be the current user"
         )
     
-    # Check if the user being reviewed is under this manager
+    # Get all valid team members for this reviewer
     from app.database.users import DatabaseUsers
     team_members = await DatabaseUsers.get_team_members_by_manager(str(current_user.id))
     team_ids = [str(member.id) for member in team_members]
     
-    if str(review_data.user_id) not in team_ids and current_user.role != 'admin':
+    # Get users from active projects and tasks where reviewer is manager
+    from app.database.projects import DatabaseProjects
+    project_user_ids = await DatabaseProjects.get_users_from_active_projects_and_tasks(str(current_user.id))
+    
+    # Combine both lists of valid users
+    valid_user_ids = set(team_ids).union(set(project_user_ids))
+    
+    # Check if the user being reviewed is valid
+    if str(review_data.user_id) not in valid_user_ids and current_user.role != 'admin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot create reviews for users outside your team"
+            detail="Cannot create reviews for users outside your team, projects, or tasks"
         )
     
     try:
         review = await DatabasePerformanceReviews.create_review(review_data)
-        return PerformanceReviewResponse(**review.dict(by_alias=True))
+        
+        # Convert to response format
+        response_data = convert_review_to_response(review)
+        return PerformanceReviewResponse(**response_data)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -61,11 +92,68 @@ async def create_performance_review(
             detail=str(e)
         )
 
+@router.get("/eligible-users", response_model=List[dict])
+async def get_eligible_users_for_review(
+    current_user = Depends(get_current_user)
+):
+    """Get all users that the current user can create performance reviews for"""
+    # Verify user has permission to create reviews
+    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to conduct performance reviews"
+        )
+    
+    try:
+        # Get team members from organizational hierarchy
+        from app.database.users import DatabaseUsers
+        team_members = await DatabaseUsers.get_team_members_by_manager(str(current_user.id))
+        team_ids = [str(member.id) for member in team_members]
+        
+        # Get users from active projects and tasks
+        from app.database.projects import DatabaseProjects
+        project_user_ids = await DatabaseProjects.get_users_from_active_projects_and_tasks(str(current_user.id))
+        
+        # Combine both lists of valid users
+        valid_user_ids = set(team_ids).union(set(project_user_ids))
+        
+        # Get full user details for all eligible users
+        eligible_users = []
+        for user_id in valid_user_ids:
+            user = await DatabaseUsers.get_user_by_id(user_id)
+            if user and user.is_active:
+                eligible_users.append({
+                    "_id": str(user.id),
+                    "id": str(user.id),
+                    "username": user.username,
+                    "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip() or user.username,
+                    "name": user.first_name or user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "position": user.position,
+                    "department": user.department,
+                    "role": user.role
+                })
+        
+        return eligible_users
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get eligible users: {str(e)}"
+        )
+
 @router.get("/", response_model=List[PerformanceReviewResponse])
 async def get_my_performance_reviews(current_user = Depends(get_current_user)):
     """Get all performance reviews for the current user"""
     reviews = await DatabasePerformanceReviews.get_user_reviews(str(current_user.id))
-    return [PerformanceReviewResponse(**review.dict(by_alias=True)) for review in reviews]
+    
+    response_reviews = []
+    for review in reviews:
+        response_data = convert_review_to_response(review)
+        response_reviews.append(PerformanceReviewResponse(**response_data))
+    
+    return response_reviews
 
 @router.get("/conducting", response_model=List[PerformanceReviewResponse])
 async def get_reviews_conducted(
@@ -74,14 +162,20 @@ async def get_reviews_conducted(
 ):
     """Get all reviews conducted by the current user"""
     # Verify user can conduct reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to conduct performance reviews"
         )
     
     reviews = await DatabasePerformanceReviews.get_reviews_by_reviewer(str(current_user.id), status)
-    return [PerformanceReviewResponse(**review.dict(by_alias=True)) for review in reviews]
+    
+    response_reviews = []
+    for review in reviews:
+        response_data = convert_review_to_response(review)
+        response_reviews.append(PerformanceReviewResponse(**response_data))
+    
+    return response_reviews
 
 @router.get("/team/{review_period}", response_model=List[PerformanceReviewResponse])
 async def get_team_reviews(
@@ -90,19 +184,33 @@ async def get_team_reviews(
 ):
     """Get all reviews for a team in a specific period"""
     # Verify user has permission to view team reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view team reviews"
         )
     
-    # Get team members
+    # Get team members from organizational hierarchy
     from app.database.users import DatabaseUsers
     team_members = await DatabaseUsers.get_team_members_by_manager(str(current_user.id))
     team_ids = [str(member.id) for member in team_members]
     
-    reviews = await DatabasePerformanceReviews.get_team_reviews(team_ids, review_period)
-    return [PerformanceReviewResponse(**review.dict(by_alias=True)) for review in reviews]
+    # Get users from active projects and tasks
+    from app.database.projects import DatabaseProjects
+    project_user_ids = await DatabaseProjects.get_users_from_active_projects_and_tasks(str(current_user.id))
+    
+    # Combine both lists of valid users
+    valid_user_ids = set(team_ids).union(set(project_user_ids))
+    
+    # Get reviews for all valid users
+    reviews = await DatabasePerformanceReviews.get_team_reviews(list(valid_user_ids), review_period)
+    
+    response_reviews = []
+    for review in reviews:
+        response_data = convert_review_to_response(review)
+        response_reviews.append(PerformanceReviewResponse(**response_data))
+    
+    return response_reviews
 
 @router.get("/stats", response_model=dict)
 async def get_performance_stats(
@@ -137,7 +245,8 @@ async def get_review_by_id(
             detail="Not authorized to view this review"
         )
     
-    return PerformanceReviewResponse(**review.dict(by_alias=True))
+    response_data = convert_review_to_response(review)
+    return PerformanceReviewResponse(**response_data)
 
 @router.put("/{review_id}", response_model=PerformanceReviewResponse)
 async def update_review(
@@ -169,7 +278,9 @@ async def update_review(
         )
     
     updated_review = await DatabasePerformanceReviews.update_review(review_id, review_data)
-    return PerformanceReviewResponse(**updated_review.dict(by_alias=True))
+    
+    response_data = convert_review_to_response(updated_review)
+    return PerformanceReviewResponse(**response_data)
 
 @router.post("/{review_id}/acknowledge", response_model=PerformanceReviewResponse)
 async def acknowledge_review(
@@ -208,4 +319,6 @@ async def acknowledge_review(
         )
     
     acknowledged_review = await DatabasePerformanceReviews.acknowledge_review(review_id, acknowledgement)
-    return PerformanceReviewResponse(**acknowledged_review.dict(by_alias=True))
+    
+    response_data = convert_review_to_response(acknowledged_review)
+    return PerformanceReviewResponse(**response_data)
