@@ -22,6 +22,152 @@ import uuid
 
 router = APIRouter(prefix="/api/hr", tags=["hr"])
 
+# Dashboard Endpoints
+@router.get("/dashboard/stats")
+async def get_dashboard_stats(current_user: UserInDB = Depends(get_current_user)):
+    """Get HR dashboard statistics"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view HR dashboard stats"
+        )
+    
+    try:
+        from app.database.users import users_collection
+        from app.database.attendance import attendance_collection
+        from app.database.recruitment import job_postings_collection
+        
+        # Total employees
+        total_employees = users_collection.count_documents({"is_active": True})
+        
+        # Today's attendance rate
+        today = datetime.now().date()
+        today_attendance = attendance_collection.count_documents({
+            "date": today.isoformat(),
+            "check_in": {"$exists": True}
+        })
+        attendance_rate = (today_attendance / total_employees * 100) if total_employees > 0 else 0
+        
+        # Monthly payroll (placeholder - would need payroll collection)
+        monthly_payroll = 0  # This would be calculated from actual payroll data
+        
+        # Open positions
+        open_positions = job_postings_collection.count_documents({"status": "active"})
+        
+        return {
+            "total_employees": total_employees,
+            "attendance_rate": attendance_rate,
+            "monthly_payroll": monthly_payroll,
+            "open_positions": open_positions
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching dashboard stats: {str(e)}")
+
+@router.get("/attendance/today")
+async def get_today_attendance(
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Get today's attendance records"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view attendance data"
+        )
+    
+    try:
+        from app.database.attendance import attendance_collection
+        from app.database.users import users_collection
+        
+        target_date = date if date else datetime.now().date().isoformat()
+        
+        # Get attendance records for the date
+        attendance_records = list(attendance_collection.find({"date": target_date}))
+        
+        # Enrich with user data
+        enriched_records = []
+        for record in attendance_records:
+            user = users_collection.find_one({"_id": record.get("user_id")})
+            if user:
+                enriched_records.append({
+                    **record,
+                    "employee_name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                    "department": user.get("department", "N/A"),
+                    "is_late": record.get("is_late", False),
+                    "status": "present" if record.get("check_in") else "absent"
+                })
+        
+        return enriched_records
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching today's attendance: {str(e)}")
+
+@router.get("/activities/recent")
+async def get_recent_activities(current_user: UserInDB = Depends(get_current_user)):
+    """Get recent HR activities"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view HR activities"
+        )
+    
+    try:
+        # This would be populated from various activity logs
+        # For now, return sample data
+        activities = [
+            {
+                "title": "New Employee Onboarding",
+                "description": "John Doe joined the Development team",
+                "timestamp": datetime.now().isoformat()
+            },
+            {
+                "title": "Leave Request Approved",
+                "description": "Annual leave approved for Jane Smith",
+                "timestamp": datetime.now().isoformat()
+            }
+        ]
+        return activities
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching recent activities: {str(e)}")
+
+@router.get("/pending-actions")
+async def get_pending_actions(current_user: UserInDB = Depends(get_current_user)):
+    """Get pending HR actions"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view pending actions"
+        )
+    
+    try:
+        from app.database.leave_requests import leave_requests_collection
+        from app.database.recruitment import applications_collection
+        
+        pending_actions = []
+        
+        # Pending leave requests
+        pending_leaves = leave_requests_collection.count_documents({"status": "pending"})
+        if pending_leaves > 0:
+            pending_actions.append({
+                "title": "Leave Requests",
+                "count": pending_leaves,
+                "type": "leave_requests",
+                "url": "/web/departments/hr/leave-requests"
+            })
+        
+        # Pending job applications
+        pending_applications = applications_collection.count_documents({"status": "applied"})
+        if pending_applications > 0:
+            pending_actions.append({
+                "title": "Job Applications",
+                "count": pending_applications,
+                "type": "applications",
+                "url": "/web/departments/hr/recruitment"
+            })
+        
+        return pending_actions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching pending actions: {str(e)}")
+
 # Employee Management
 @router.get("/employees", response_model=List[dict])
 async def get_all_employees(
@@ -30,7 +176,7 @@ async def get_all_employees(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get all employees (HR only)"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view all employees"
@@ -68,7 +214,7 @@ async def get_employee_by_id(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get employee details by ID"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view employee details"
@@ -168,7 +314,7 @@ async def get_job_postings(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get all job postings"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view job postings"
@@ -679,4 +825,356 @@ async def get_leave_summary_report(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating leave report: {str(e)}"
+        )
+
+# Payroll Management Endpoints
+@router.get("/payroll")
+async def get_payroll_data(
+    month: Optional[str] = Query(None, description="Month (01-12)"),
+    year: Optional[int] = Query(None, description="Year"),
+    department: Optional[str] = Query(None, description="Filter by department"),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Get payroll data for specified month/year"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view payroll data"
+        )
+    
+    try:
+        from app.database.users import users_collection
+        from app.database.salary_slips import salary_slips_collection
+        
+        current_date = datetime.now()
+        target_month = month or f"{current_date.month:02d}"
+        target_year = year or current_date.year
+        
+        # Check if payroll exists for this month/year
+        payroll_query = {
+            "month": target_month,
+            "year": target_year
+        }
+        if department:
+            payroll_query["department"] = department
+        
+        payroll_records = list(salary_slips_collection.find(payroll_query))
+        
+        if payroll_records:
+            # Return existing payroll data
+            for record in payroll_records:
+                record["id"] = str(record.pop("_id"))
+            return payroll_records
+        else:
+            # Return 404 if no payroll data exists
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No payroll data found for the specified period"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching payroll data: {str(e)}"
+        )
+
+@router.post("/payroll/generate")
+async def generate_payroll(
+    payroll_request: dict,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Generate payroll for specified month/year"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate payroll"
+        )
+    
+    try:
+        from app.database.users import users_collection
+        from app.database.salary_slips import salary_slips_collection
+        from app.database.attendance import attendance_collection
+        
+        month = payroll_request.get("month")
+        year = payroll_request.get("year")
+        department = payroll_request.get("department")
+        include_bonuses = payroll_request.get("include_bonuses", True)
+        include_overtime = payroll_request.get("include_overtime", True)
+        
+        if not month or not year:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Month and year are required"
+            )
+        
+        # Get all active employees
+        employee_query = {"is_active": True}
+        if department:
+            employee_query["department"] = department
+        
+        employees = list(users_collection.find(employee_query))
+        
+        payroll_records = []
+        for employee in employees:
+            emp_id = str(employee["_id"])
+            base_salary = employee.get("salary", 0)
+            
+            # Calculate allowances
+            hra = base_salary * 0.20  # 20% HRA
+            medical_allowance = 1500
+            transport_allowance = 1200
+            overtime_amount = 0
+            bonus_amount = 0
+            
+            if include_overtime:
+                # Calculate overtime from attendance (placeholder)
+                overtime_hours = 0  # This would be calculated from attendance data
+                overtime_amount = overtime_hours * (base_salary / (22 * 8)) * 1.5  # 1.5x hourly rate
+            
+            if include_bonuses:
+                # Calculate performance bonus (placeholder)
+                bonus_amount = 0  # This would be calculated from performance data
+            
+            total_allowances = hra + medical_allowance + transport_allowance + overtime_amount + bonus_amount
+            
+            # Calculate deductions
+            pf = base_salary * 0.12  # 12% PF
+            esi = base_salary * 0.0075  # 0.75% ESI
+            income_tax = base_salary * 0.10 if base_salary > 50000 else 0  # 10% tax if salary > 50k
+            professional_tax = 200
+            late_penalty = 0  # This would be calculated from attendance data
+            
+            total_deductions = pf + esi + income_tax + professional_tax + late_penalty
+            net_salary = base_salary + total_allowances - total_deductions
+            
+            # Create salary slip record
+            salary_slip = {
+                "employee_id": emp_id,
+                "employee_name": f"{employee.get('first_name', '')} {employee.get('last_name', '')}".strip(),
+                "department": employee.get("department", ""),
+                "month": month,
+                "year": int(year),
+                "base_salary": base_salary,
+                "allowances": {
+                    "hra": hra,
+                    "medical": medical_allowance,
+                    "transport": transport_allowance,
+                    "overtime": overtime_amount,
+                    "bonus": bonus_amount
+                },
+                "total_allowances": total_allowances,
+                "deductions": {
+                    "pf": pf,
+                    "esi": esi,
+                    "income_tax": income_tax,
+                    "professional_tax": professional_tax,
+                    "late_penalty": late_penalty
+                },
+                "total_deductions": total_deductions,
+                "net_salary": net_salary,
+                "status": "processed",
+                "generated_by": str(current_user.id),
+                "generated_at": datetime.now(),
+                "pay_date": None
+            }
+            
+            payroll_records.append(salary_slip)
+        
+        # Insert all salary slips
+        if payroll_records:
+            result = salary_slips_collection.insert_many(payroll_records)
+            
+            return {
+                "message": "Payroll generated successfully",
+                "records_created": len(result.inserted_ids),
+                "month": month,
+                "year": year,
+                "department": department
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No employees found for payroll generation"
+            )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating payroll: {str(e)}"
+        )
+
+@router.get("/salary-slip/{employee_id}")
+async def download_salary_slip(
+    employee_id: str,
+    month: str = Query(..., description="Month (01-12)"),
+    year: int = Query(..., description="Year"),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Download salary slip PDF for an employee"""
+    if current_user.role not in ["director", "hr", "manager"] and str(current_user.id) != employee_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to download this salary slip"
+        )
+    
+    try:
+        from app.database.salary_slips import salary_slips_collection
+        from fastapi.responses import Response
+        
+        # Find the salary slip
+        salary_slip = salary_slips_collection.find_one({
+            "employee_id": employee_id,
+            "month": month,
+            "year": year
+        })
+        
+        if not salary_slip:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Salary slip not found"
+            )
+        
+        # Generate PDF (placeholder - you would use a PDF library like reportlab)
+        pdf_content = f"""
+        SALARY SLIP
+        Employee: {salary_slip['employee_name']}
+        Month/Year: {month}/{year}
+        Base Salary: ₹{salary_slip['base_salary']:,.2f}
+        Total Allowances: ₹{salary_slip['total_allowances']:,.2f}
+        Total Deductions: ₹{salary_slip['total_deductions']:,.2f}
+        Net Salary: ₹{salary_slip['net_salary']:,.2f}
+        """.encode('utf-8')
+        
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=salary_slip_{employee_id}_{month}_{year}.pdf"}
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating salary slip: {str(e)}"
+        )
+
+@router.put("/payroll/{employee_id}/mark-paid")
+async def mark_payroll_as_paid(
+    employee_id: str,
+    payment_data: dict,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Mark an employee's payroll as paid"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to mark payroll as paid"
+        )
+    
+    try:
+        from app.database.salary_slips import salary_slips_collection
+        
+        month = payment_data.get("month")
+        year = payment_data.get("year")
+        
+        result = salary_slips_collection.update_one(
+            {
+                "employee_id": employee_id,
+                "month": month,
+                "year": int(year)
+            },
+            {
+                "$set": {
+                    "status": "paid",
+                    "pay_date": datetime.now(),
+                    "paid_by": str(current_user.id)
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Payroll record not found"
+            )
+        
+        return {"message": "Payroll marked as paid successfully"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error marking payroll as paid: {str(e)}"
+        )
+
+@router.get("/salary-slips/bulk")
+async def download_bulk_salary_slips(
+    month: str = Query(..., description="Month (01-12)"),
+    year: int = Query(..., description="Year"),
+    department: Optional[str] = Query(None, description="Filter by department"),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Download bulk salary slips as ZIP file"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to download bulk salary slips"
+        )
+    
+    try:
+        from app.database.salary_slips import salary_slips_collection
+        from fastapi.responses import Response
+        import zipfile
+        import io
+        
+        # Find all salary slips for the period
+        query = {"month": month, "year": year}
+        if department:
+            query["department"] = department
+        
+        salary_slips = list(salary_slips_collection.find(query))
+        
+        if not salary_slips:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No salary slips found for the specified period"
+            )
+        
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for slip in salary_slips:
+                # Generate PDF content for each slip (placeholder)
+                pdf_content = f"""
+                SALARY SLIP
+                Employee: {slip['employee_name']}
+                Month/Year: {month}/{year}
+                Base Salary: ₹{slip['base_salary']:,.2f}
+                Total Allowances: ₹{slip['total_allowances']:,.2f}
+                Total Deductions: ₹{slip['total_deductions']:,.2f}
+                Net Salary: ₹{slip['net_salary']:,.2f}
+                """.encode('utf-8')
+                
+                filename = f"salary_slip_{slip['employee_id']}_{month}_{year}.pdf"
+                zip_file.writestr(filename, pdf_content)
+        
+        zip_buffer.seek(0)
+        
+        return Response(
+            content=zip_buffer.getvalue(),
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=bulk_salary_slips_{month}_{year}.zip"}
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating bulk salary slips: {str(e)}"
         )

@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Employee Management</title>
+    <style>
+        /* Include all the same CSS styles from dashboard.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Include all layout styles from dashboard... */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background-color: white; border-right: 1px solid var(--border-color); position: fixed; height: 100vh; z-index: 100; transition: all 0.3s ease; }
+        .sidebar-hidden .sidebar { transform: translateX(-100%); }
+        .main-content { flex: 1; margin-left: 250px; transition: all 0.3s ease; }
+        .sidebar-hidden .main-content { margin-left: 0; }
+        
+        .sidebar-header { padding: 1.5rem; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .company-logo { display: flex; align-items: center; }
+        .company-logo svg { margin-right: 0.75rem; }
+        .company-name { font-weight: 600; font-size: 1.25rem; }
+        
+        .nav-list { list-style: none; padding: 1rem 0; }
+        .nav-item { padding: 0.25rem 1.5rem; }
+        .nav-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: var(--border-radius); color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; }
+        .nav-link:hover { background-color: var(--bg-light); }
+        .nav-link.active { background-color: rgba(37, 99, 235, 0.1); color: var(--primary); font-weight: 500; }
+        .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; }
+        
+        .sidebar-footer { position: absolute; bottom: 0; width: 100%; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); }
+        
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background-color: white; border-bottom: 1px solid var(--border-color); }
+        .menu-toggle { background: none; border: none; cursor: pointer; display: none; }
+        .user-menu { display: flex; align-items: center; cursor: pointer; position: relative; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.5rem; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background-color: white; border-radius: var(--border-radius); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 200px; z-index: 100; display: none; }
+        .user-dropdown.active { display: block; }
+        .dropdown-item { padding: 0.75rem 1rem; color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; }
+        .dropdown-item:hover { background-color: var(--bg-light); }
+        .dropdown-item i { margin-right: 0.75rem; width: 20px; text-align: center; }
+        .dropdown-divider { height: 1px; background-color: var(--border-color); margin: 0.5rem 0; }
+        .page-title { font-size: 1.25rem; font-weight: 600; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.625rem 1.25rem; border-radius: 0.375rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; border: none; text-decoration: none; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-success:hover { background-color: #0da271; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-warning { background-color: var(--warning); color: white; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-outline { border: 1px solid var(--border-color); background-color: transparent; }
+        .btn-outline:hover { background-color: var(--bg-light); }
+        .btn i { margin-right: 0.5rem; }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+        
+        .card { background-color: white; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 1.5rem; }
+        .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 600; }
+        .card-body { padding: 1.5rem; }
+        
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .table th { background-color: var(--bg-light); font-weight: 500; color: var(--text-secondary); }
+        
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-info { background-color: rgba(59, 130, 246, 0.1); color: var(--info); }
+        
+        /* Form styles */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-input { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.875rem; }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .form-select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.875rem; background-color: white; }
+        .form-textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.875rem; resize: vertical; min-height: 100px; }
+        
+        /* Modal styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background-color: white; border-radius: var(--border-radius); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 1.25rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+        .modal-body { padding: 1.5rem; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem; }
+        
+        /* Filter and search styles */
+        .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 200px; }
+        
+        /* Toast notification */
+        .toast { position: fixed; bottom: 20px; right: 20px; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 1rem; border-radius: var(--border-radius); z-index: 1000; display: none; }
+        .toast.show { display: block; animation: toast-in-out 3s forwards; }
+        @keyframes toast-in-out { 0% { opacity: 0; transform: translateY(100%); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(100%); } }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .sidebar.active { transform: translateX(0); }
+            .filters { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <!-- Include the same sidebar as dashboard -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul id="navigationMenu" class="nav-list">
+                    <li class="nav-item">
+                        <a href="/app/hr/dashboard" class="nav-link">
+                            <i>📊</i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/employees" class="nav-link active">
+                            <i>👥</i>Employee Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/attendance" class="nav-link">
+                            <i>🕒</i>Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/payroll" class="nav-link">
+                            <i>💰</i>Payroll
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/recruitment" class="nav-link">
+                            <i>🎯</i>Recruitment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/leave-requests" class="nav-link">
+                            <i>📅</i>Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/performance" class="nav-link">
+                            <i>⭐</i>Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/reports" class="nav-link">
+                            <i>📈</i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/profile" class="nav-link">
+                            <i>👤</i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/settings" class="nav-link">
+                            <i>⚙️</i>Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">Loading...</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Employee Management</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">...</div>
+                    <span id="userTimeDisplay">Loading...</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/hr/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/hr/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main style="padding: 2rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Employee Management</h2>
+                        <button class="btn btn-primary" id="addEmployeeBtn">
+                            <i>👤➕</i> Add Employee
+                        </button>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="filters">
+                            <div class="search-box">
+                                <input type="text" id="searchInput" class="form-input" placeholder="Search employees...">
+                            </div>
+                            <select id="departmentFilter" class="form-select" style="min-width: 150px;">
+                                <option value="">All Departments</option>
+                                <option value="Development">Development</option>
+                                <option value="Sales">Sales</option>
+                                <option value="HR">HR</option>
+                                <option value="Management">Management</option>
+                            </select>
+                            <select id="statusFilter" class="form-select" style="min-width: 120px;">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="on_leave">On Leave</option>
+                            </select>
+                            <button class="btn btn-outline" id="clearFiltersBtn">
+                                <i>🔄</i> Clear
+                            </button>
+                        </div>
+                        
+                        <!-- Employee Table -->
+                        <div style="overflow-x: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Employee ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Position</th>
+                                        <th>Join Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeTableBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center;">Loading employees...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Employee</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <input type="hidden" id="employeeId" name="employeeId">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" id="phone" name="phone" class="form-input">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Department *</label>
+                            <select id="department" name="department" class="form-select" required>
+                                <option value="">Select Department</option>
+                                <option value="Development">Development</option>
+                                <option value="Sales">Sales</option>
+                                <option value="HR">HR</option>
+                                <option value="Management">Management</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Position *</label>
+                            <input type="text" id="position" name="position" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Join Date *</label>
+                            <input type="date" id="joinDate" name="joinDate" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Salary</label>
+                            <input type="number" id="salary" name="salary" class="form-input" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <textarea id="address" name="address" class="form-textarea"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Name</label>
+                            <input type="text" id="emergencyContactName" name="emergencyContactName" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Phone</label>
+                            <input type="tel" id="emergencyContactPhone" name="emergencyContactPhone" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="on_leave">On Leave</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveEmployeeBtn">Save Employee</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script src="/static/js/hr-utils.js?v=3"></script>
+    <script>
+        let employees = [];
+        let filteredEmployees = [];
+        
+        // Initialize employees page
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize HR page with user data and setup
+                const currentUser = await hrUtils.initializeHRPage();
+                
+                // Load employees data
+                await loadEmployees();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Error initializing employees page:', error);
+                hrUtils.showToast('Error loading employees page. Please refresh.', 'error');
+            }
+        });
+        
+        // Load employees
+        async function loadEmployees() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/hr/employees', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    employees = await response.json();
+                    filteredEmployees = [...employees];
+                    renderEmployeeTable();
+                } else {
+                    throw new Error('Failed to load employees');
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                document.getElementById('employeeTableBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center;">Error loading employees</td></tr>';
+            }
+        }
+        
+        // Render employee table
+        function renderEmployeeTable() {
+            const tableBody = document.getElementById('employeeTableBody');
+            
+            if (filteredEmployees.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No employees found</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = '';
+            filteredEmployees.forEach(employee => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = 'badge-success';
+                let statusText = 'Active';
+                
+                if (employee.status === 'inactive') {
+                    statusBadge = 'badge-danger';
+                    statusText = 'Inactive';
+                } else if (employee.status === 'on_leave') {
+                    statusBadge = 'badge-warning';
+                    statusText = 'On Leave';
+                }
+                
+                row.innerHTML = `
+                    <td>${employee.employee_id || employee._id}</td>
+                    <td>${employee.first_name} ${employee.last_name}</td>
+                    <td>${employee.email}</td>
+                    <td>${employee.department}</td>
+                    <td>${employee.position}</td>
+                    <td>${employee.join_date ? new Date(employee.join_date).toLocaleDateString() : 'N/A'}</td>
+                    <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="editEmployee('${employee._id || employee.id}')">
+                            <i>✏️</i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${employee._id || employee.id}')">
+                            <i>🗑️</i> Delete
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Filter employees
+        function filterEmployees() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            filteredEmployees = employees.filter(employee => {
+                const matchesSearch = 
+                    employee.first_name.toLowerCase().includes(searchTerm) ||
+                    employee.last_name.toLowerCase().includes(searchTerm) ||
+                    employee.email.toLowerCase().includes(searchTerm) ||
+                    employee.position.toLowerCase().includes(searchTerm);
+                
+                const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+                const matchesStatus = !statusFilter || employee.status === statusFilter;
+                
+                return matchesSearch && matchesDepartment && matchesStatus;
+            });
+            
+            renderEmployeeTable();
+        }
+        
+        // Add/Edit employee
+        function openEmployeeModal(employeeId = null) {
+            const modal = document.getElementById('employeeModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const form = document.getElementById('employeeForm');
+            
+            form.reset();
+            
+            if (employeeId) {
+                modalTitle.textContent = 'Edit Employee';
+                const employee = employees.find(emp => emp._id === employeeId || emp.id === employeeId);
+                if (employee) {
+                    document.getElementById('employeeId').value = employee._id || employee.id;
+                    document.getElementById('firstName').value = employee.first_name || '';
+                    document.getElementById('lastName').value = employee.last_name || '';
+                    document.getElementById('email').value = employee.email || '';
+                    document.getElementById('phone').value = employee.phone || '';
+                    document.getElementById('department').value = employee.department || '';
+                    document.getElementById('position').value = employee.position || '';
+                    document.getElementById('joinDate').value = employee.join_date ? employee.join_date.split('T')[0] : '';
+                    document.getElementById('salary').value = employee.salary || '';
+                    document.getElementById('address').value = employee.address || '';
+                    document.getElementById('emergencyContactName').value = employee.emergency_contact_name || '';
+                    document.getElementById('emergencyContactPhone').value = employee.emergency_contact_phone || '';
+                    document.getElementById('status').value = employee.status || 'active';
+                }
+            } else {
+                modalTitle.textContent = 'Add Employee';
+                document.getElementById('employeeId').value = '';
+                document.getElementById('joinDate').value = new Date().toISOString().split('T')[0];
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        // Save employee
+        async function saveEmployee() {
+            const form = document.getElementById('employeeForm');
+            const formData = new FormData(form);
+            const employeeId = formData.get('employeeId');
+            
+            const employeeData = {
+                first_name: formData.get('firstName'),
+                last_name: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                department: formData.get('department'),
+                position: formData.get('position'),
+                join_date: formData.get('joinDate'),
+                salary: parseFloat(formData.get('salary')) || 0,
+                address: formData.get('address'),
+                emergency_contact_name: formData.get('emergencyContactName'),
+                emergency_contact_phone: formData.get('emergencyContactPhone'),
+                status: formData.get('status')
+            };
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const url = employeeId ? `/api/hr/employees/${employeeId}` : '/api/hr/employees';
+                const method = employeeId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    showToast(employeeId ? 'Employee updated successfully' : 'Employee added successfully');
+                    await loadEmployees();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save employee');
+                }
+            } catch (error) {
+                console.error('Error saving employee:', error);
+                showToast('Error saving employee: ' + error.message);
+            }
+        }
+        
+        // Edit employee
+        function editEmployee(employeeId) {
+            openEmployeeModal(employeeId);
+        }
+        
+        // Delete employee
+        async function deleteEmployee(employeeId) {
+            if (!confirm('Are you sure you want to delete this employee?')) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/api/hr/employees/${employeeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('Employee deleted successfully');
+                    await loadEmployees();
+                } else {
+                    throw new Error('Failed to delete employee');
+                }
+            } catch (error) {
+                console.error('Error deleting employee:', error);
+                showToast('Error deleting employee');
+            }
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('employeeModal').style.display = 'none';
+        }
+        
+        // Show toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            try {
+                const currentUser = await getCurrentUser();
+                
+                if (currentUser) {
+                    const userTimeElement = document.getElementById('userTimeDisplay');
+                    if (userTimeElement) {
+                        userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        setInterval(() => {
+                            userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        }, 1000);
+                    }
+                    
+                    const initials = currentUser.first_name && currentUser.last_name ? 
+                                    (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
+                                    currentUser.username[0].toUpperCase();
+                    const userInitialsElement = document.getElementById('userInitials');
+                    if (userInitialsElement) {
+                        userInitialsElement.textContent = initials;
+                    }
+                    
+                    const sidebarUsernameElement = document.getElementById('sidebar-username');
+                    if (sidebarUsernameElement) {
+                        sidebarUsernameElement.textContent = currentUser.username;
+                    }
+                    
+                    const sidebarPositionElement = document.getElementById('sidebar-position');
+                    if (sidebarPositionElement) {
+                        sidebarPositionElement.textContent = currentUser.position || 'HR Team Member';
+                    }
+                }
+                
+                await loadEmployees();
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            if (menuToggle && dashboardContainer) {
+                menuToggle.addEventListener('click', function() {
+                    dashboardContainer.classList.toggle('sidebar-hidden');
+                });
+            }
+            
+            // User dropdown
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function() {
+                    userDropdown.classList.toggle('active');
+                });
+                document.addEventListener('click', function(event) {
+                    if (!userMenu.contains(event.target)) {
+                        userDropdown.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_position');
+                    window.location.href = '/static/login.html';
+                });
+            }
+            
+            // Add employee button
+            document.getElementById('addEmployeeBtn').addEventListener('click', () => openEmployeeModal());
+            
+            // Search and filters
+            document.getElementById('searchInput').addEventListener('input', filterEmployees);
+            document.getElementById('departmentFilter').addEventListener('change', filterEmployees);
+            document.getElementById('statusFilter').addEventListener('change', filterEmployees);
+            document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('departmentFilter').value = '';
+                document.getElementById('statusFilter').value = '';
+                filterEmployees();
+            });
+            
+            // Modal events
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('cancelBtn').addEventListener('click', closeModal);
+            document.getElementById('saveEmployeeBtn').addEventListener('click', saveEmployee);
+            
+            // Close modal on outside click
+            document.getElementById('employeeModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -19,6 +19,28 @@ function getCurrentISTTime() {
 }
 
 /**
+ * Get current time formatted for display
+ * @returns {string} Current time in HH:MM format IST
+ */
+function getCurrentTimeFormatted() {
+    const currentTime = getCurrentISTTime();
+    const hours = currentTime.getHours().toString().padStart(2, '0');
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes} IST`;
+}
+
+/**
+ * Convert any date to IST
+ * @param {Date} date - Date to convert
+ * @returns {Date} Date converted to IST
+ */
+function convertToIST(date) {
+    if (!date) return new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    return new Date(date.getTime() + istOffset - (date.getTimezoneOffset() * 60 * 1000));
+}
+
+/**
  * Format datetime string to IST with full date and time
  * @param {string} dateTimeString - ISO datetime string
  * @returns {string} Formatted datetime in IST
@@ -88,6 +110,28 @@ function formatISTDate(dateString) {
 function getISTDateString() {
     const istTime = getCurrentISTTime();
     return istTime.toISOString().split('T')[0];
+}
+
+/**
+ * Get current time formatted for display
+ * @returns {string} Current time in HH:MM format IST
+ */
+function getCurrentTimeFormatted() {
+    const currentTime = getCurrentISTTime();
+    const hours = currentTime.getHours().toString().padStart(2, '0');
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes} IST`;
+}
+
+/**
+ * Convert any date to IST
+ * @param {Date} date - Date to convert
+ * @returns {Date} Date converted to IST
+ */
+function convertToIST(date) {
+    if (!date) return new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    return new Date(date.getTime() + istOffset - (date.getTimezoneOffset() * 60 * 1000));
 }
 
 /**

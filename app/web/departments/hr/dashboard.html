@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - HR Dashboard</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Dashboard specific styles */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .stat-card.employees {
+            border-left-color: var(--primary);
+        }
+        
+        .stat-card.attendance {
+            border-left-color: var(--success);
+        }
+        
+        .stat-card.payroll {
+            border-left-color: var(--warning);
+        }
+        
+        .stat-card.recruitment {
+            border-left-color: var(--info);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .table th {
+            background-color: var(--bg-light);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .badge-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+        
+        /* Quick actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-action {
+            padding: 1rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.2s ease;
+        }
+        
+        .quick-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quick-action i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { opacity: 0; transform: translateY(100%); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(100%); }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul id="navigationMenu" class="nav-list">
+                    <li class="nav-item">
+                        <a href="/app/hr/dashboard" class="nav-link active">
+                            <i>📊</i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/employees" class="nav-link">
+                            <i>👥</i>Employee Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/attendance" class="nav-link">
+                            <i>🕒</i>Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/payroll" class="nav-link">
+                            <i>💰</i>Payroll
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/recruitment" class="nav-link">
+                            <i>🎯</i>Recruitment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/leave-requests" class="nav-link">
+                            <i>📅</i>Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/performance" class="nav-link">
+                            <i>⭐</i>Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/reports" class="nav-link">
+                            <i>📈</i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/profile" class="nav-link">
+                            <i>👤</i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/hr/settings" class="nav-link">
+                            <i>⚙️</i>Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">Loading...</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">HR Dashboard</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">...</div>
+                    <span id="userTimeDisplay">Loading...</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/hr/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/hr/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main" style="padding: 2rem;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>HR Dashboard</h2>
+                        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Manage employees, payroll, and HR operations</p>
+                    </div>
+                    <div>
+                        <span id="currentDate" style="color: var(--text-secondary);">Loading...</span>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="dashboard-stats">
+                    <div class="stat-card employees">
+                        <div class="stat-value" id="totalEmployees">0</div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <div class="stat-card attendance">
+                        <div class="stat-value" id="todayAttendance">0%</div>
+                        <div class="stat-label">Today's Attendance</div>
+                    </div>
+                    <div class="stat-card payroll">
+                        <div class="stat-value" id="monthlyPayroll">₹0</div>
+                        <div class="stat-label">Monthly Payroll</div>
+                    </div>
+                    <div class="stat-card recruitment">
+                        <div class="stat-value" id="openPositions">0</div>
+                        <div class="stat-label">Open Positions</div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <a href="/app/hr/employees?action=add" class="quick-action">
+                                <i>👤➕</i>
+                                <div>Add Employee</div>
+                            </a>
+                            <a href="/app/hr/payroll?action=generate" class="quick-action">
+                                <i>💰</i>
+                                <div>Generate Payroll</div>
+                            </a>
+                            <a href="/app/hr/attendance?view=today" class="quick-action">
+                                <i>🕒</i>
+                                <div>View Attendance</div>
+                            </a>
+                            <a href="/app/hr/recruitment?action=post" class="quick-action">
+                                <i>🎯</i>
+                                <div>Post Job</div>
+                            </a>
+                            <a href="/app/hr/leave-requests" class="quick-action">
+                                <i>📅</i>
+                                <div>Leave Requests</div>
+                            </a>
+                            <a href="/app/hr/reports" class="quick-action">
+                                <i>📈</i>
+                                <div>Generate Report</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <div class="main-section">
+                        <!-- Recent Activities -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Recent Activities</h3>
+                                <a href="/app/hr/activities" class="btn btn-outline btn-sm">View All</a>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentActivities">
+                                    <p style="text-align: center; color: var(--text-secondary);">Loading recent activities...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Today's Attendance Overview -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Today's Attendance</h3>
+                                <a href="/app/hr/attendance" class="btn btn-outline btn-sm">View Details</a>
+                            </div>
+                            <div class="card-body">
+                                <div style="overflow-x: auto;">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Employee</th>
+                                                <th>Department</th>
+                                                <th>Check In</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="todayAttendanceTable">
+                                            <tr>
+                                                <td colspan="4" style="text-align: center;">Loading attendance data...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <!-- Pending Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Pending Actions</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="pendingActions">
+                                    <p style="text-align: center; color: var(--text-secondary);">Loading pending actions...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upcoming Events -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Upcoming Events</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="upcomingEvents">
+                                    <p style="text-align: center; color: var(--text-secondary);">Loading upcoming events...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Department Summary -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Department Summary</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="departmentSummary">
+                                    <p style="text-align: center; color: var(--text-secondary);">Loading department data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script src="/static/js/hr-utils.js?v=3"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize HR page with user data and setup
+                const currentUser = await hrUtils.initializeHRPage();
+                
+                // Load dashboard data
+                await loadDashboardStats();
+                await loadTodayAttendance();
+                await loadRecentActivities();
+                await loadPendingActions();
+                
+                // Update clock every second
+                updateClock();
+                setInterval(updateClock, 1000);
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                hrUtils.showToast('Error loading dashboard. Please refresh the page.', 'error');
+            }
+        });
+
+        // Update clock display
+        function updateClock() {
+            const clockElement = document.getElementById('currentTime');
+            if (clockElement) {
+                clockElement.textContent = hrUtils.getCurrentTimeFormatted();
+            }
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/hr/dashboard/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    
+                    document.getElementById('totalEmployees').textContent = stats.total_employees || 0;
+                    document.getElementById('todayAttendance').textContent = `${Math.round(stats.attendance_rate || 0)}%`;
+                    document.getElementById('monthlyPayroll').textContent = `₹${(stats.monthly_payroll || 0).toLocaleString()}`;
+                    document.getElementById('openPositions').textContent = stats.open_positions || 0;
+                } else {
+                    throw new Error('Failed to load dashboard stats');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Set default values
+                document.getElementById('totalEmployees').textContent = '0';
+                document.getElementById('todayAttendance').textContent = '0%';
+                document.getElementById('monthlyPayroll').textContent = '₹0';
+                document.getElementById('openPositions').textContent = '0';
+            }
+        }
+
+        // Load today's attendance
+        async function loadTodayAttendance() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const today = hrUtils.formatDateInputIST(new Date());
+                
+                const response = await fetch(`/api/hr/attendance/today?date=${today}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const attendanceData = await response.json();
+                    const tableBody = document.getElementById('todayAttendanceTable');
+                    
+                    if (attendanceData.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No attendance data for today</td></tr>';
+                        return;
+                    }
+                    
+                    tableBody.innerHTML = '';
+                    attendanceData.slice(0, 10).forEach(record => {
+                        const row = document.createElement('tr');
+                        
+                        let statusBadge = 'badge-success';
+                        let statusText = 'Present';
+                        
+                        if (record.is_late) {
+                            statusBadge = 'badge-warning';
+                            statusText = 'Late';
+                        } else if (record.status === 'absent') {
+                            statusBadge = 'badge-danger';
+                            statusText = 'Absent';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${record.employee_name || record.user_id}</td>
+                            <td>${record.department || 'N/A'}</td>
+                            <td>${record.check_in ? hrUtils.formatISTTime(record.check_in) : 'Not checked in'}</td>
+                            <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading today\'s attendance:', error);
+                document.getElementById('todayAttendanceTable').innerHTML = 
+                    '<tr><td colspan="4" style="text-align: center;">Error loading attendance data</td></tr>';
+            }
+        }
+
+        // Load recent activities
+        async function loadRecentActivities() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/hr/activities/recent', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const activities = await response.json();
+                    const container = document.getElementById('recentActivities');
+                    
+                    if (activities.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent activities</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    activities.slice(0, 5).forEach(activity => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);';
+                        item.innerHTML = `
+                            <div style="font-weight: 500;">${activity.title}</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
+                                ${activity.description} • ${hrUtils.formatISTTime(activity.timestamp)}
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading recent activities:', error);
+                document.getElementById('recentActivities').innerHTML = 
+                    '<p style="text-align: center; color: var(--text-secondary);">Error loading activities</p>';
+            }
+        }
+
+        // Load pending actions
+        async function loadPendingActions() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/hr/pending-actions', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const actions = await response.json();
+                    const container = document.getElementById('pendingActions');
+                    
+                    if (actions.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No pending actions</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    actions.forEach(action => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);';
+                        
+                        let badgeClass = 'badge-info';
+                        if (action.priority === 'high') badgeClass = 'badge-danger';
+                        else if (action.priority === 'medium') badgeClass = 'badge-warning';
+                        
+                        item.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500;">${action.title}</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.875rem;">${action.description}</div>
+                                </div>
+                                <span class="badge ${badgeClass}">${action.priority}</span>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading pending actions:', error);
+                document.getElementById('pendingActions').innerHTML = 
+                    '<p style="text-align: center; color: var(--text-secondary);">Error loading pending actions</p>';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            
+            if (menuToggle && dashboardContainer) {
+                menuToggle.addEventListener('click', function() {
+                    dashboardContainer.classList.toggle('sidebar-hidden');
+                });
+            }
+            
+            // User dropdown
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function() {
+                    userDropdown.classList.toggle('active');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!userMenu.contains(event.target)) {
+                        userDropdown.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_position');
+                    window.location.href = '/static/login.html';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
