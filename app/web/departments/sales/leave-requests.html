@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Requests - Sales Department</title>
+    <style>
+        /* Root Variables */
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-left: 0.75rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 0.75rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        /* Main content styles */
+        .page-main {
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+        
+        /* Controls bar */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        /* Button styles */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Leave requests grid */
+        .leave-requests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .leave-request-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .leave-request-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .request-info {
+            flex: 1;
+        }
+        
+        .request-type {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .request-dates {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .request-duration {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .request-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .request-reason {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .request-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Form styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .leave-requests-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#2563eb"/>
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list" id="navList">
+                    <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>👥</i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>📈</i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">User</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Sales</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Leave Requests</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">U</div>
+                    <span id="userTimeDisplay">00:00 IST - User</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/sales/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="page-main">
+                <div class="page-header">
+                    <h1 class="page-title">Leave Requests</h1>
+                    <p class="page-subtitle">Manage your leave requests and view status</p>
+                </div>
+                
+                <div class="controls-bar">
+                    <div class="filters">
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="sick">Sick Leave</option>
+                            <option value="vacation">Vacation</option>
+                            <option value="personal">Personal</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button class="btn" id="addLeaveRequestBtn">
+                            ➕ Request Leave
+                        </button>
+                        
+                        <button class="btn btn-secondary" id="refreshBtn">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="leaveRequestsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading leave requests...
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Leave Request Modal -->
+    <div class="modal" id="leaveRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Request Leave</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <form id="leaveRequestForm">
+                <input type="hidden" id="requestId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="leaveType">Leave Type *</label>
+                    <select class="form-input" id="leaveType" required>
+                        <option value="">Select Leave Type</option>
+                        <option value="sick">Sick Leave</option>
+                        <option value="vacation">Vacation</option>
+                        <option value="personal">Personal Leave</option>
+                        <option value="emergency">Emergency Leave</option>
+                        <option value="maternity">Maternity Leave</option>
+                        <option value="paternity">Paternity Leave</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">Start Date *</label>
+                        <input type="date" class="form-input" id="startDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="endDate">End Date *</label>
+                        <input type="date" class="form-input" id="endDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="reason">Reason *</label>
+                    <textarea class="form-input form-textarea" id="reason" placeholder="Please provide reason for leave..." required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-success">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- Include scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/role-aware.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            setupEventListeners();
+            loadLeaveRequests();
+        });
+        
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('active');
+                });
+                
+                document.addEventListener('click', function() {
+                    userDropdown.classList.remove('active');
+                });
+            }
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    window.location.href = '/app/login';
+                });
+            }
+            
+            // Modal controls
+            const addLeaveRequestBtn = document.getElementById('addLeaveRequestBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const modal = document.getElementById('leaveRequestModal');
+            
+            if (addLeaveRequestBtn) {
+                addLeaveRequestBtn.addEventListener('click', () => openModal());
+            }
+            
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => closeModal());
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => closeModal());
+            }
+            
+            // Close modal on outside click
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }
+            
+            // Form submission
+            const leaveRequestForm = document.getElementById('leaveRequestForm');
+            if (leaveRequestForm) {
+                leaveRequestForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitLeaveRequest();
+                });
+            }
+            
+            // Filters
+            const statusFilter = document.getElementById('statusFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            
+            if (statusFilter) {
+                statusFilter.addEventListener('change', loadLeaveRequests);
+            }
+            
+            if (typeFilter) {
+                typeFilter.addEventListener('change', loadLeaveRequests);
+            }
+            
+            // Refresh button
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', loadLeaveRequests);
+            }
+            
+            // Date validation
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    endDateInput.min = this.value;
+                    if (endDateInput.value < this.value) {
+                        endDateInput.value = this.value;
+                    }
+                });
+            }
+        }
+        
+        function loadUserData() {
+            try {
+                if (!currentUser) {
+                    console.log('Current user not loaded, redirecting to login');
+                    window.location.href = '/app/login';
+                    return;
+                }
+                
+                updateUserInterface(currentUser);
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showToast('Error loading user data. Please refresh the page.', 'error');
+            }
+        }
+        
+        function updateUserInterface(userData) {
+            // Update sidebar
+            const usernameElement = document.getElementById('sidebar-username');
+            if (usernameElement) {
+                usernameElement.textContent = userData.full_name || userData.username || 'Unknown User';
+            }
+            
+            const positionElement = document.getElementById('sidebar-position');
+            if (positionElement) {
+                positionElement.textContent = userData.position || 'Sales';
+            }
+            
+            // Update user avatar
+            const userInitialsElement = document.getElementById('userInitials');
+            if (userInitialsElement) {
+                const initials = getInitials(userData.full_name || userData.username);
+                userInitialsElement.textContent = initials;
+            }
+            
+            // Update time display with IST
+            updateTimeDisplay(userData);
+        }
+        
+        function getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+        
+        function updateTimeDisplay(userData) {
+            const userTimeDisplay = document.getElementById('userTimeDisplay');
+            if (userTimeDisplay) {
+                // Convert to IST (UTC +5:30)
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+                const istTime = new Date(now.getTime() + istOffset);
+                
+                const timeString = istTime.toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const username = userData.username || userData.full_name || 'User';
+                userTimeDisplay.textContent = `${timeString} IST - ${username}`;
+            }
+            
+            setTimeout(() => updateTimeDisplay(userData), 60000);
+        }
+        
+        async function loadLeaveRequests() {
+            try {
+                const container = document.getElementById('leaveRequestsContainer');
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading leave requests...
+                    </div>
+                `;
+                
+                const statusFilter = document.getElementById('statusFilter').value;
+                const typeFilter = document.getElementById('typeFilter').value;
+                
+                let url = '/leave-requests/my-requests';
+                const params = [];
+                if (statusFilter) params.push(`status=${statusFilter}`);
+                if (typeFilter) params.push(`leave_type=${typeFilter}`);
+                if (params.length > 0) url += '?' + params.join('&');
+                
+                const response = await apiRequest(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayLeaveRequests(data.leave_requests || []);
+                } else {
+                    throw new Error('Failed to load leave requests');
+                }
+                
+            } catch (error) {
+                console.error('Error loading leave requests:', error);
+                const container = document.getElementById('leaveRequestsContainer');
+                container.innerHTML = '<p>Error loading leave requests. Please try again.</p>';
+                showToast('Error loading leave requests', 'error');
+            }
+        }
+        
+        function displayLeaveRequests(requests) {
+            const container = document.getElementById('leaveRequestsContainer');
+            
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <p>No leave requests found. Click "Request Leave" to submit a new request.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'leave-requests-grid';
+            
+            requests.forEach(request => {
+                const card = createLeaveRequestCard(request);
+                grid.appendChild(card);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+        
+        function createLeaveRequestCard(request) {
+            const card = document.createElement('div');
+            card.className = 'leave-request-card';
+            
+            // Format dates
+            const startDate = new Date(request.start_date).toLocaleDateString();
+            const endDate = new Date(request.end_date).toLocaleDateString();
+            
+            // Calculate duration
+            const start = new Date(request.start_date);
+            const end = new Date(request.end_date);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            card.innerHTML = `
+                <div class="request-header">
+                    <div class="request-info">
+                        <div class="request-type">${capitalizeFirst(request.leave_type)} Leave</div>
+                        <div class="request-dates">${startDate} - ${endDate}</div>
+                        <div class="request-duration">${diffDays} day${diffDays > 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="request-status status-${request.status}">${capitalizeFirst(request.status)}</div>
+                </div>
+                
+                <div class="request-reason">
+                    <strong>Reason:</strong><br>
+                    ${request.reason}
+                </div>
+                
+                ${request.status === 'pending' ? `
+                    <div class="request-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="editLeaveRequest('${request.id}')">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelLeaveRequest('${request.id}')">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                ` : ''}
+                
+                ${request.manager_comment ? `
+                    <div class="request-reason" style="margin-top: 1rem;">
+                        <strong>Manager Comment:</strong><br>
+                        ${request.manager_comment}
+                    </div>
+                ` : ''}
+            `;
+            
+            return card;
+        }
+        
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        function openModal(requestData = null) {
+            const modal = document.getElementById('leaveRequestModal');
+            const form = document.getElementById('leaveRequestForm');
+            const title = document.getElementById('modalTitle');
+            
+            if (requestData) {
+                // Edit mode
+                title.textContent = 'Edit Leave Request';
+                populateForm(requestData);
+            } else {
+                // Add mode
+                title.textContent = 'Request Leave';
+                form.reset();
+                document.getElementById('requestId').value = '';
+                
+                // Set minimum date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('startDate').min = today;
+                document.getElementById('endDate').min = today;
+            }
+            
+            modal.classList.add('active');
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('leaveRequestModal');
+            modal.classList.remove('active');
+        }
+        
+        function populateForm(requestData) {
+            document.getElementById('requestId').value = requestData.id;
+            document.getElementById('leaveType').value = requestData.leave_type;
+            document.getElementById('startDate').value = requestData.start_date;
+            document.getElementById('endDate').value = requestData.end_date;
+            document.getElementById('reason').value = requestData.reason;
+        }
+        
+        async function submitLeaveRequest() {
+            try {
+                const formData = {
+                    leave_type: document.getElementById('leaveType').value,
+                    start_date: document.getElementById('startDate').value,
+                    end_date: document.getElementById('endDate').value,
+                    reason: document.getElementById('reason').value
+                };
+                
+                const requestId = document.getElementById('requestId').value;
+                const isEdit = requestId !== '';
+                
+                const url = isEdit ? `/leave-requests/${requestId}` : '/leave-requests';
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await apiRequest(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showToast(isEdit ? 'Leave request updated successfully' : 'Leave request submitted successfully');
+                    closeModal();
+                    loadLeaveRequests();
+                } else {
+                    const errorData = await response.json();
+                    showToast(`Error: ${errorData.detail || 'Failed to submit request'}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting leave request:', error);
+                showToast('Error submitting leave request', 'error');
+            }
+        }
+        
+        async function editLeaveRequest(requestId) {
+            try {
+                const response = await apiRequest(`/leave-requests/${requestId}`);
+                if (response.ok) {
+                    const requestData = await response.json();
+                    openModal(requestData);
+                } else {
+                    showToast('Error loading request data', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading request data:', error);
+                showToast('Error loading request data', 'error');
+            }
+        }
+        
+        async function cancelLeaveRequest(requestId) {
+            if (!confirm('Are you sure you want to cancel this leave request?')) {
+                return;
+            }
+            
+            try {
+                const response = await apiRequest(`/leave-requests/${requestId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast('Leave request cancelled successfully');
+                    loadLeaveRequests();
+                } else {
+                    const errorData = await response.json();
+                    showToast(`Error: ${errorData.detail || 'Failed to cancel request'}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error cancelling leave request:', error);
+                showToast('Error cancelling leave request', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.className = 'toast show';
+                
+                // Set color based on type
+                if (type === 'error') {
+                    toast.style.background = 'var(--danger)';
+                } else if (type === 'warning') {
+                    toast.style.background = 'var(--warning)';
+                } else {
+                    toast.style.background = 'var(--success)';
+                }
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

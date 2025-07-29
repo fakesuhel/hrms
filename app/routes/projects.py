@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from typing import List, Optional
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 from app.database.projects import (
     DatabaseProjects, ProjectCreate, ProjectUpdate, 
     ProjectResponse, Project, TaskCreate, TaskUpdate, UserSearchResult
 )
 from app.utils.auth import get_current_user
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now()
 
 router = APIRouter(
     prefix="/projects",
@@ -26,7 +33,7 @@ async def search_users(
     This is useful for assigning tasks to team members.
     """
     try:
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Searching users with query: '{query}'")
         print(f"Current time: {current_time}, User: {current_user.username}")
         
@@ -46,13 +53,13 @@ async def create_project(
 ):
     try:
         # Debug logging
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Creating project: {project_data.name}")
         print(f"Current time: {current_time}, User: {current_user.username}")
         
         project = await DatabaseProjects.create_project(
             project_data=project_data,
-            manager_id=str(current_user.id)
+            manager_id=project_data.manager_id if project_data.manager_id else str(current_user.id)
         )
         
         # Convert to response model
@@ -64,7 +71,7 @@ async def create_project(
             "start_date": project.start_date,  # Already a string
             "end_date": project.end_date,      # Already a string
             "status": project.status,
-            "manager_id": str(project.manager_id),
+            "manager_id": str(project.manager_id) if project.manager_id else None,
             "team_members": [str(member) for member in project.team_members],
             "tasks": [
                 {
@@ -100,13 +107,15 @@ async def get_projects(
 ):
     try:
         # Debug logging
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Getting projects for user: {current_user.id}")
         print(f"Current time: {current_time}, User: {current_user.username}")
         
         projects = await DatabaseProjects.get_projects(
             user_id=str(current_user.id),
-            only_managed=only_managed
+            only_managed=only_managed,
+            user_role=current_user.role,
+            user_department=getattr(current_user, 'department', None)
         )
         
         # Convert to response models
@@ -120,7 +129,7 @@ async def get_projects(
                 "start_date": project.start_date,  # Already a string
                 "end_date": project.end_date,      # Already a string
                 "status": project.status,
-                "manager_id": str(project.manager_id),
+                "manager_id": str(project.manager_id) if project.manager_id else None,
                 "team_members": [str(member) for member in project.team_members],
                 "tasks": [
                     {
@@ -157,7 +166,7 @@ async def get_project(
 ):
     try:
         # Debug logging
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Getting project: {project_id}")
         print(f"Current time: {current_time}, User: {current_user.username}")
         
@@ -170,11 +179,11 @@ async def get_project(
             )
             
         # Check permissions
-        if str(project.manager_id) != str(current_user.id) and str(current_user.id) not in [str(m) for m in project.team_members]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to view this project"
-            )
+        # if str(project.manager_id) != str(current_user.id) and str(current_user.id) not in [str(m) for m in project.team_members]:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail="You don't have permission to view this project"
+        #     )
         
         # Convert to response model
         response_dict = {
@@ -185,7 +194,7 @@ async def get_project(
             "start_date": project.start_date,  # Already a string
             "end_date": project.end_date,      # Already a string
             "status": project.status,
-            "manager_id": str(project.manager_id),
+            "manager_id": str(project.manager_id) if project.manager_id else None,
             "team_members": [str(member) for member in project.team_members],
             "tasks": [
                 {
@@ -238,11 +247,13 @@ async def update_project(
             )
             
         # Only the project manager can update the project
-        if str(project.manager_id) != str(current_user.id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the project manager can update the project"
-            )
+        if project.manager_id and str(project.manager_id) != str(current_user.id):
+            # Allow admins and directors to edit any project
+            if current_user.role not in ['admin', 'director']:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only the project manager, admin, or director can update the project"
+                )
             
         # Update the project
         updated_project = await DatabaseProjects.update_project(project_id, update_data)
@@ -263,7 +274,7 @@ async def update_project(
             "start_date": updated_project.start_date,
             "end_date": updated_project.end_date,
             "status": updated_project.status,
-            "manager_id": str(updated_project.manager_id),
+            "manager_id": str(updated_project.manager_id) if updated_project.manager_id else None,
             "team_members": [str(member) for member in updated_project.team_members],
             "tasks": [
                 {
@@ -315,11 +326,13 @@ async def delete_project(
             )
             
         # Only the project manager can delete the project
-        if str(project.manager_id) != str(current_user.id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the project manager can delete the project"
-            )
+        if project.manager_id and str(project.manager_id) != str(current_user.id):
+            # Allow admins and directors to delete any project
+            if current_user.role not in ['admin', 'director']:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only the project manager, admin, or director can delete the project"
+                )
             
         # Delete the project
         success = await DatabaseProjects.delete_project(project_id)
@@ -361,7 +374,13 @@ async def add_task(
             )
             
         # Only the project manager or team members can add tasks
-        if str(project.manager_id) != str(current_user.id) and str(current_user.id) not in [str(m) for m in project.team_members]:
+        can_add_task = (
+            (project.manager_id and str(project.manager_id) == str(current_user.id)) or
+            str(current_user.id) in [str(m) for m in project.team_members] or
+            current_user.role in ['admin', 'director', 'dev_manager']
+        )
+        
+        if not can_add_task:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to add tasks to this project"
@@ -385,7 +404,7 @@ async def add_task(
             "start_date": updated_project.start_date,
             "end_date": updated_project.end_date,
             "status": updated_project.status,
-            "manager_id": str(updated_project.manager_id),
+            "manager_id": str(updated_project.manager_id) if updated_project.manager_id else None,
             "team_members": [str(member) for member in updated_project.team_members],
             "tasks": [
                 {
@@ -438,7 +457,13 @@ async def update_task(
             )
             
         # Only the project manager or team members can update tasks
-        if str(project.manager_id) != str(current_user.id) and str(current_user.id) not in [str(m) for m in project.team_members]:
+        can_update_task = (
+            (project.manager_id and str(project.manager_id) == str(current_user.id)) or
+            str(current_user.id) in [str(m) for m in project.team_members] or
+            current_user.role in ['admin', 'director', 'dev_manager']
+        )
+        
+        if not can_update_task:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to update tasks in this project"
@@ -462,7 +487,7 @@ async def update_task(
             "start_date": updated_project.start_date,
             "end_date": updated_project.end_date,
             "status": updated_project.status,
-            "manager_id": str(updated_project.manager_id),
+            "manager_id": str(updated_project.manager_id) if updated_project.manager_id else None,
             "team_members": [str(member) for member in updated_project.team_members],
             "tasks": [
                 {
@@ -514,7 +539,13 @@ async def delete_task(
             )
             
         # Only the project manager or team members can delete tasks
-        if str(project.manager_id) != str(current_user.id) and str(current_user.id) not in [str(m) for m in project.team_members]:
+        can_delete_task = (
+            (project.manager_id and str(project.manager_id) == str(current_user.id)) or
+            str(current_user.id) in [str(m) for m in project.team_members] or
+            current_user.role in ['admin', 'director', 'dev_manager']
+        )
+        
+        if not can_delete_task:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to delete tasks in this project"
@@ -538,7 +569,7 @@ async def delete_task(
             "start_date": updated_project.start_date,
             "end_date": updated_project.end_date,
             "status": updated_project.status,
-            "manager_id": str(updated_project.manager_id),
+            "manager_id": str(updated_project.manager_id) if updated_project.manager_id else None,
             "team_members": [str(member) for member in updated_project.team_members],
             "tasks": [
                 {
@@ -573,7 +604,7 @@ async def delete_task(
 async def get_project_stats(current_user = Depends(get_current_user)):
     try:
         # Debug logging
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Getting project stats for user: {current_user.id}")
         print(f"Current time: 2025-06-12 09:35:23, User: {current_user.username}")
         

@@ -43,7 +43,7 @@ async function apiRequest(endpoint, options = {}) {
         if (response.status === 401) {
             authToken = null;
             localStorage.removeItem('bhoomitechzone_token');
-            window.location.href = '/static/login.html';
+            window.location.href = '/app/login';
             return;
         }
         
@@ -100,7 +100,7 @@ const AuthAPI = {
         authToken = null;
         currentUser = null;
         localStorage.removeItem('bhoomitechzone_token');
-        window.location.href = '/static/login.html';
+        window.location.href = '/app/login';
     },
     
     // Get current user details

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Tracking - Bhoomi TechZone HRMS</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .dashboard-main {
+            padding: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .payments-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payments-table th,
+        .payments-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .payments-table th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .payment-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-paid {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+        
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+        
+        .status-overdue {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--bg-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success);
+            transition: width 0.3s ease;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#2563eb"/>
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <!-- Navigation will be populated by role-manager.js -->
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">User</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Sales</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Payment Tracking</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">U</div>
+                    <span id="userTimeDisplay">00:00 - User</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <!-- Payment Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">₹2,45,000</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹1,85,000</div>
+                        <div class="stat-label">Received</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹60,000</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">75.5%</div>
+                        <div class="stat-label">Collection Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Payment Tracking -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Payment Milestones</h2>
+                        <button class="btn" id="addPaymentBtn">
+                            <span>➕</span>
+                            Add Payment
+                        </button>
+                    </div>
+                    
+                    <!-- Payments Table -->
+                    <div style="overflow-x: auto;">
+                        <table class="payments-table">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Project</th>
+                                    <th>Total Amount</th>
+                                    <th>Paid Amount</th>
+                                    <th>Progress</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTableBody">
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 500;">ABC Technologies</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">john@abc-tech.com</div>
+                                    </td>
+                                    <td>E-commerce Platform</td>
+                                    <td>₹1,50,000</td>
+                                    <td>₹1,20,000</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">80%</span>
+                                            <div class="progress-bar" style="width: 100px;">
+                                                <div class="progress-fill" style="width: 80%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="payment-status status-pending">Pending</span>
+                                    </td>
+                                    <td>2025-02-15</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn btn-sm">Update</button>
+                                            <button class="btn btn-sm btn-secondary">View</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 500;">XYZ Corp</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">jane@xyz-corp.com</div>
+                                    </td>
+                                    <td>CRM System</td>
+                                    <td>₹80,000</td>
+                                    <td>₹80,000</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">100%</span>
+                                            <div class="progress-bar" style="width: 100px;">
+                                                <div class="progress-fill" style="width: 100%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="payment-status status-paid">Paid</span>
+                                    </td>
+                                    <td>2025-01-30</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn btn-sm btn-secondary">View</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 500;">Tech Solutions</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">info@tech-sol.com</div>
+                                    </td>
+                                    <td>Website Development</td>
+                                    <td>₹45,000</td>
+                                    <td>₹15,000</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">33%</span>
+                                            <div class="progress-bar" style="width: 100px;">
+                                                <div class="progress-fill" style="width: 33%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="payment-status status-overdue">Overdue</span>
+                                    </td>
+                                    <td>2025-01-15</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn btn-sm">Update</button>
+                                            <button class="btn btn-sm btn-secondary">View</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="/static/js/role-manager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            // Initialize role-based features
+            if (window.roleManager) {
+                window.roleManager.initialize();
+                window.roleManager.filterPageContent('payments');
+            }
+            
+            // Setup basic event listeners
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+        }
+    </script>
+</body>
+</html>

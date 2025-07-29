@@ -628,73 +628,8 @@
             </div>
             
             <nav class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/static/dashboard.html" class="nav-link active">
-                            <i>📊</i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item employee-nav">
-                        <a href="/app/attendance" class="nav-link">
-                            <i>🕒</i>
-                            Attendance
-                        </a>
-                    </li>
-                    <li class="nav-item manager-nav">
-                        <a href="/static/projects.html" class="nav-link">
-                            <i>📁</i>
-                            Projects
-                        </a>
-                    </li>
-                    <li class="nav-item employee-nav">
-                        <a href="/static/daily-reports.html" class="nav-link">
-                            <i>📝</i>
-                            Daily Reports
-                        </a>
-                    </li>
-                    <li class="nav-item manager-nav">
-                        <a href="/static/team.html" class="nav-link">
-                            <i>👥</i>
-                            Team
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/static/performance-reviews.html" class="nav-link">
-                            <i>⭐</i>
-                            Performance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/static/leave-requests.html" class="nav-link">
-                            <i>📅</i>
-                            Leave Requests
-                        </a>
-                    </li>
-                    <li class="nav-item hr-nav director-nav">
-                        <a href="/static/employees.html" class="nav-link">
-                            <i>👤</i>
-                            Employees
-                        </a>
-                    </li>
-                    <li class="nav-item hr-nav">
-                        <a href="/static/recruitment.html" class="nav-link">
-                            <i>🔍</i>
-                            Recruitment
-                        </a>
-                    </li>
-                    <li class="nav-item director-nav">
-                        <a href="/static/reports.html" class="nav-link">
-                            <i>📈</i>
-                            Reports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/static/settings.html" class="nav-link">
-                            <i>⚙️</i>
-                            Settings
-                        </a>
-                    </li>
+                <ul id="navigationMenu" class="nav-list">
+                    <!-- Dynamic navigation will be populated here -->
                 </ul>
             </nav>
             
@@ -1102,6 +1037,115 @@
     <div id="toast" class="toast"></div>
     
     <script>
+        // IST timezone conversion (UTC +5:30)
+        function getCurrentTimeFormatted() {
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const istTime = new Date(now.getTime() + istOffset);
+            return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
+        }
+
+        // Navigation configuration for different roles
+        const navigationConfig = {
+            employee: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard', active: true },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard', active: true },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard', active: true },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' },
+                { icon: '📈', label: 'Reports', href: '/app/it/reports' },
+                { icon: '⚙️', label: 'Settings', href: '/app/it/settings' }
+            ]
+        };
+
+        // Generate navigation menu based on user role
+        function generateNavigationMenu(userRole) {
+            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            const navigationMenu = document.getElementById('navigationMenu');
+            
+            if (!navigationMenu) return;
+            
+            navigationMenu.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = item.active ? 'nav-link active' : 'nav-link';
+                a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                
+                li.appendChild(a);
+                navigationMenu.appendChild(li);
+            });
+        }
+
+        // Setup role-based UI elements
+        function setupRoleBasedUI(user) {
+            const userRole = user.role || 'employee';
+            generateNavigationMenu(userRole);
+            
+            // Log user role for debugging
+            console.log('User role detected:', userRole);
+        }
+
+        // Get current user from API or localStorage
+        async function getCurrentUser() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                if (!token) return null;
+                
+                const response = await fetch('/api/user/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+            
+            // Fallback to mock user if API fails
+            return {
+                id: 1,
+                username: 'soheru',
+                first_name: 'Soheru',
+                last_name: 'User',
+                role: 'employee',
+                position: 'Developer'
+            };
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             // Initialize with the current timestamp from API
             const currentTimestamp = "2025-06-13 20:30:29";
@@ -1116,6 +1160,30 @@
                 if (!token) {
                     window.location.href = '/static/login.html';
                     return;
+                }
+                
+                // Get current user and setup UI
+                const currentUser = await getCurrentUser();
+                
+                // Update UI with user info
+                if (currentUser) {
+                    document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                    
+                    // Set user initials
+                    const initials = currentUser.first_name && currentUser.last_name ? 
+                                    (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
+                                    currentUser.username[0].toUpperCase();
+                    document.getElementById('userInitials').textContent = initials;
+                    document.getElementById('sidebar-username').textContent = currentUser.username;
+                    document.getElementById('sidebar-position').textContent = currentUser.position || 'Team Member';
+                    
+                    // Setup role-based UI
+                    setupRoleBasedUI(currentUser);
+                    
+                    // Start live clock update
+                    setInterval(() => {
+                        document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                    }, 1000);
                 }
                 
                 // Load user data
@@ -2989,6 +3057,7 @@
                 // Get location (in a real app this would use geolocation)
                 const location = 'Office';
                 
+                const isoTodayDate = new Date().toISOString().split('T')[0];
                 const response = await fetch('/attendance/check-in', {
                     method: 'POST',
                     headers: {
@@ -2997,7 +3066,8 @@
                     },
                     body: JSON.stringify({
                         check_in_location: location,
-                        check_in_note: 'Checked in via dashboard'
+                        check_in_note: 'Checked in via dashboard',
+                        date: isoTodayDate
                     })
                 });
                 
@@ -3043,6 +3113,7 @@
                 // Get location (in a real app this would use geolocation)
                 const location = 'Office';
                 
+                const isoTodayDate = new Date().toISOString().split('T')[0];
                 const response = await fetch('/attendance/check-out', {
                     method: 'POST',
                     headers: {
@@ -3052,7 +3123,8 @@
                     body: JSON.stringify({
                         check_out_location: location,
                         check_out_note: 'Checked out via dashboard',
-                        work_summary: 'Completed daily tasks'
+                        work_summary: 'Completed daily tasks',
+                        date: isoTodayDate
                     })
                 });
                 

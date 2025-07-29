@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from app.database import db
 from passlib.context import CryptContext
+from pydantic_core import core_schema
 
 # Get users collection
 users_collection = db["users"]
@@ -13,20 +14,30 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now()
+
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-        
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler) -> core_schema.CoreSchema:
+        return core_schema.with_info_plain_validator_function(cls.validate)
     
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def validate(cls, v, info=None):
+        if isinstance(v, ObjectId):
+            return v
+        if isinstance(v, str) and ObjectId.is_valid(v):
+            return ObjectId(v)
+        raise ValueError("Invalid ObjectId")
+    
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema: Dict[str, Any], handler) -> Dict[str, Any]:
+        return {"type": "string"}
 
 class UserBase(BaseModel):
     username: str
@@ -52,6 +63,24 @@ class UserBase(BaseModel):
     role: str = "employee"  # "employee", "team_lead", "manager", "admin"
     manager_id: Optional[str] = None
     is_active: bool = True
+    
+    # Financial Information
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    pan_number: Optional[str] = None
+    aadhar_number: Optional[str] = None
+    uan_number: Optional[str] = None
+    
+    # Salary Components
+    base_salary: Optional[float] = None
+    hra: Optional[float] = None
+    allowances: Optional[float] = None
+    performance_incentives: Optional[float] = None
+    pf_deduction: Optional[float] = None
+    tax_deduction: Optional[float] = None
+    penalty_deductions: Optional[float] = None
+    net_salary: Optional[float] = None
     
 class UserCreate(UserBase):
     password: str
@@ -81,31 +110,47 @@ class UserUpdate(BaseModel):
     manager_id: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = None
+    
+    # Financial Information
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    pan_number: Optional[str] = None
+    aadhar_number: Optional[str] = None
+    uan_number: Optional[str] = None
+    
+    # Salary Components
+    base_salary: Optional[float] = None
+    hra: Optional[float] = None
+    allowances: Optional[float] = None
+    performance_incentives: Optional[float] = None
+    pf_deduction: Optional[float] = None
+    tax_deduction: Optional[float] = None
+    penalty_deductions: Optional[float] = None
+    net_salary: Optional[float] = None
 
 class UserInDB(UserBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    hashed_password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    hashed_password: Optional[str] = None  # Make it optional to handle existing records
+    password: Optional[str] = None  # Legacy field for backward compatibility
+    created_at: datetime = Field(default_factory=get_ist_now)
+    updated_at: datetime = Field(default_factory=get_ist_now)
     
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str,
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "from_attributes": True
+    }
 
 class UserResponse(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True
+    }
 
 class DatabaseUsers:
     @staticmethod
@@ -158,12 +203,12 @@ class DatabaseUsers:
         if not employee_id:
             # Generate a unique employee ID (EMP + timestamp + random)
             import random
-            timestamp = str(int(datetime.utcnow().timestamp()))[-6:]
+            timestamp = str(int(get_ist_now().timestamp()))[-6:]
             random_num = str(random.randint(100, 999))
             employee_id = f"EMP{timestamp}{random_num}"
         
         # Create user document
-        now = datetime.utcnow()
+        now = get_ist_now()
         user_dict = user_data.dict(exclude={"password"})
         user_dict.update({
             "employee_id": employee_id,
@@ -194,7 +239,7 @@ class DatabaseUsers:
             update_data["hashed_password"] = pwd_context.hash(update_data.pop("password"))
         
         if update_data:
-            update_data["updated_at"] = datetime.utcnow()
+            update_data["updated_at"] = get_ist_now()
             
             # Update user
             users_collection.update_one(
@@ -228,7 +273,7 @@ class DatabaseUsers:
         else:
             id_obj = user_id
         
-        now = datetime.utcnow()
+        now = get_ist_now()
         
         result = users_collection.update_one(
             {"_id": id_obj},

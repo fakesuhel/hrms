@@ -207,3 +207,11 @@ async def cancel_leave_request(
     
     updated_leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
     return LeaveRequestResponse(**updated_leave.dict(by_alias=True))
+
+# No code changes are needed in this file to fix the 404 error for:
+# "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1"
+
+# Explanation:
+# This request is made by Chrome DevTools or browser extensions looking for debugging or configuration files.
+# It is not an error in your FastAPI code. The 404 response is correct because your API does not serve this file.
+# You can safely ignore these log entries, or suppress them in your logging configuration if desired.

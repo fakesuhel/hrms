@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -16,6 +16,15 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hours
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="users/token", auto_error=False)
+
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now()
 
 class Token(BaseModel):
     access_token: str
@@ -37,7 +46,13 @@ async def authenticate_user(username: str, password: str) -> Union[UserInDB, boo
     user = await DatabaseUsers.get_user_by_username(username)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    
+    # Handle both hashed_password and password fields for backward compatibility
+    password_to_check = user.hashed_password or user.password
+    if not password_to_check:
+        return False
+        
+    if not verify_password(password, password_to_check):
         return False
     return user
 
@@ -45,9 +60,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = get_ist_now() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = get_ist_now() + timedelta(minutes=15)
         
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -134,3 +149,22 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+async def get_current_user_optional(token: str = Depends(oauth2_scheme_optional)) -> Optional[UserInDB]:
+    """Get current user but don't raise exception if not authenticated"""
+    if not token:
+        return None
+        
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        
+        user = await DatabaseUsers.get_user_by_username(username=username)
+        if user is None or not user.is_active:
+            return None
+            
+        return user
+    except JWTError:
+        return None

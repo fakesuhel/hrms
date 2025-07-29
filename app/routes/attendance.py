@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional
 
 from app.database.attendance import AttendanceCheckIn, AttendanceCheckOut, AttendanceResponse, DatabaseAttendance
 from app.utils.auth import get_current_user
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now(IST)
 
 router = APIRouter(
     prefix="/attendance",
@@ -74,9 +81,13 @@ async def check_out(
         print(f"Check-out request: User ID: {current_user.id}")
         print(f"Current time: 2025-06-12 06:56:11, User: soherunot")
         
+        # Extract date from request body if available
+        date = getattr(checkout_data, "date", None)
+        
         attendance = await DatabaseAttendance.check_out(
             str(current_user.id),
-            checkout_data
+            checkout_data,
+            date
         )
         
         if not attendance:
@@ -280,3 +291,112 @@ async def get_attendance_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get attendance statistics: {str(e)}"
         )
+
+@router.get("/", response_model=List[AttendanceResponse])
+async def get_attendance(
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
+    current_user = Depends(get_current_user)
+):
+    """Get attendance records for a specific date (managers only)"""
+    try:
+        # Check if user has permission to view all attendance
+        if current_user.role not in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to view team attendance"
+            )
+        
+        # Use today's date if not provided
+        if not date:
+            date = datetime.utcnow().date().isoformat()
+        
+        print(f"Getting attendance for date: {date}")
+        
+        # Get attendance for all users on the specified date
+        attendances = await DatabaseAttendance.get_attendance_by_date(date)
+        
+        # Convert to response format
+        response_list = []
+        for attendance in attendances:
+            response_dict = {
+                "_id": str(attendance.id),
+                "user_id": str(attendance.user_id),
+                "date": attendance.date,
+                "check_in": attendance.check_in,
+                "check_out": attendance.check_out,
+                "check_in_location": attendance.check_in_location,
+                "check_out_location": attendance.check_out_location,
+                "check_in_note": attendance.check_in_note,
+                "check_out_note": attendance.check_out_note,
+                "work_summary": attendance.work_summary,
+                "is_late": attendance.is_late,
+                "is_complete": attendance.is_complete,
+                "work_hours": attendance.work_hours,
+                "status": "present" if attendance.check_in else "absent",
+                "created_at": attendance.created_at,
+                "updated_at": attendance.updated_at
+            }
+            response_list.append(AttendanceResponse(**response_dict))
+        
+        return response_list
+        
+    except Exception as e:
+        print(f"Error in get_attendance: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get attendance: {str(e)}"
+        )
+
+@router.get("/by-date", response_model=List[AttendanceResponse])
+async def get_attendance_by_date(
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    current_user = Depends(get_current_user)
+):
+    """Get all attendance records for a specific date (managers only)"""
+    try:
+        # Check if user has permission to view all attendance
+        if current_user.role not in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to view team attendance"
+            )
+        
+        print(f"Getting attendance by date: {date} for manager: {current_user.username}")
+        
+        # Get attendance records for the date
+        attendance_records = await DatabaseAttendance.get_attendance_by_date(date)
+        
+        # Convert to response format
+        response_list = []
+        for attendance in attendance_records:
+            response_dict = {
+                "_id": str(attendance.id),
+                "user_id": str(attendance.user_id),
+                "date": attendance.date,
+                "check_in": attendance.check_in,
+                "check_out": attendance.check_out,
+                "check_in_location": attendance.check_in_location,
+                "check_out_location": attendance.check_out_location,
+                "check_in_note": attendance.check_in_note,
+                "check_out_note": attendance.check_out_note,
+                "work_summary": attendance.work_summary,
+                "is_late": attendance.is_late,
+                "is_complete": attendance.is_complete,
+                "work_hours": attendance.work_hours,
+                "status": attendance.status,
+                "created_at": attendance.created_at,
+                "updated_at": attendance.updated_at
+            }
+            response_list.append(AttendanceResponse(**response_dict))
+        
+        return response_list
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in get_attendance_by_date: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get attendance: {str(e)}"
+        )
+

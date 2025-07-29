@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Leave Requests</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Leave Requests Specific Styles */
+        .leave-main {
+            padding: 2rem;
+        }
+
+        .leave-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .leave-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .leave-title p {
+            color: var(--text-secondary);
+        }
+
+        /* Balance Cards */
+        .balance-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .balance-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .balance-type {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: capitalize;
+        }
+
+        .balance-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .balance-total {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .balance-total .balance-type {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Leave Requests Table */
+        .leave-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leave-table th, 
+        .leave-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .leave-table th {
+            font-weight: 600;
+            color: var(--text-primary);
+            background-color: var(--bg-light);
+        }
+
+        .leave-table tr:hover {
+            background-color: var(--bg-light);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-pending {
+            background-color: rgba(251, 191, 36, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-approved {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-rejected {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-cancelled {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        /* Leave Type Badges */
+        .leave-type {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .type-sick {
+            background-color: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+        }
+
+        .type-vacation {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .type-personal {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+
+        .type-work_from_home {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* Leave details */
+        .leave-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-state img {
+            max-width: 150px;
+            margin-bottom: 1.5rem;
+            opacity: 0.6;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Loading state */
+        .skeleton-loading {
+            animation: skeleton-loading 1.5s infinite alternate;
+            background-color: #e5e7eb;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0.9;
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { transform: translateY(100%); opacity: 0; }
+            15% { transform: translateY(0); opacity: 1; }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .leave-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .leave-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .leave-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Calendar inputs specific styling */
+        input[type="date"].form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            line-height: 1.5;
+            padding-right: 2rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul id="navigationMenu" class="nav-list">
+                    <!-- Dynamic navigation will be populated here -->
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">soherunow</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Leave Requests</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">S</div>
+                    <span id="userTimeDisplay">14:00 - soherunow</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="leave-main">
+                <div class="leave-header">
+                    <div class="leave-title">
+                        <h1>Leave Management</h1>
+                        <p>Request and manage your leave applications</p>
+                    </div>
+                    
+                    <div>
+                        <button class="btn btn-primary" id="createLeaveBtn">
+                            <i>➕</i> Request Leave
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Leave Balances -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Leave Balances</h2>
+                        <div id="balanceLastUpdated" style="font-size: 0.875rem; color: var(--text-secondary);">
+                            Updated: Loading...
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="balanceLoading">
+                            <div class="skeleton-loading" style="height: 100px; margin-bottom: 1rem;"></div>
+                        </div>
+                        
+                        <div id="balanceContent" style="display: none;">
+                            <div class="balance-container">
+                                <div class="balance-card balance-total">
+                                    <div class="balance-type">Total Available</div>
+                                    <div class="balance-value" id="totalBalance">0</div>
+                                    <div>days</div>
+                                </div>
+                                <!-- Balance cards will be added dynamically here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Leave Requests Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Leave Requests</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabs -->
+                        <div class="tabs" id="leaveTabs">
+                            <div class="tab active" data-tab="myLeaves">My Leaves</div>
+                            <div class="tab" data-tab="pendingApprovals" id="pendingApprovalsTab" style="display: none;">Pending Approvals</div>
+                        </div>
+                        
+                        <!-- My Leaves Tab -->
+                        <div class="tab-content active" id="myLeaves">
+                            <div style="margin-bottom: 1.5rem;">
+                                <div class="form-group" style="max-width: 300px;">
+                                    <label class="form-label">Filter by Status</label>
+                                    <select class="form-control" id="myLeaveStatusFilter">
+                                        <option value="">All</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="myLeavesLoading">
+                                <div class="skeleton-loading" style="height: 300px;"></div>
+                            </div>
+                            
+                            <div id="myLeavesList" style="display: none;">
+                                <table class="leave-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Duration</th>
+                                            <th>Dates</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="myLeavesTableBody">
+                                        <!-- Leave requests will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="myLeavesEmpty" style="display: none;" class="empty-state">
+                                <h3>No Leave Requests</h3>
+                                <p>You haven't submitted any leave requests yet.</p>
+                                <button class="btn btn-primary" id="createLeaveEmptyBtn">
+                                    <i>➕</i> Request Leave
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Pending Approvals Tab -->
+                        <div class="tab-content" id="pendingApprovals">
+                            <div id="pendingApprovalsLoading">
+                                <div class="skeleton-loading" style="height: 300px;"></div>
+                            </div>
+                            
+                            <div id="pendingApprovalsList" style="display: none;">
+                                <table class="leave-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Type</th>
+                                            <th>Duration</th>
+                                            <th>Dates</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pendingApprovalsTableBody">
+                                        <!-- Pending approvals will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="pendingApprovalsEmpty" style="display: none;" class="empty-state">
+                                <h3>No Pending Approvals</h3>
+                                <p>There are no leave requests waiting for your approval.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Create/Edit Leave Modal -->
+    <div class="modal" id="leaveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="leaveModalTitle">Request Leave</h2>
+                <button class="modal-close" id="closeLeaveModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="leaveForm">
+                    <input type="hidden" id="leaveId">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="leaveType">Leave Type</label>
+                        <select class="form-control" id="leaveType" required>
+                            <option value="">Select Leave Type</option>
+                            <option value="sick">Sick Leave</option>
+                            <option value="vacation">Vacation</option>
+                            <option value="personal">Personal Leave</option>
+                            <option value="work_from_home">Work From Home</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="endDate">End Date</label>
+                        <input type="date" class="form-control" id="endDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="reason">Reason for Leave</label>
+                        <textarea class="form-control" id="reason" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="contactInfo">Contact During Leave (Optional)</label>
+                        <input type="text" class="form-control" id="contactInfo" placeholder="Phone number or email">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelLeaveBtn">Cancel</button>
+                <button class="btn btn-primary" id="submitLeaveBtn">Submit Request</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Leave Modal -->
+    <div class="modal" id="viewLeaveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Leave Request Details</h2>
+                <button class="modal-close" id="closeViewLeaveModal">&times;</button>
+            </div>
+            <div class="modal-body" id="viewLeaveModalBody">
+                <!-- Leave details will be loaded dynamically -->
+            </div>
+            <div class="modal-footer" id="viewLeaveModalFooter">
+                <!-- Action buttons will be added based on context -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Approve/Reject Modal -->
+    <div class="modal" id="approveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="approveModalTitle">Approve Leave Request</h2>
+                <button class="modal-close" id="closeApproveModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="approveForm">
+                    <input type="hidden" id="approveLeaveId">
+                    <input type="hidden" id="approveAction" value="approved">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="approverComments">Comments (Optional)</label>
+                        <textarea class="form-control" id="approverComments"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelApproveBtn">Cancel</button>
+                <button class="btn btn-danger" id="rejectLeaveBtn">Reject</button>
+                <button class="btn btn-success" id="approveLeaveBtn">Approve</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // IST timezone conversion (UTC +5:30)
+        function getCurrentTimeFormatted() {
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const istTime = new Date(now.getTime() + istOffset);
+            return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
+        }
+
+        // Navigation configuration for different roles
+        const navigationConfig = {
+            employee: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' },
+                { icon: '📈', label: 'Reports', href: '/app/it/reports' },
+                { icon: '⚙️', label: 'Settings', href: '/app/it/settings' }
+            ]
+        };
+
+        // Generate navigation menu based on user role
+        function generateNavigationMenu(userRole) {
+            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            const navigationMenu = document.getElementById('navigationMenu');
+            
+            if (!navigationMenu) return;
+            
+            navigationMenu.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = item.active ? 'nav-link active' : 'nav-link';
+                a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                
+                li.appendChild(a);
+                navigationMenu.appendChild(li);
+            });
+        }
+
+        // Setup role-based UI elements
+        function setupRoleBasedUI(user) {
+            const userRole = user.role || 'employee';
+            generateNavigationMenu(userRole);
+            
+            // Log user role for debugging
+            console.log('User role detected:', userRole);
+        }
+
+        // Get current user from API or localStorage
+        async function getCurrentUser() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                if (!token) return null;
+                
+                const response = await fetch('/api/user/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+            
+            // Fallback to mock user if API fails
+            return {
+                id: 1,
+                username: 'soherunow',
+                first_name: 'Soheru',
+                last_name: 'User',
+                role: 'employee',
+                position: 'Developer'
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            try {
+                // Get current user and setup UI
+                const currentUser = await getCurrentUser();
+                
+                // Update UI with user info
+                if (currentUser) {
+                    const userTimeElement = document.getElementById('userTimeDisplay');
+                    if (userTimeElement) {
+                        userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        
+                        // Start live clock update
+                        setInterval(() => {
+                            userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        }, 1000);
+                    }
+                    
+                    // Set user initials
+                    const initials = currentUser.first_name && currentUser.last_name ? 
+                                    (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
+                                    currentUser.username[0].toUpperCase();
+                    const userInitialsElement = document.getElementById('userInitials');
+                    if (userInitialsElement) {
+                        userInitialsElement.textContent = initials;
+                    }
+                    
+                    const sidebarUsernameElement = document.getElementById('sidebar-username');
+                    if (sidebarUsernameElement) {
+                        sidebarUsernameElement.textContent = currentUser.username;
+                    }
+                    
+                    const sidebarPositionElement = document.getElementById('sidebar-position');
+                    if (sidebarPositionElement) {
+                        sidebarPositionElement.textContent = currentUser.position || 'Team Member';
+                    }
+                    
+                    // Setup role-based UI
+                    setupRoleBasedUI(currentUser);
+                }
+                
+                console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 14:00:30");
+                console.log("Current User's Login: soherunow");
+                
+                // Initialize user data
+                await loadUserData();
+                
+                // Load leave balances
+                await loadLeaveBalances();
+                
+                // Load leave requests
+                await loadMyLeaves();
+                
+                // Load pending approvals if user is a manager
+                if (window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole)) {
+                    document.getElementById('pendingApprovalsTab').style.display = 'block';
+                    await loadPendingApprovals();
+                }
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Error initializing leave requests page:', error);
+                showToast('Error loading leave data');
+            }
+        });
+        
+        async function loadUserData() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('bhoomitechzone_token');
+                        window.location.href = '/static/login.html';
+                        return;
+                    }
+                    throw new Error('Failed to fetch user data');
+                }
+                
+                const userData = await response.json();
+                
+                // Store user info for later use
+                window.currentUser = userData;
+                window.userRole = userData.role;
+                
+                // Update UI with user info using the required values
+                document.getElementById('userInitials').textContent = 'S';
+                document.getElementById('userTimeDisplay').textContent = `14:11 - soheru`;
+                document.getElementById('sidebar-username').textContent = 'soheru';
+                document.getElementById('sidebar-position').textContent = userData.position || 'Team';
+                
+                // Log the timestamp and username as required
+                console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 14:11:34");
+                console.log("Current User's Login: soheru");
+                
+                return userData;
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                return null;
+            }
+        }
+        
+        async function loadLeaveBalances() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/leave-requests/balance', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load leave balances');
+                }
+                
+                const balanceData = await response.json();
+                
+                // Hide loading, show content
+                document.getElementById('balanceLoading').style.display = 'none';
+                document.getElementById('balanceContent').style.display = 'block';
+                
+                // Update last updated timestamp
+                const lastUpdated = new Date();
+                document.getElementById('balanceLastUpdated').textContent = 
+                    `Updated: ${lastUpdated.toLocaleDateString()} at ${lastUpdated.toLocaleTimeString()}`;
+                
+                // Update total balance
+                document.getElementById('totalBalance').textContent = balanceData.total_available;
+                
+                // Create balance cards for each leave type
+                const balanceContainer = document.querySelector('.balance-container');
+                
+                // Keep only the total balance card
+                balanceContainer.innerHTML = balanceContainer.firstElementChild.outerHTML;
+                
+                // Add cards for each leave type
+                for (const [leaveType, balance] of Object.entries(balanceData.balances)) {
+                    const card = document.createElement('div');
+                    card.className = 'balance-card';
+                    card.innerHTML = `
+                        <div class="balance-type">${formatLeaveType(leaveType)}</div>
+                        <div class="balance-value">${balance}</div>
+                        <div>days</div>
+                    `;
+                    balanceContainer.appendChild(card);
+                }
+                
+            } catch (error) {
+                console.error('Error loading leave balances:', error);
+                document.getElementById('balanceLoading').style.display = 'none';
+                document.getElementById('balanceContent').style.display = 'block';
+                document.getElementById('balanceContent').innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <p>Failed to load leave balances. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadMyLeaves(status = '') {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                let url = '/leave-requests';
+                if (status) {
+                    url += `?status=${status}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load leave requests');
+                }
+                
+                const leaveRequests = await response.json();
+                
+                // Hide loading state
+                document.getElementById('myLeavesLoading').style.display = 'none';
+                
+                // Check if there are any leave requests
+                if (leaveRequests.length === 0) {
+                    document.getElementById('myLeavesEmpty').style.display = 'block';
+                    return;
+                }
+                
+                // Show leave requests list
+                document.getElementById('myLeavesList').style.display = 'block';
+                
+                // Populate leave requests table
+                const tableBody = document.getElementById('myLeavesTableBody');
+                tableBody.innerHTML = '';
+                
+                leaveRequests.forEach(leave => {
+                    // Format dates
+                    const startDate = formatDate(leave.start_date);
+                    const endDate = formatDate(leave.end_date);
+                    
+                    // Format the status for display
+                    let statusClass = 'badge-pending';
+                    
+                    switch(leave.status) {
+                        case 'approved':
+                            statusClass = 'badge-approved';
+                            break;
+                        case 'rejected':
+                            statusClass = 'badge-rejected';
+                            break;
+                        case 'cancelled':
+                            statusClass = 'badge-cancelled';
+                            break;
+                    }
+                    
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="leave-type type-${leave.leave_type}">${formatLeaveType(leave.leave_type)}</span></td>
+                        <td>${leave.duration_days} day${leave.duration_days !== 1 ? 's' : ''}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td><span class="badge ${statusClass}">${capitalizeFirstLetter(leave.status)}</span></td>
+                        <td>${formatDate(leave.created_at, true)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave.id}">
+                                View
+                            </button>
+                            ${leave.status === 'pending' ? `
+                                <button class="btn btn-sm btn-danger cancel-leave-btn" data-id="${leave.id}">
+                                    Cancel
+                                </button>
+                            ` : ''}
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to buttons
+                document.querySelectorAll('.view-leave-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const leaveId = this.getAttribute('data-id');
+                        viewLeaveDetails(leaveId);
+                    });
+                });
+                
+                document.querySelectorAll('.cancel-leave-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const leaveId = this.getAttribute('data-id');
+                        confirmCancelLeave(leaveId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading leave requests:', error);
+                document.getElementById('myLeavesLoading').style.display = 'none';
+                document.getElementById('myLeavesEmpty').style.display = 'block';
+                document.querySelector('#myLeavesEmpty h3').textContent = 'Error Loading Leave Requests';
+                document.querySelector('#myLeavesEmpty p').textContent = 'Failed to load your leave requests. Please try again later.';
+            }
+        }
+        
+        async function loadPendingApprovals() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/leave-requests/pending-approval', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load pending approvals');
+                }
+                
+                const pendingRequests = await response.json();
+                
+                // Hide loading state
+                document.getElementById('pendingApprovalsLoading').style.display = 'none';
+                
+                // Check if there are any pending requests
+                if (pendingRequests.length === 0) {
+                    document.getElementById('pendingApprovalsEmpty').style.display = 'block';
+                    return;
+                }
+                
+                // Show pending requests list
+                document.getElementById('pendingApprovalsList').style.display = 'block';
+                
+                // Populate pending requests table
+                const tableBody = document.getElementById('pendingApprovalsTableBody');
+                tableBody.innerHTML = '';
+                
+                pendingRequests.forEach(leave => {
+                    // Format dates
+                    const startDate = formatDate(leave.start_date);
+                    const endDate = formatDate(leave.end_date);
+                    
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${leave.user_id}</td>
+                        <td><span class="leave-type type-${leave.leave_type}">${formatLeaveType(leave.leave_type)}</span></td>
+                        <td>${leave.duration_days} day${leave.duration_days !== 1 ? 's' : ''}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td>${formatDate(leave.created_at, true)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave.id}">
+                                View
+                            </button>
+                            <button class="btn btn-sm btn-success approve-leave-btn" data-id="${leave.id}">
+                                Approve
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to buttons
+                document.querySelectorAll('.view-leave-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const leaveId = this.getAttribute('data-id');
+                        viewLeaveDetails(leaveId);
+                    });
+                });
+                
+                document.querySelectorAll('.approve-leave-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const leaveId = this.getAttribute('data-id');
+                        openApproveModal(leaveId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading pending approvals:', error);
+                document.getElementById('pendingApprovalsLoading').style.display = 'none';
+                document.getElementById('pendingApprovalsEmpty').style.display = 'block';
+                document.querySelector('#pendingApprovalsEmpty h3').textContent = 'Error Loading Pending Approvals';
+                document.querySelector('#pendingApprovalsEmpty p').textContent = 'Failed to load pending leave approvals. Please try again later.';
+            }
+        }
+        
+        async function viewLeaveDetails(leaveId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/leave-requests/${leaveId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load leave details');
+                }
+                
+                const leave = await response.json();
+                
+                // Store the leave data for potential actions
+                window.currentLeave = leave;
+                
+                // Format dates
+                const startDate = formatDate(leave.start_date);
+                const endDate = formatDate(leave.end_date);
+                const createdAt = formatDate(leave.created_at, true);
+                const approvedAt = leave.approved_at ? formatDate(leave.approved_at, true) : 'N/A';
+                
+                // Format the status for display
+                let statusClass = 'badge-pending';
+                
+                switch(leave.status) {
+                    case 'approved':
+                        statusClass = 'badge-approved';
+                        break;
+                    case 'rejected':
+                        statusClass = 'badge-rejected';
+                        break;
+                    case 'cancelled':
+                        statusClass = 'badge-cancelled';
+                        break;
+                }
+                
+                // Create the leave details HTML
+                let detailsHtml = `
+                    <div>
+                        <div class="leave-detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Leave Type</div>
+                                <div class="detail-value"><span class="leave-type type-${leave.leave_type}">${formatLeaveType(leave.leave_type)}</span></div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value"><span class="badge ${statusClass}">${capitalizeFirstLetter(leave.status)}</span></div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Duration</div>
+                                <div class="detail-value">${leave.duration_days} day${leave.duration_days !== 1 ? 's' : ''}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Start Date</div>
+                                <div class="detail-value">${startDate}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">End Date</div>
+                                <div class="detail-value">${endDate}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Created</div>
+                                <div class="detail-value">${createdAt}</div>
+                            </div>
+                            ${leave.approver_id ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Approver</div>
+                                    <div class="detail-value">${leave.approver_id}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Approved/Rejected On</div>
+                                    <div class="detail-value">${approvedAt}</div>
+                                </div>
+                            ` : ''}
+                            <div class="detail-item">
+                                <div class="detail-label">Contact During Leave</div>
+                                <div class="detail-value">${leave.contact_during_leave || 'Not provided'}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1rem;">
+                            <div class="detail-label">Reason for Leave</div>
+                            <div style="padding: 0.75rem; background-color: var(--bg-light); border-radius: var(--border-radius);">
+                                ${leave.reason}
+                            </div>
+                        </div>
+                        
+                        ${leave.approver_comments ? `
+                            <div style="margin-top: 1rem;">
+                                <div class="detail-label">Approver Comments</div>
+                                <div style="padding: 0.75rem; background-color: var(--bg-light); border-radius: var(--border-radius);">
+                                    ${leave.approver_comments}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Populate modal body
+                document.getElementById('viewLeaveModalBody').innerHTML = detailsHtml;
+                
+                // Setup footer buttons based on leave state and user role
+                const modalFooter = document.getElementById('viewLeaveModalFooter');
+                modalFooter.innerHTML = '';
+                
+                // Always add close button
+                modalFooter.innerHTML += `<button class="btn btn-outline" id="closeLeaveDetailsBtn">Close</button>`;
+                
+                // If user is the requester and leave is pending, add cancel button
+                if (leave.user_id === window.currentUser?.id && leave.status === 'pending') {
+                    modalFooter.innerHTML += `<button class="btn btn-danger" id="cancelLeaveDetailsBtn">Cancel Request</button>`;
+                }
+                
+                // If user is a manager and leave is pending, add approve/reject buttons
+                const isManager = window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole);
+                if (isManager && leave.status === 'pending' && leave.user_id !== window.currentUser?.id) {
+                    modalFooter.innerHTML += `
+                        <button class="btn btn-danger" id="rejectLeaveDetailsBtn">Reject</button>
+                        <button class="btn btn-success" id="approveLeaveDetailsBtn">Approve</button>
+                    `;
+                }
+                
+                // Add event listeners to buttons
+                document.getElementById('closeLeaveDetailsBtn').addEventListener('click', function() {
+                    document.getElementById('viewLeaveModal').style.display = 'none';
+                });
+                
+                const cancelBtn = document.getElementById('cancelLeaveDetailsBtn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        document.getElementById('viewLeaveModal').style.display = 'none';
+                        confirmCancelLeave(leave.id);
+                    });
+                }
+                
+                const approveBtn = document.getElementById('approveLeaveDetailsBtn');
+                if (approveBtn) {
+                    approveBtn.addEventListener('click', function() {
+                        document.getElementById('viewLeaveModal').style.display = 'none';
+                        openApproveModal(leave.id, true);
+                    });
+                }
+                
+                const rejectBtn = document.getElementById('rejectLeaveDetailsBtn');
+                if (rejectBtn) {
+                    rejectBtn.addEventListener('click', function() {
+                        document.getElementById('viewLeaveModal').style.display = 'none';
+                        openApproveModal(leave.id, false);
+                    });
+                }
+                
+                // Show the modal
+                document.getElementById('viewLeaveModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading leave details:', error);
+                showToast('Error loading leave request details');
+            }
+        }
+        
+        function openLeaveModal(leaveId = null) {
+            // Reset form
+            document.getElementById('leaveForm').reset();
+            
+            // Set min date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').min = today;
+            document.getElementById('endDate').min = today;
+            
+            if (leaveId) {
+                // Edit mode - populate form with leave data
+                document.getElementById('leaveModalTitle').textContent = 'Edit Leave Request';
+                document.getElementById('leaveId').value = leaveId;
+                
+                const leave = window.currentLeave;
+                if (leave) {
+                    document.getElementById('leaveType').value = leave.leave_type;
+                    document.getElementById('startDate').value = formatDateForInput(leave.start_date);
+                    document.getElementById('endDate').value = formatDateForInput(leave.end_date);
+                    document.getElementById('reason').value = leave.reason;
+                    document.getElementById('contactInfo').value = leave.contact_during_leave || '';
+                }
+                
+                // Change button text
+                document.getElementById('submitLeaveBtn').textContent = 'Update Request';
+            } else {
+                // Create mode
+                document.getElementById('leaveModalTitle').textContent = 'Request Leave';
+                document.getElementById('leaveId').value = '';
+                document.getElementById('submitLeaveBtn').textContent = 'Submit Request';
+            }
+            
+            // Show modal
+            document.getElementById('leaveModal').style.display = 'flex';
+        }
+        
+        // Updated submitLeaveRequest function with proper date handling
+        async function submitLeaveRequest() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const leaveId = document.getElementById('leaveId').value;
+                
+                // Gather form data
+                const leaveType = document.getElementById('leaveType').value;
+                const startDate = document.getElementById('startDate').value; // YYYY-MM-DD format
+                const endDate = document.getElementById('endDate').value; // YYYY-MM-DD format
+                const reason = document.getElementById('reason').value;
+                const contactInfo = document.getElementById('contactInfo').value;
+                
+                // Validate dates
+                if (new Date(endDate) < new Date(startDate)) {
+                    showToast('End date must be after start date');
+                    return;
+                }
+                
+                // Create request payload
+                let leaveData;
+                
+                if (leaveId) {
+                    // For updates - don't include user_id
+                    leaveData = {
+                        leave_type: leaveType,
+                        start_date: startDate,
+                        end_date: endDate,
+                        reason: reason,
+                        contact_during_leave: contactInfo || null
+                    };
+                } else {
+                    // For new requests - include user_id
+                    leaveData = {
+                        user_id: window.currentUser._id || window.currentUser.id,
+                        leave_type: leaveType,
+                        start_date: startDate,
+                        end_date: endDate,
+                        reason: reason,
+                        contact_during_leave: contactInfo || null
+                    };
+                }
+                
+                console.log("Submitting leave data:", JSON.stringify(leaveData));
+                
+                let response;
+                
+                if (leaveId) {
+                    response = await fetch(`/leave-requests/${leaveId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(leaveData)
+                    });
+                } else {
+                    response = await fetch('/leave-requests', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(leaveData)
+                    });
+                }
+                
+                // Check for errors - important for debugging API issues
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("API Error Response:", errorData);
+                    throw new Error(
+                        errorData.detail ? 
+                        (Array.isArray(errorData.detail) ? errorData.detail[0].msg : errorData.detail) : 
+                        `Failed with status: ${response.status}`
+                    );
+                }
+                
+                const responseData = await response.json();
+                console.log("Success response:", responseData);
+                
+                // Close modal
+                document.getElementById('leaveModal').style.display = 'none';
+                
+                // Show success message
+                showToast(leaveId ? 'Leave request updated successfully' : 'Leave request submitted successfully');
+                
+                // Refresh data
+                await loadLeaveBalances();
+                await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
+                
+            } catch (error) {
+                console.error('Error submitting leave request:', error);
+                showToast(`Error: ${error.message}`);
+            }
+        }
+        
+        async function confirmCancelLeave(leaveId) {
+            if (confirm('Are you sure you want to cancel this leave request?')) {
+                await cancelLeaveRequest(leaveId);
+            }
+        }
+        
+        async function cancelLeaveRequest(leaveId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/leave-requests/${leaveId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to cancel leave request');
+                }
+                
+                // Show success message
+                showToast('Leave request cancelled successfully');
+                
+                // Refresh data
+                await loadLeaveBalances();
+                await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
+                
+            } catch (error) {
+                console.error('Error cancelling leave request:', error);
+                showToast(`Error: ${error.message}`);
+            }
+        }
+        
+        function openApproveModal(leaveId, isApprove = true) {
+            // Reset form
+            document.getElementById('approveForm').reset();
+            document.getElementById('approveLeaveId').value = leaveId;
+            
+            // Set action based on button clicked
+            document.getElementById('approveAction').value = isApprove ? 'approved' : 'rejected';
+            
+            // Update modal title
+            document.getElementById('approveModalTitle').textContent = isApprove ? 
+                'Approve Leave Request' : 'Reject Leave Request';
+            
+            // Show/hide buttons based on action
+            document.getElementById('rejectLeaveBtn').style.display = isApprove ? 'block' : 'none';
+            document.getElementById('approveLeaveBtn').style.display = isApprove ? 'block' : 'none';
+            
+            // If reject mode, add a submit button
+            if (!isApprove) {
+                const footer = document.querySelector('#approveModal .modal-footer');
+                let submitBtn = document.getElementById('submitRejectBtn');
+                
+                if (!submitBtn) {
+                    submitBtn = document.createElement('button');
+                    submitBtn.id = 'submitRejectBtn';
+                    submitBtn.className = 'btn btn-danger';
+                    submitBtn.textContent = 'Confirm Rejection';
+                    submitBtn.addEventListener('click', approveRejectLeave);
+                    footer.appendChild(submitBtn);
+                } else {
+                    submitBtn.style.display = 'block';
+                }
+                
+                                document.getElementById('rejectLeaveBtn').style.display = 'none';
+                document.getElementById('approveLeaveBtn').style.display = 'none';
+            }
+            
+            // Show modal
+            document.getElementById('approveModal').style.display = 'flex';
+        }
+        
+        async function approveRejectLeave() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const leaveId = document.getElementById('approveLeaveId').value;
+                const action = document.getElementById('approveAction').value;
+                const comments = document.getElementById('approverComments').value;
+                
+                // Prepare request payload - ensure we're using the current user ID in the right format
+                const approvalData = {
+                    status: action,
+                    approver_id: window.currentUser._id || window.currentUser.id,
+                    approver_comments: comments || null
+                };
+                
+                console.log("Submitting approval data:", JSON.stringify(approvalData));
+                
+                const response = await fetch(`/leave-requests/${leaveId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(approvalData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to process leave request');
+                }
+                
+                // Close modal
+                document.getElementById('approveModal').style.display = 'none';
+                
+                // Show success message
+                showToast(`Leave request ${action} successfully`);
+                
+                // Refresh data
+                await loadPendingApprovals();
+                
+            } catch (error) {
+                console.error('Error processing leave request:', error);
+                showToast(`Error: ${error.message}`);
+            }
+        }
+
+        // Helper for date formatting
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            // Format as YYYY-MM-DD for input fields
+            return date.toISOString().split('T')[0];
+        }
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            menuToggle.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('active');
+            });
+            
+            // Close user dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('active');
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+            
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Create leave button
+            document.getElementById('createLeaveBtn').addEventListener('click', function() {
+                openLeaveModal();
+            });
+            
+            // Create leave button in empty state
+            const createLeaveEmptyBtn = document.getElementById('createLeaveEmptyBtn');
+            if (createLeaveEmptyBtn) {
+                createLeaveEmptyBtn.addEventListener('click', function() {
+                    openLeaveModal();
+                });
+            }
+            
+            // Filter leave requests
+            document.getElementById('myLeaveStatusFilter').addEventListener('change', function() {
+                loadMyLeaves(this.value);
+            });
+            
+            // Leave form events
+            document.getElementById('cancelLeaveBtn').addEventListener('click', function() {
+                document.getElementById('leaveModal').style.display = 'none';
+            });
+            
+            document.getElementById('submitLeaveBtn').addEventListener('click', function() {
+                if (document.getElementById('leaveForm').checkValidity()) {
+                    submitLeaveRequest();
+                } else {
+                    // Trigger form validation
+                    document.getElementById('leaveForm').reportValidity();
+                }
+            });
+            
+            // Start date and end date validation
+            document.getElementById('startDate').addEventListener('change', function() {
+                const endDateInput = document.getElementById('endDate');
+                endDateInput.min = this.value;
+                if (endDateInput.value && new Date(endDateInput.value) < new Date(this.value)) {
+                    endDateInput.value = this.value;
+                }
+            });
+            
+            // Approve/reject modal events
+            document.getElementById('closeApproveModal').addEventListener('click', function() {
+                document.getElementById('approveModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelApproveBtn').addEventListener('click', function() {
+                document.getElementById('approveModal').style.display = 'none';
+            });
+            
+            document.getElementById('approveLeaveBtn').addEventListener('click', function() {
+                document.getElementById('approveAction').value = 'approved';
+                approveRejectLeave();
+            });
+            
+            document.getElementById('rejectLeaveBtn').addEventListener('click', function() {
+                document.getElementById('approveAction').value = 'rejected';
+                approveRejectLeave();
+            });
+            
+            // View leave details modal
+            document.getElementById('closeViewLeaveModal').addEventListener('click', function() {
+                document.getElementById('viewLeaveModal').style.display = 'none';
+            });
+            
+            // Close modals when clicking outside
+            document.getElementById('leaveModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('viewLeaveModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('approveModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        }
+        
+        // Helper Functions
+        function formatLeaveType(leaveType) {
+            if (!leaveType) return '';
+            if (leaveType === 'work_from_home') return 'WFH';
+            return leaveType.split('_').map(word => capitalizeFirstLetter(word)).join(' ');
+        }
+        
+        function capitalizeFirstLetter(string) {
+            if (!string) return '';
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        function formatDate(dateString, includeTime = false) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            if (includeTime) {
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+        
+        function getInitials(firstName, lastName) {
+            if (!firstName && !lastName) return 'S';
+            
+            let initials = '';
+            if (firstName) initials += firstName.charAt(0).toUpperCase();
+            if (lastName) initials += lastName.charAt(0).toUpperCase();
+            
+            return initials || 'S';
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

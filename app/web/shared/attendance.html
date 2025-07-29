@@ -783,7 +783,7 @@
                 <div class="attendance-status">
                     <div class="status-header">
                         <h3 class="status-title">Today's Attendance</h3>
-                        <div class="status-date" id="currentDate">Wednesday, June 12, 2025</div>
+                        <div class="status-date" id="currentDate">Loading...</div>
                     </div>
                     
                     <div class="status-details">
@@ -805,6 +805,22 @@
                         <div class="status-item">
                             <div class="status-label">Work Hours</div>
                             <div class="status-value" id="workHours">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Checkout Notice -->
+                    <div style="margin-top: 1rem; padding: 0.75rem; background-color: #eff6ff; border: 1px solid #3b82f6; border-radius: 0.5rem; font-size: 0.875rem;">
+                        <div style="font-weight: 500; color: #1e40af; margin-bottom: 0.25rem;">📋 Auto Checkout Policy</div>
+                        <div style="color: #1e40af;">
+                            If you don't check out by 8:00 PM IST, the system will automatically check you out and calculate working hours till 7:00 PM IST.
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Absent Notice -->
+                    <div style="margin-top: 0.75rem; padding: 0.75rem; background-color: #fef2f2; border: 1px solid #ef4444; border-radius: 0.5rem; font-size: 0.875rem;">
+                        <div style="font-weight: 500; color: #dc2626; margin-bottom: 0.25rem;">⚠️ Auto Absent Policy</div>
+                        <div style="color: #dc2626;">
+                            If you don't check in by 6:00 PM IST, you will be automatically marked as absent for the day. All times are in IST (UTC+5:30).
                         </div>
                     </div>
                 </div>
@@ -986,11 +1002,6 @@
             
             <div>
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Work Summary</label>
-                    <textarea id="checkOutSummary" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); height: 100px;" placeholder="Summarize your work for today..."></textarea>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Location</label>
                     <input type="text" id="checkOutLocation" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);" placeholder="Where are you working from?">
                 </div>
@@ -1029,63 +1040,43 @@
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
     
+    <!-- IST Utilities Script -->
+    <script src="/static/js/ist-utils.js"></script>
+    <script src="/static/js/role-manager.js"></script>
+    
         <script>
+        // Note: IST utilities are loaded from ist-utils.js
+        
         document.addEventListener('DOMContentLoaded', async function() {
-            // Check authentication
-            const token = localStorage.getItem('bhoomitechzone_token');
-            if (!token) {
-                window.location.href = '/static/login.html';
-                return;
-            }
-            
-            // Current date and time - updated with latest values
-            const currentDateTime = new Date('2025-06-12T07:29:30');
-            const currentUser = 'soheruWRITE';
-            
             try {
-                // Display current date
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                const currentDateElement = document.getElementById('currentDate');
-                if (currentDateElement) {
-                    currentDateElement.textContent = currentDateTime.toLocaleDateString(undefined, options);
+                // Initialize role-based features
+                if (window.roleManager) {
+                    window.roleManager.initialize();
+                    window.roleManager.filterPageContent('attendance');
                 }
                 
-                const userTimeElement = document.getElementById('userTimeDisplay');
-                if (userTimeElement) {
-                    userTimeElement.textContent = formatTime(currentDateTime) + ' - ' + currentUser;
-                }
+                // Initialize IST and user data using centralized utilities
+                const userData = await initializeISTAndUserData();
                 
-                const userInitialsElement = document.getElementById('userInitials');
-                if (userInitialsElement) {
-                    userInitialsElement.textContent = 'SW';
-                }
-                
-                const sidebarUsernameElement = document.getElementById('sidebar-username');
-                if (sidebarUsernameElement) {
-                    sidebarUsernameElement.textContent = currentUser;
-                }
-                
-                // Initialize date pickers
+                // Initialize date pickers with IST dates
+                const currentDateTime = getCurrentISTTime();
                 const startDate = new Date(currentDateTime);
                 startDate.setDate(startDate.getDate() - 30); // Default to last 30 days
                 
                 const startDateElement = document.getElementById('startDate');
                 if (startDateElement) {
-                    startDateElement.value = formatDateInput(startDate);
+                    startDateElement.value = formatDateInputIST(startDate);
                 }
                 
                 const endDateElement = document.getElementById('endDate');
                 if (endDateElement) {
-                    endDateElement.value = formatDateInput(currentDateTime);
+                    endDateElement.value = formatDateInputIST(currentDateTime);
                 }
                 
                 const teamDateElement = document.getElementById('teamDate');
                 if (teamDateElement) {
-                    teamDateElement.value = formatDateInput(currentDateTime);
+                    teamDateElement.value = formatDateInputIST(currentDateTime);
                 }
-                
-                // Load user data and check permissions
-                await loadUserData();
                 
                 // Load today's attendance status
                 await loadTodayStatus();
@@ -1101,16 +1092,17 @@
                 
                 // Load team attendance (if user has permission)
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
-                if (teamAttendanceSection && teamAttendanceSection.style.display === 'block') {
+                if (teamAttendanceSection && userData && ['team_lead', 'manager', 'admin', 'hr'].includes(userData.role)) {
+                    teamAttendanceSection.style.display = 'block';
                     await loadTeamAttendance(currentDateTime);
                 }
                 
                 // Setup event listeners
                 setupEventListeners();
                 
-                console.log(`Attendance page loaded at 2025-06-12 07:29:30 by ${currentUser}`);
             } catch (error) {
                 console.error('Error during initialization:', error);
+                showToast('Error initializing attendance page', 'error');
             }
         });
         
@@ -1135,27 +1127,49 @@
                 
                 const userData = await response.json();
                 
-                // Update UI with user info - with null checks
+                // Store user data globally
+                window.currentUserData = userData;
+                
+                // Update current time display
+                updateCurrentTimeDisplay(userData);
+                
+                // Update UI with actual user info
                 const usernameElement = document.getElementById('sidebar-username');
                 if (usernameElement) {
-                    usernameElement.textContent = 'soheruWRITE';
+                    usernameElement.textContent = userData.full_name || userData.username || 'Unknown User';
                 }
                 
                 const positionElement = document.getElementById('sidebar-position');
                 if (positionElement) {
-                    positionElement.textContent = userData.position || 'Team Lead';
+                    positionElement.textContent = userData.position || userData.role || 'Employee';
                 }
                 
                 // Show team attendance section for team leads/managers/admins
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
-                if (teamAttendanceSection && ['team_lead', 'manager', 'admin'].includes(userData.role)) {
+                if (teamAttendanceSection && ['team_lead', 'manager', 'admin', 'hr'].includes(userData.role)) {
                     teamAttendanceSection.style.display = 'block';
                 }
                 
+                // Set user initials based on actual name
                 const userInitialsElement = document.getElementById('userInitials');
                 if (userInitialsElement) {
-                    userInitialsElement.textContent = 'SW';
+                    const initials = getInitials(userData.full_name || userData.username);
+                    userInitialsElement.textContent = initials;
                 }
+                
+                // Update any other user-related displays
+                const allUsernameElements = document.querySelectorAll('.user-display-name');
+                allUsernameElements.forEach(element => {
+                    element.textContent = userData.full_name || userData.username || 'Unknown User';
+                });
+                
+                // Update email displays if any
+                const emailElements = document.querySelectorAll('.user-email');
+                emailElements.forEach(element => {
+                    element.textContent = userData.email || '';
+                });
+                
+                console.log(`User loaded: ${userData.full_name || userData.username} (${userData.role}) at ${formatISTDateTime(new Date())}`);
                 
             } catch (error) {
                 console.error('Error loading user data:', error);
@@ -1163,12 +1177,47 @@
             }
         }
         
+        function updateCurrentTimeDisplay(userData) {
+            const userTimeDisplay = document.getElementById('userTimeDisplay');
+            const currentDateDisplay = document.getElementById('currentDate');
+            
+            // Get current IST time
+            const now = new Date();
+            const istDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+            
+            if (userTimeDisplay) {
+                // Format time as HH:MM
+                const hours = istDate.getHours().toString().padStart(2, '0');
+                const minutes = istDate.getMinutes().toString().padStart(2, '0');
+                const timeString = `${hours}:${minutes}`;
+                
+                // Update display with current IST time and username
+                const username = userData.username || userData.full_name || 'User';
+                userTimeDisplay.textContent = `${timeString} - ${username}`;
+            }
+            
+            if (currentDateDisplay) {
+                // Format current date
+                const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                const weekday = weekdays[istDate.getDay()];
+                const day = istDate.getDate();
+                const month = months[istDate.getMonth()];
+                const year = istDate.getFullYear();
+                
+                currentDateDisplay.textContent = `${weekday}, ${day} ${month}, ${year}`;
+            }
+            
+            // Update the time every minute
+            setTimeout(() => updateCurrentTimeDisplay(userData), 60000);
+        }
+        
         async function loadTodayStatus() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const today = formatDateInput(new Date('2025-06-12'));
                 
-                const response = await fetch(`/attendance/history?start_date=${today}&end_date=${today}`, {
+                const response = await fetch('/attendance/today', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1178,7 +1227,9 @@
                     throw new Error('Failed to load today\'s attendance status');
                 }
                 
-                const records = await response.json();
+                const record = await response.json();
+                
+                console.log('Today status API response:', record);
                 
                 // Update UI based on today's attendance status - with null checks
                 const checkInOutBtn = document.getElementById('checkInOutBtn');
@@ -1188,20 +1239,28 @@
                 const attendanceStatusElement = document.getElementById('attendanceStatus');
                 const attendanceActionTextElement = document.getElementById('attendanceActionText');
                 
-                if (records.length > 0) {
-                    const record = records[0];
-                    
+                if (record) {
                     // Update status display
                     if (checkInTimeElement) {
-                        checkInTimeElement.textContent = record.check_in ? formatDateTime(record.check_in) : 'Not checked in';
+                        let checkInText = record.check_in ? formatISTDateTime(record.check_in) : 'Not checked in';
+                        // Add note about early check-in if applicable
+                        if (record.check_in && record.effective_start_time && 
+                            new Date(record.check_in) < new Date(record.effective_start_time)) {
+                            checkInText += ' (Early check-in - hours count from 10:00 AM)';
+                        }
+                        checkInTimeElement.textContent = checkInText;
                     }
                     
                     if (checkOutTimeElement) {
-                        checkOutTimeElement.textContent = record.check_out ? formatDateTime(record.check_out) : 'Not checked out';
+                        checkOutTimeElement.textContent = record.check_out ? formatISTDateTime(record.check_out) : 'Not checked out';
                     }
                     
                     if (workHoursElement) {
-                        workHoursElement.textContent = record.work_hours ? `${record.work_hours} hours` : 'N/A';
+                        let workHoursText = record.work_hours ? `${record.work_hours} hours` : 'N/A';
+                        if (record.is_half_day && record.work_hours) {
+                            workHoursText += ' (Half Day)';
+                        }
+                        workHoursElement.textContent = workHoursText;
                     }
                     
                     // Status badge
@@ -1226,23 +1285,35 @@
                     }
                     
                     // Update check in/out button
+                    console.log('Updating button state. Record:', {
+                        is_complete: record.is_complete,
+                        check_in: record.check_in,
+                        check_out: record.check_out
+                    });
+                    
                     if (checkInOutBtn) {
-                        if (record.is_complete) {
+                        if (record.check_out) {
                             // Already checked out
-                            checkInOutBtn.innerHTML = '<i>✓</i> Checked Out';
+                            console.log('Setting button to: Checked Out (disabled) - check_out exists:', record.check_out);
+                            checkInOutBtn.innerHTML = '<i>✓</i> <span id="attendanceActionText">Checked Out</span>';
                             checkInOutBtn.classList.remove('btn-primary');
                             checkInOutBtn.classList.add('btn-success');
                             checkInOutBtn.disabled = true;
-                        } else {
+                        } else if (record.check_in) {
                             // Checked in but not out
-                            checkInOutBtn.innerHTML = '<i>🕒</i> Check Out';
-                            if (attendanceActionTextElement) {
-                                attendanceActionTextElement.textContent = 'Check Out';
-                            }
+                            console.log('Setting button to: Check Out - check_in exists:', record.check_in, 'check_out:', record.check_out);
+                            checkInOutBtn.innerHTML = '<i>🕒</i> <span id="attendanceActionText">Check Out</span>';
+                            checkInOutBtn.classList.remove('btn-success');
+                            checkInOutBtn.classList.add('btn-primary');
+                            checkInOutBtn.disabled = false;
                         }
+                    } else {
+                        console.log('checkInOutBtn not found!');
                     }
                 } else {
                     // Not checked in yet
+                    console.log('No attendance record found, setting button to Check In');
+                    
                     if (checkInTimeElement) {
                         checkInTimeElement.textContent = 'Not checked in';
                     }
@@ -1260,10 +1331,11 @@
                     }
                     
                     if (checkInOutBtn) {
-                        checkInOutBtn.innerHTML = '<i>🕒</i> Check In';
-                        if (attendanceActionTextElement) {
-                            attendanceActionTextElement.textContent = 'Check In';
-                        }
+                        console.log('Setting button to: Check In');
+                        checkInOutBtn.innerHTML = '<i>🕒</i> <span id="attendanceActionText">Check In</span>';
+                        checkInOutBtn.classList.remove('btn-success');
+                        checkInOutBtn.classList.add('btn-primary');
+                        checkInOutBtn.disabled = false;
                     }
                 }
                 
@@ -1290,6 +1362,15 @@
                 const attendanceStatusElement = document.getElementById('attendanceStatus');
                 if (attendanceStatusElement) {
                     attendanceStatusElement.textContent = 'Unknown';
+                }
+                
+                // Reset button to check-in state
+                const checkInOutBtn = document.getElementById('checkInOutBtn');
+                if (checkInOutBtn) {
+                    checkInOutBtn.innerHTML = '<i>🕒</i> <span id="attendanceActionText">Check In</span>';
+                    checkInOutBtn.classList.remove('btn-success');
+                    checkInOutBtn.classList.add('btn-primary');
+                    checkInOutBtn.disabled = false;
                 }
             }
         }
@@ -1393,7 +1474,7 @@
         async function loadAttendanceStats(period) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const today = new Date('2025-06-12');
+                const today = new Date();
                 
                 // Calculate date range based on selected period
                 let startDate = new Date(today);
@@ -1587,7 +1668,7 @@
                 dayCell.className = 'calendar-day';
                 
                 // Mark today's date
-                const currentDate = new Date('2025-06-12');
+                const currentDate = new Date();
                 if (day === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
                     dayCell.classList.add('today');
                 }
@@ -1738,12 +1819,7 @@
                 </div>
                 
                 ${record.check_out ? `
-                    <div>
-                        <div style="margin-bottom: 0.5rem; font-weight: 500;">Work Summary:</div>
-                        <div style="padding: 0.75rem; background-color: var(--bg-light); border-radius: var(--border-radius);">
-                            ${record.work_summary || 'No work summary provided'}
-                        </div>
-                    </div>
+                    <!-- Additional details for checked out records can be added here if needed -->
                 ` : ''}
             `;
             
@@ -1790,7 +1866,6 @@
                 const note = noteInput ? noteInput.value || '' : '';
                 
                 console.log('Sending check-in request...');
-                console.log('User: soheruWRITE, Time: 2025-06-12 07:29:30');
                 
                 const response = await fetch('/attendance/check-in', {
                     method: 'POST',
@@ -1801,7 +1876,7 @@
                     body: JSON.stringify({
                         check_in_location: location,
                         check_in_note: note,
-                        date: new Date('2025-06-12').toISOString().split('T')[0]
+                        date: getISTDateString()  // Use IST date
                     })
                 });
                 
@@ -1819,8 +1894,23 @@
                 // Show success message
                 showToast('Successfully checked in');
                 
+                console.log('Check-in successful, updating UI...');
+                
                 // Update UI
                 await loadTodayStatus();
+                
+                console.log('Today status loaded, checking button state...');
+                
+                // Verify button state after update
+                const checkInOutBtn = document.getElementById('checkInOutBtn');
+                const attendanceActionText = document.getElementById('attendanceActionText');
+                
+                console.log('After check-in - Button innerHTML:', checkInOutBtn ? checkInOutBtn.innerHTML : 'Button not found');
+                console.log('After check-in - Action text:', attendanceActionText ? attendanceActionText.textContent : 'Action text element not found');
+                console.log('Button state after check-in:', {
+                    buttonText: checkInOutBtn ? checkInOutBtn.innerHTML : 'Button not found',
+                    actionText: attendanceActionText ? attendanceActionText.textContent : 'Action text not found'
+                });
                 
                 const startDateElement = document.getElementById('startDate');
                 const endDateElement = document.getElementById('endDate');
@@ -1841,16 +1931,39 @@
         async function performCheckOut() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
+                
+                // First, check current working hours to determine if it would be a half day
+                const workingHoursResponse = await fetch('/attendance/working-hours', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (workingHoursResponse.ok) {
+                    const workingHoursData = await workingHoursResponse.json();
+                    
+                    // If it would be a half day, show confirmation popup
+                    if (workingHoursData.is_half_day && workingHoursData.working_hours < 9) {
+                        const confirmed = confirm(
+                            `If you check out now, you will be marked as half day.\n\n` +
+                            `Current working hours: ${workingHoursData.working_hours.toFixed(1)} hours\n` +
+                            `Required for full day: 9.0 hours\n\n` +
+                            `Do you want to continue with check out?`
+                        );
+                        
+                        if (!confirmed) {
+                            return; // User cancelled, don't proceed with checkout
+                        }
+                    }
+                }
+                
                 const locationInput = document.getElementById('checkOutLocation');
-                const summaryInput = document.getElementById('checkOutSummary');
                 const noteInput = document.getElementById('checkOutNote');
                 
                 const location = locationInput ? locationInput.value || 'Office' : 'Office';
-                const summary = summaryInput ? summaryInput.value || '' : '';
                 const note = noteInput ? noteInput.value || '' : '';
                 
                 console.log('Sending check-out request...');
-                console.log('User: soheruWRITE, Time: 2025-06-12 07:29:30');
                 
                 const response = await fetch('/attendance/check-out', {
                     method: 'POST',
@@ -1860,7 +1973,6 @@
                     },
                     body: JSON.stringify({
                         check_out_location: location,
-                        work_summary: summary,
                         check_out_note: note
                     })
                 });
@@ -1870,14 +1982,22 @@
                     throw new Error(data.detail || 'Failed to check out');
                 }
                 
+                const checkoutData = await response.json();
+                
                 // Close modal
                 const checkOutModal = document.getElementById('checkOutModal');
                 if (checkOutModal) {
                     checkOutModal.style.display = 'none';
                 }
                 
-                // Show success message
-                showToast('Successfully checked out');
+                // Show success message with working hours info
+                let successMessage = 'Successfully checked out';
+                if (checkoutData.is_half_day) {
+                    successMessage += ` (Half Day - ${checkoutData.work_hours} hours)`;
+                } else {
+                    successMessage += ` (Full Day - ${checkoutData.work_hours} hours)`;
+                }
+                showToast(successMessage);
                 
                 // Update UI
                 await loadTodayStatus();
@@ -1949,8 +2069,11 @@
                 const listView = document.getElementById('listView');
                 const calendarView = document.getElementById('calendarView');
                 
+                console.log('View toggle elements:', { listViewBtn, calendarViewBtn, listView, calendarView });
+                
                 if (listViewBtn && calendarViewBtn && listView && calendarView) {
                     listViewBtn.addEventListener('click', function() {
+                        console.log('List view clicked');
                         listViewBtn.classList.add('active');
                         calendarViewBtn.classList.remove('active');
                         listView.style.display = 'block';
@@ -1958,10 +2081,18 @@
                     });
                     
                     calendarViewBtn.addEventListener('click', function() {
+                        console.log('Calendar view clicked');
                         calendarViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         listView.style.display = 'none';
                         calendarView.style.display = 'block';
+                    });
+                } else {
+                    console.error('View toggle elements not found:', { 
+                        listViewBtn: !!listViewBtn, 
+                        calendarViewBtn: !!calendarViewBtn, 
+                        listView: !!listView, 
+                        calendarView: !!calendarView 
                     });
                 }
                 
@@ -2031,19 +2162,49 @@
                 
                 // Check in/out button
                 const checkInOutBtn = document.getElementById('checkInOutBtn');
-                const attendanceActionText = document.getElementById('attendanceActionText');
                 const checkInModal = document.getElementById('checkInModal');
                 const checkOutModal = document.getElementById('checkOutModal');
                 
                 if (checkInOutBtn && checkInModal && checkOutModal) {
                     checkInOutBtn.addEventListener('click', function() {
+                        // Get the attendanceActionText element dynamically since it's created after page load
+                        const attendanceActionText = document.getElementById('attendanceActionText');
                         const actionText = attendanceActionText ? attendanceActionText.textContent : 'Check In';
                         
+                        console.log('Button clicked! ActionText element:', attendanceActionText);
+                        console.log('ActionText value:', actionText);
+                        console.log('Button innerHTML:', checkInOutBtn.innerHTML);
+                        
                         if (actionText === 'Check In') {
+                            console.log('Opening check-in modal');
                             checkInModal.style.display = 'flex';
                         } else if (actionText === 'Check Out') {
+                            console.log('Opening check-out modal');
                             checkOutModal.style.display = 'flex';
+                        } else {
+                            console.log('Unknown action text:', actionText);
                         }
+                    });
+                    
+                    // Close modals when clicking outside
+                    checkInModal.addEventListener('click', function(e) {
+                        if (e.target === checkInModal) {
+                            console.log('Clicked outside check-in modal');
+                            checkInModal.style.display = 'none';
+                        }
+                    });
+                    
+                    checkOutModal.addEventListener('click', function(e) {
+                        if (e.target === checkOutModal) {
+                            console.log('Clicked outside check-out modal');
+                            checkOutModal.style.display = 'none';
+                        }
+                    });
+                } else {
+                    console.error('Check in/out button elements not found:', {
+                        checkInOutBtn: !!checkInOutBtn,
+                        checkInModal: !!checkInModal,
+                        checkOutModal: !!checkOutModal
                     });
                 }
                 
@@ -2052,13 +2213,34 @@
                 const cancelCheckIn = document.getElementById('cancelCheckIn');
                 const closeCheckInModal = document.getElementById('closeCheckInModal');
                 
+                console.log('Check-in modal elements:', { confirmCheckIn, cancelCheckIn, closeCheckInModal, checkInModal });
+                
                 if (confirmCheckIn && cancelCheckIn && closeCheckInModal && checkInModal) {
                     confirmCheckIn.addEventListener('click', performCheckIn);
                     cancelCheckIn.addEventListener('click', function() {
+                        console.log('Cancel check-in clicked');
                         checkInModal.style.display = 'none';
+                        // Clear form fields
+                        const locationInput = document.getElementById('checkInLocation');
+                        const noteInput = document.getElementById('checkInNote');
+                        if (locationInput) locationInput.value = '';
+                        if (noteInput) noteInput.value = '';
                     });
                     closeCheckInModal.addEventListener('click', function() {
+                        console.log('Close check-in modal clicked');
                         checkInModal.style.display = 'none';
+                        // Clear form fields
+                        const locationInput = document.getElementById('checkInLocation');
+                        const noteInput = document.getElementById('checkInNote');
+                        if (locationInput) locationInput.value = '';
+                        if (noteInput) noteInput.value = '';
+                    });
+                } else {
+                    console.error('Check-in modal elements not found:', {
+                        confirmCheckIn: !!confirmCheckIn,
+                        cancelCheckIn: !!cancelCheckIn,
+                        closeCheckInModal: !!closeCheckInModal,
+                        checkInModal: !!checkInModal
                     });
                 }
                 
@@ -2067,13 +2249,34 @@
                 const cancelCheckOut = document.getElementById('cancelCheckOut');
                 const closeCheckOutModal = document.getElementById('closeCheckOutModal');
                 
+                console.log('Check-out modal elements:', { confirmCheckOut, cancelCheckOut, closeCheckOutModal, checkOutModal });
+                
                 if (confirmCheckOut && cancelCheckOut && closeCheckOutModal && checkOutModal) {
                     confirmCheckOut.addEventListener('click', performCheckOut);
                     cancelCheckOut.addEventListener('click', function() {
+                        console.log('Cancel check-out clicked');
                         checkOutModal.style.display = 'none';
+                        // Clear form fields
+                        const locationInput = document.getElementById('checkOutLocation');
+                        const noteInput = document.getElementById('checkOutNote');
+                        if (locationInput) locationInput.value = '';
+                        if (noteInput) noteInput.value = '';
                     });
                     closeCheckOutModal.addEventListener('click', function() {
+                        console.log('Close check-out modal clicked');
                         checkOutModal.style.display = 'none';
+                        // Clear form fields
+                        const locationInput = document.getElementById('checkOutLocation');
+                        const noteInput = document.getElementById('checkOutNote');
+                        if (locationInput) locationInput.value = '';
+                        if (noteInput) noteInput.value = '';
+                    });
+                } else {
+                    console.error('Check-out modal elements not found:', {
+                        confirmCheckOut: !!confirmCheckOut,
+                        cancelCheckOut: !!cancelCheckOut,
+                        closeCheckOutModal: !!closeCheckOutModal,
+                        checkOutModal: !!checkOutModal
                     });
                 }
                 
@@ -2082,12 +2285,30 @@
                 const closeAttendanceDetailsModal = document.getElementById('closeAttendanceDetailsModal');
                 const attendanceDetailsModal = document.getElementById('attendanceDetailsModal');
                 
+                console.log('Attendance details modal elements:', { closeAttendanceDetails, closeAttendanceDetailsModal, attendanceDetailsModal });
+                
                 if (closeAttendanceDetails && closeAttendanceDetailsModal && attendanceDetailsModal) {
                     closeAttendanceDetails.addEventListener('click', function() {
+                        console.log('Close attendance details clicked');
                         attendanceDetailsModal.style.display = 'none';
                     });
                     closeAttendanceDetailsModal.addEventListener('click', function() {
+                        console.log('Close attendance details modal (X) clicked');
                         attendanceDetailsModal.style.display = 'none';
+                    });
+                    
+                    // Close modal when clicking outside the modal content
+                    attendanceDetailsModal.addEventListener('click', function(e) {
+                        if (e.target === attendanceDetailsModal) {
+                            console.log('Clicked outside attendance details modal');
+                            attendanceDetailsModal.style.display = 'none';
+                        }
+                    });
+                } else {
+                    console.error('Attendance details modal elements not found:', {
+                        closeAttendanceDetails: !!closeAttendanceDetails,
+                        closeAttendanceDetailsModal: !!closeAttendanceDetailsModal,
+                        attendanceDetailsModal: !!attendanceDetailsModal
                     });
                 }
                 
@@ -2108,6 +2329,25 @@
                         loadTeamAttendance(date);
                     });
                 }
+                
+                // Add keyboard event listeners for modal closing (ESC key)
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        // Close any open modals
+                        if (checkInModal && checkInModal.style.display === 'flex') {
+                            console.log('ESC pressed - closing check-in modal');
+                            checkInModal.style.display = 'none';
+                        }
+                        if (checkOutModal && checkOutModal.style.display === 'flex') {
+                            console.log('ESC pressed - closing check-out modal');
+                            checkOutModal.style.display = 'none';
+                        }
+                        if (attendanceDetailsModal && attendanceDetailsModal.style.display === 'flex') {
+                            console.log('ESC pressed - closing attendance details modal');
+                            attendanceDetailsModal.style.display = 'none';
+                        }
+                    }
+                });
                 
                 console.log('All event listeners set up successfully');
                 
@@ -2130,32 +2370,25 @@
             }
         }
         
-        // Utility functions
+        // Utility functions - all using IST from ist-utils.js
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString(undefined, options);
+            return formatISTDate(dateString);
         }
         
         function formatDateTime(dateTimeString) {
-            const date = new Date(dateTimeString);
-            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return date.toLocaleString(undefined, options);
+            return formatISTDateTime(dateTimeString);
         }
         
         function formatTime(dateTimeString) {
-            const date = new Date(dateTimeString);
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
+            return formatISTTime(dateTimeString);
         }
         
         function formatDateInput(date) {
-            return date.toISOString().split('T')[0];
+            return formatDateInputIST(date);
         }
         
-        // Current timestamp and user info for logging
-        console.log('Attendance page loaded at 2025-06-12 07:29:30 by soheruWRITE');
+        // Page loaded log with IST time using centralized utilities
+        console.log(`Attendance page script loaded at ${formatISTDateTime(new Date())}`);
     </script>
 </body>
 </html>

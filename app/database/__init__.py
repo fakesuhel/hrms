@@ -19,6 +19,8 @@ daily_reports_collection = db["daily_reports"]
 leave_requests_collection = db["leave_requests"]
 performance_reviews_collection = db["performance_reviews"]
 settings_collection = db["settings"]
+leads_collection = db["leads"]
+customers_collection = db["customers"]
 
 # Create indices for better query performance
 users_collection.create_index("email", unique=True)
@@ -27,6 +29,10 @@ attendance_collection.create_index([("user_id", 1), ("date", 1)], unique=True)
 projects_collection.create_index("name", unique=True)
 leave_requests_collection.create_index([("user_id", 1), ("start_date", 1)])
 performance_reviews_collection.create_index([("user_id", 1), ("review_period", 1)])
+leads_collection.create_index([("assigned_to", 1), ("status", 1)])
+leads_collection.create_index([("created_by", 1), ("created_at", 1)])
+customers_collection.create_index([("assigned_to", 1), ("status", 1)])
+customers_collection.create_index([("created_by", 1), ("created_at", 1)])
 
 def get_db():
     return db

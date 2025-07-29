@@ -1,0 +1,2611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Teams</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-info-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        
+        .user-info-details {
+            flex: 1;
+        }
+        
+        .sidebar-time {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            margin-right: 0.5rem;
+        }
+        
+        .user-fullname {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Form control styles */
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-light);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Teams Specific Styles */
+        .teams-main {
+            padding: 2rem;
+        }
+
+        .teams-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .teams-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .teams-title p {
+            color: var(--text-secondary);
+        }
+        
+        /* Project Grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .project-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-header p {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .project-body {
+            padding: 1.5rem;
+        }
+
+        .project-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .project-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .project-stat {
+            text-align: center;
+        }
+
+        .project-stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .project-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--bg-light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-value {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .progress-low {
+            background-color: var(--danger);
+        }
+
+        .progress-medium {
+            background-color: var(--warning);
+        }
+
+        .progress-high {
+            background-color: var(--success);
+        }
+
+        .team-members-list {
+            list-style: none;
+        }
+
+        .team-member-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .team-member-item:last-child {
+            border-bottom: none;
+        }
+
+        .team-member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .team-member-info {
+            flex: 1;
+        }
+
+        .team-member-name {
+            font-weight: 500;
+            display: block;
+        }
+
+        .team-member-role {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .project-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .project-client {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .project-client strong {
+            color: var(--text-primary);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* Project team section */
+        .project-team-section {
+            margin-top: 1.5rem;
+        }
+        
+        .project-team-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        /* Loading skeleton */
+        .skeleton-loading {
+            animation: skeleton-loading 1.5s infinite alternate;
+            background-color: #e5e7eb;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0.9;
+            }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { transform: translateY(100%); opacity: 0; }
+            15% { transform: translateY(0); opacity: 1; }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state img {
+            width: 150px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .teams-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .project-info-item {
+            margin-bottom: 1rem;
+        }
+
+        .project-info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Team member action buttons */
+        .team-member-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Task assignee styling */
+        .task-assignee {
+            background-color: rgba(37, 99, 235, 0.05);
+            border-left: 3px solid var(--primary-light);
+        }
+        
+        .task-assignee-card {
+            position: relative;
+        }
+        
+        .task-badge {
+            font-size: 0.65rem;
+            background-color: var(--primary-light);
+            color: white;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            margin-left: 0.3rem;
+            vertical-align: middle;
+        }
+        
+        .team-member-task-info {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            display: block;
+        }
+        
+        /* Task assignee styling in task list */
+        .task-assignees {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .task-assignee-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem;
+            background-color: rgba(16, 185, 129, 0.1);
+            border-radius: 0.25rem;
+        }
+        
+        .task-assignee-name {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list" id="navigationMenu">
+                    <!-- Navigation will be populated dynamically based on user role -->
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-info-avatar" id="sidebar-user-avatar">S</div>
+                    <div class="user-info-details">
+                        <div id="sidebar-username" style="font-weight: 500;">soheru</div>
+                        <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team</div>
+                    </div>
+                </div>
+                <div id="sidebar-time" class="sidebar-time">00:00:00</div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Team</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">S</div>
+                    <div class="user-info-header">
+                        <div id="userFullName" class="user-fullname">User Name</div>
+                        <div id="userTimeDisplay" class="user-time">13:29:00</div>
+                    </div>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="teams-main">
+                <div class="teams-header">
+                    <div class="teams-title">
+                        <h1>Team Projects</h1>
+                        <p>Active projects for your team</p>
+                    </div>
+                </div>
+                
+                <div id="loadingProjects">
+                    <div class="skeleton-loading" style="height: 300px; margin-bottom: 1.5rem;"></div>
+                    <div class="skeleton-loading" style="height: 300px; margin-bottom: 1.5rem;"></div>
+                    <div class="skeleton-loading" style="height: 300px;"></div>
+                </div>
+                
+                <div class="project-grid" id="projectsGrid" style="display: none;"></div>
+                
+                <div id="emptyState" style="display: none;" class="empty-state">
+                    <h3>No Active Projects Found</h3>
+                    <p>There are no active projects assigned to your team at the moment.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Project Details Modal -->
+    <div class="modal" id="projectDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="projectModalTitle">Project Details</h2>
+                <button class="modal-close" id="closeProjectModal">&times;</button>
+            </div>
+            <div class="modal-body" id="projectModalBody">
+                <!-- Project details will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="closeModalBtn">Close</button>
+                <button class="btn btn-primary" id="saveTeamChangesBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            try {
+                // Get current user information
+                const currentUser = await getCurrentUser();
+                
+                // Initialize clock and user info
+                initializeLiveClock(currentUser);
+                
+                // Set user info in UI
+                updateUserInfo(currentUser);
+                
+                // Setup role-based UI
+                setupRoleBasedUI(currentUser);
+                
+                // Log current datetime and user
+                const currentTime = getCurrentFormattedTime();
+                console.log(`Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): ${currentTime}`);
+                console.log(`Current User's Login: ${currentUser.username}`);
+                
+                // Load projects
+                await loadTeamProjects();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Error initializing team page:', error);
+                showToast('Error loading team data');
+                
+                // Hide loading, show empty state
+                document.getElementById('loadingProjects').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        });
+
+        async function getCurrentUser() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Try to get current user from API
+                const response = await fetch('/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch current user');
+                }
+                
+                const userData = await response.json();
+                
+                // Store user data for quick access
+                localStorage.setItem('bhoomitechzone_user', JSON.stringify(userData));
+                
+                return userData;
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+                
+                // Try to get user from localStorage
+                const cachedUser = localStorage.getItem('bhoomitechzone_user');
+                if (cachedUser) {
+                    try {
+                        return JSON.parse(cachedUser);
+                    } catch (e) {
+                        // If parse fails, return default
+                    }
+                }
+                
+                // If API call fails and no cached data, return default
+                const username = localStorage.getItem('bhoomitechzone_username') || 'User';
+                return { username: username, role: 'Team Member' };
+            }
+        }
+
+        function getCurrentFormattedTime() {
+            const now = new Date();
+            
+            // Format as YYYY-MM-DD HH:MM:SS
+            const year = now.getUTCFullYear();
+            const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatTimeWithSeconds(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatTimeOnly(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        async function getAllUsers() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                showToast('Error loading users');
+                return [];
+            }
+        }
+
+        async function loadTeamProjects() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const currentUser = await getCurrentUser();
+                
+                // Get all projects and users in parallel
+                const [projectsResponse, usersResponse] = await Promise.all([
+                    fetch('/projects', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('/users', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+                
+                if (!projectsResponse.ok || !usersResponse.ok) {
+                    throw new Error('Failed to load data');
+                }
+                
+                const allProjects = await projectsResponse.json();
+                const allUsers = await usersResponse.json();
+                
+                // Create a user lookup map for quick reference
+                const userLookup = {};
+                allUsers.forEach(user => {
+                    userLookup[user._id] = user;
+                });
+                
+                // Debug logging
+                console.log("Current user:", currentUser);
+                console.log("All projects:", allProjects);
+                console.log("User role:", currentUser.role);
+                console.log("User ID:", currentUser._id);
+                
+                // Filter projects based on user role
+                let projects = [];
+                if (currentUser.role === 'employee') {
+                    // Employees can only see projects they are assigned to or have tasks in
+                    projects = allProjects.filter(project => {
+                        // Check if user is in team members
+                        const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+                        
+                        // Check if user has tasks in this project
+                        const hasAssignedTasks = project.tasks && project.tasks.some(task => 
+                            task.assigned_to && (
+                                (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+                                task.assigned_to === currentUser._id
+                            )
+                        );
+                        
+                        // Check if user created the project
+                        const isCreator = project.created_by === currentUser._id;
+                        
+                        // Debug each project
+                        console.log(`Project "${project.title}":`, {
+                            isTeamMember,
+                            hasAssignedTasks,
+                            isCreator,
+                            teamMembers: project.team_members,
+                            tasks: project.tasks,
+                            status: project.status,
+                            createdBy: project.created_by
+                        });
+                        
+                        return (isTeamMember || hasAssignedTasks || isCreator) && project.status === 'active';
+                    });
+                } else {
+                    // Team leads, managers, directors, HR can see all active projects
+                    projects = allProjects.filter(project => project.status === 'active');
+                }
+                
+                console.log("Filtered projects:", projects);
+                
+                // Hide loading
+                document.getElementById('loadingProjects').style.display = 'none';
+                
+                const projectsGrid = document.getElementById('projectsGrid');
+                
+                if (!projects || projects.length === 0) {
+                    // Show empty state with role-appropriate message
+                    const emptyStateText = currentUser.role === 'employee' 
+                        ? 'No assigned projects found. You will see active projects here when you are assigned to them or have tasks assigned to you.'
+                        : 'No active projects found.';
+                    
+                    document.getElementById('emptyState').style.display = 'block';
+                    const emptyStateElement = document.getElementById('emptyState');
+                    if (emptyStateElement) {
+                        const textElement = emptyStateElement.querySelector('p');
+                        if (textElement) {
+                            textElement.textContent = emptyStateText;
+                        }
+                    }
+                    return;
+                }
+                
+                console.log("Found accessible projects:", projects);
+                
+                // Show projects grid
+                projectsGrid.style.display = 'grid';
+                projectsGrid.innerHTML = '';
+                
+                projects.forEach(project => {
+                    // Process team members to include names
+                    let enhancedTeamMembers = (project.team_members || []).map(member => {
+                        const memberId = typeof member === 'string' ? member : member.user_id;
+                        const user = userLookup[memberId];
+                        return {
+                            user_id: memberId,
+                            name: user ? (user.full_name || user.name || user.username) : 'Unknown',
+                            role: typeof member === 'object' && member.role ? member.role : 
+                                  (user && user.position) ? user.position : 'Team Member',
+                            source: 'team'
+                        };
+                    });
+                    
+                    // Also include users assigned to tasks
+                    const taskAssignees = [];
+                    if (project.tasks && project.tasks.length > 0) {
+                        project.tasks.forEach(task => {
+                            if (task.assigned_to) {
+                                // Handle both single string and array of assignees
+                                const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+                                assignees.forEach(assigneeId => {
+                                    if (assigneeId && typeof assigneeId === 'string' && assigneeId.trim() !== '') {
+                                        const user = userLookup[assigneeId];
+                                        if (user) {
+                                            taskAssignees.push({
+                                                user_id: assigneeId,
+                                                name: user.full_name || user.name || user.username,
+                                                role: (user.position) ? user.position : 'Task Assignee',
+                                                source: 'task'
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Merge task assignees with team members, avoiding duplicates
+                    taskAssignees.forEach(assignee => {
+                        const existingMember = enhancedTeamMembers.find(member => member.user_id === assignee.user_id);
+                        if (!existingMember) {
+                            enhancedTeamMembers.push(assignee);
+                        }
+                    });
+                    
+                    // Create project card
+                    const projectCard = document.createElement('div');
+                    projectCard.className = 'project-card';
+                    projectCard.setAttribute('data-project-id', project._id);
+                    
+                    // Get progress (calculate from tasks if not directly available)
+                    let progress = 0;
+                    if (project.tasks && project.tasks.length > 0) {
+                        const completedTasks = project.tasks.filter(task => task.status === 'completed').length;
+                        progress = Math.round((completedTasks / project.tasks.length) * 100);
+                    }
+                    
+                    // Calculate progress color
+                    let progressClass = 'progress-low';
+                    if (progress >= 70) {
+                        progressClass = 'progress-high';
+                    } else if (progress >= 40) {
+                        progressClass = 'progress-medium';
+                    }
+                    
+                    // Format dates
+                    const startDate = formatDate(project.start_date);
+                    const endDate = formatDate(project.end_date);
+                    
+                    projectCard.innerHTML = `
+                        <div class="project-header" style="background-color: #2563eb;">
+                            <h3>${project.name}</h3>
+                            <p>${startDate} - ${endDate}</p>
+                        </div>
+                        <div class="project-body">
+                            <div class="project-status status-active">Active</div>
+                            
+                            <div class="project-client">
+                                <span><strong>Client:</strong> ${project.client || 'N/A'}</span>
+                            </div>
+                            
+                            <p style="margin-bottom: 1.25rem; font-size: 0.875rem;">${project.description || 'No description available'}</p>
+                            
+                            <div class="project-progress" style="margin-bottom: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 0.875rem;">Progress</span>
+                                    <span style="font-weight: 500;">${progress}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-value ${progressClass}" style="width: ${progress}%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="project-team-section">
+                                <div class="project-team-header">Team Members (${enhancedTeamMembers.length})</div>
+                                <ul class="team-members-list">
+                                    ${generateTeamMembersList(enhancedTeamMembers, 3)}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <button class="btn btn-sm btn-outline view-project" data-id="${project._id}">View Details</button>
+                        </div>
+                    `;
+                    
+                    projectsGrid.appendChild(projectCard);
+                });
+                
+                // Add event listeners to buttons
+                document.querySelectorAll('.view-project').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const projectId = this.getAttribute('data-id');
+                        viewProjectDetails(projectId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading team projects:', error);
+                
+                // Hide loading, show empty state
+                document.getElementById('loadingProjects').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.querySelector('#emptyState p').textContent = 'Failed to load projects. Please try again later.';
+            }
+        }
+
+        async function viewProjectDetails(projectId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const [projectResponse, usersResponse] = await Promise.all([
+                    fetch(`/projects/${projectId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('/users', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+                
+                if (!projectResponse.ok || !usersResponse.ok) {
+                    throw new Error('Failed to load data');
+                }
+                
+                const project = await projectResponse.json();
+                const allUsers = await usersResponse.json();
+                
+                // Get progress (calculate from tasks if not directly available)
+                let progress = 0;
+                if (project.tasks && project.tasks.length > 0) {
+                    const completedTasks = project.tasks.filter(task => task.status === 'completed').length;
+                    progress = Math.round((completedTasks / project.tasks.length) * 100);
+                }
+                
+                // Calculate progress color
+                let progressClass = 'progress-low';
+                if (progress >= 70) {
+                    progressClass = 'progress-high';
+                } else if (progress >= 40) {
+                    progressClass = 'progress-medium';
+                }
+                
+                // Format dates
+                const startDate = formatDate(project.start_date);
+                const endDate = formatDate(project.end_date);
+                
+                // Format budget if available
+                const budget = project.budget ? new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(project.budget) : 'N/A';
+                
+                // Get upcoming tasks (if any)
+                const tasks = project.tasks || [];
+                const upcomingTasks = tasks
+                    .filter(task => task.status !== 'completed')
+                    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+                    .slice(0, 3);
+                
+                // Get technologies
+                const technologies = project.technologies || [];
+                
+                // Map user IDs to actual user objects
+                let enhancedTeamMembers = (project.team_members || []).map(member => {
+                    // Find the full user object matching this team member
+                    const memberId = typeof member === 'string' ? member : member.user_id;
+                    const userInfo = allUsers.find(user => user._id === memberId);
+                    return {
+                        user_id: memberId,
+                        name: userInfo ? (userInfo.full_name || userInfo.name || userInfo.username) : 'Unknown',
+                        role: typeof member === 'object' && member.role ? member.role : 
+                              (userInfo && userInfo.position) ? userInfo.position : 'Team Member',
+                        source: 'team'
+                    };
+                });
+                
+                // Also include users assigned to tasks
+                const taskAssignees = [];
+                if (project.tasks && project.tasks.length > 0) {
+                    project.tasks.forEach(task => {
+                        if (task.assigned_to) {
+                            // Handle both single string and array of assignees
+                            const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+                            assignees.forEach(assigneeId => {
+                                if (assigneeId && typeof assigneeId === 'string' && assigneeId.trim() !== '') {
+                                    const userInfo = allUsers.find(user => user._id === assigneeId);
+                                    if (userInfo) {
+                                        taskAssignees.push({
+                                            user_id: assigneeId,
+                                            name: userInfo.full_name || userInfo.name || userInfo.username,
+                                            role: (userInfo.position) ? userInfo.position : 'Task Assignee',
+                                            task_title: task.title,
+                                            source: 'task'
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // Merge task assignees with team members, avoiding duplicates
+                taskAssignees.forEach(assignee => {
+                    const existingMember = enhancedTeamMembers.find(member => member.user_id === assignee.user_id);
+                    if (!existingMember) {
+                        enhancedTeamMembers.push(assignee);
+                    }
+                });
+                
+                // Generate users dropdown HTML - filter out already added team members
+                const availableUsers = allUsers.filter(user => {
+                    return !enhancedTeamMembers.some(member => member.user_id === user._id);
+                });
+                
+                const usersDropdownHTML = `
+                    <select id="addTeamMemberSelect" class="form-control">
+                        <option value="">Select a team member</option>
+                        ${availableUsers.map(user => 
+                            `<option value="${user._id}">${user.name || user.username}</option>`
+                        ).join('')}
+                    </select>
+                `;
+                
+                // Populate modal
+                document.getElementById('projectModalTitle').textContent = project.name;
+                
+                // Get current user to check permissions
+                const currentUser = await getCurrentUser();
+                const canManageTeam = canManageTeamMembers(project, currentUser);
+                
+                document.getElementById('projectModalBody').innerHTML = `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <div class="project-status status-active">Active</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">${startDate} - ${endDate}</div>
+                        </div>
+                        
+                        <div class="project-info-item">
+                            <div class="project-info-label">Client</div>
+                            <div><strong>${project.client || 'N/A'}</strong></div>
+                        </div>
+                        
+                        <div class="project-info-item">
+                            <div class="project-info-label">Budget</div>
+                            <div><strong>${budget}</strong></div>
+                        </div>
+                        
+                        <p style="margin: 1.5rem 0;">${project.description || 'No description available'}</p>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="font-weight: 500;">Progress</span>
+                                <span style="font-weight: 500;">${progress}%</span>
+                            </div>
+                            <div class="progress-bar" style="height: 8px;">
+                                <div class="progress-value ${progressClass}" style="width: ${progress}%;"></div>
+                            </div>
+                        </div>
+                        
+                        ${technologies.length > 0 ? `
+                            <div class="project-info-item">
+                                <div class="project-info-label">Technologies</div>
+                                <div>${technologies.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin: 1.5rem 0;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Tasks</h3>
+                            ${upcomingTasks.length > 0 ? `
+                                <ul style="list-style: none;" id="tasksList">
+                                    ${upcomingTasks.map(task => {
+                                        // Get assignees for this task
+                                        const assigneeIds = Array.isArray(task.assigned_to) ? task.assigned_to : 
+                                            (task.assigned_to ? [task.assigned_to] : []);
+                                        
+                                        // Format assignee information if any
+                                        let assigneeSection = '';
+                                        if (assigneeIds.length > 0) {
+                                            const assigneeUsers = assigneeIds.map(id => {
+                                                const user = allUsers.find(u => u._id === id);
+                                                return user ? {
+                                                    id: id,
+                                                    name: user.full_name || user.name || user.username
+                                                } : null;
+                                            }).filter(Boolean);
+                                            
+                                            if (assigneeUsers.length > 0) {
+                                                assigneeSection = `
+                                                    <div style="margin-top: 0.5rem;">
+                                                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Assigned to:</div>
+                                                        <div class="task-assignees">
+                                                            ${assigneeUsers.map(user => `
+                                                                <div class="task-assignee-item">
+                                                                    <span class="task-assignee-name">${user.name}</span>
+                                                                    ${canManageTeam ? `
+                                                                        <button class="task-remove-assignee btn btn-sm btn-outline" 
+                                                                                data-user-id="${user.id}" 
+                                                                                data-task-id="${task._id}"
+                                                                                style="color: var(--danger); padding: 0.1rem 0.3rem; font-size: 0.7rem;">
+                                                                            Remove
+                                                                        </button>
+                                                                    ` : ''}
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }
+                                        }
+                                        
+                                        return `
+                                            <li style="padding: 0.75rem; background-color: var(--bg-light); border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 500;">${task.title || 'Untitled Task'}</div>
+                                                <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                                                    <span style="color: var(--text-secondary);">${task.description || ''}</span>
+                                                    ${task.due_date ? `<span style="color: var(--warning); font-weight: 500;">Due: ${formatDate(task.due_date)}</span>` : ''}
+                                                </div>
+                                                ${assigneeSection}
+                                            </li>
+                                        `;
+                                    }).join('')}
+                                </ul>
+                            ` : `<p style="color: var(--text-secondary);">No pending tasks</p>`}
+                        </div>
+                        
+                        <div id="teamMembersSection" data-project-id="${project._id}">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Team Members (${enhancedTeamMembers.length})</h3>
+                            <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">
+                                * Team members include both directly assigned members and users assigned to project tasks
+                            </div>
+                            <ul class="team-members-list" id="teamMembersList">
+                                ${generateEnhancedTeamMembersList(enhancedTeamMembers, projectId, canManageTeam)}
+                            </ul>
+                            
+                            ${canManageTeam ? `
+                                <div style="margin-top: 1rem;">
+                                    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                                        <div style="flex-grow: 1;">
+                                            ${usersDropdownHTML}
+                                        </div>
+                                        <button id="addTeamMemberBtn" class="btn btn-sm btn-primary">Add Member</button>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: rgba(59, 130, 246, 0.1); border-radius: 0.25rem; font-size: 0.875rem; color: var(--info);">
+                                    You don't have permission to add or remove team members for this project.
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                // Save project ID to the modal for reference
+                document.getElementById('projectDetailsModal').setAttribute('data-project-id', projectId);
+                
+                // Show modal
+                document.getElementById('projectDetailsModal').style.display = 'flex';
+                
+                // Add event listener for adding team member (if button exists)
+                const addTeamMemberBtn = document.getElementById('addTeamMemberBtn');
+                if (addTeamMemberBtn) {
+                    addTeamMemberBtn.addEventListener('click', function() {
+                        addTeamMember(projectId);
+                    });
+                }
+                
+                // Add event listeners for remove team member buttons
+                document.querySelectorAll('.remove-team-member').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        removeTeamMember(projectId, userId);
+                    });
+                });
+                
+                // Add event listeners for remove task assignee buttons
+                document.querySelectorAll('.task-remove-assignee').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        const taskId = this.getAttribute('data-task-id');
+                        removeTaskAssignee(projectId, taskId, userId);
+                    });
+                });
+                
+                // Add event listener for save changes button
+                const saveTeamChangesBtn = document.getElementById('saveTeamChangesBtn');
+                if (saveTeamChangesBtn) {
+                    saveTeamChangesBtn.addEventListener('click', function() {
+                        saveTeamChanges(projectId);
+                    });
+                }
+                
+                // Add event listener for close button
+                const closeModalBtn = document.getElementById('closeModalBtn');
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', function() {
+                        document.getElementById('projectDetailsModal').style.display = 'none';
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error viewing project details:', error);
+                showToast('Error loading project details');
+            }
+        }
+
+        // ========================
+        // Team Member List Generation Functions
+        // ========================
+
+        // Generate basic team members list with limited display
+        function generateTeamMembersList(teamMembers, maxDisplay = 3) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic;">No team members</li>';
+            }
+            
+            const displayMembers = teamMembers.slice(0, maxDisplay);
+            const remainingCount = teamMembers.length - maxDisplay;
+            
+            let html = displayMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div class="member-avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                        ${(member.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div class="member-info">
+                        <div class="member-name" style="font-weight: 500; font-size: 0.875rem;">${member.name || 'Unknown'}</div>
+                        <div class="member-role" style="color: var(--text-secondary); font-size: 0.75rem;">${member.role || 'Team Member'}</div>
+                    </div>
+                </li>
+            `).join('');
+            
+            if (remainingCount > 0) {
+                html += `
+                    <li style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.875rem;">
+                        +${remainingCount} more member${remainingCount > 1 ? 's' : ''}
+                    </li>
+                `;
+            }
+            
+            return html;
+        }
+
+        // Generate enhanced team members list with management controls
+        function generateEnhancedTeamMembersList(teamMembers, projectId, canManageTeam = false) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic; padding: 0.5rem 0;">No team members assigned</li>';
+            }
+            
+            return teamMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center;">
+                        <div class="member-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                            ${(member.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div class="member-info">
+                            <div class="member-name" style="font-weight: 500;">${member.name || 'Unknown'}</div>
+                            <div class="member-details" style="color: var(--text-secondary); font-size: 0.875rem;">
+                                <span class="member-role">${member.role || 'Team Member'}</span>
+                                ${member.source ? `<span class="member-source" style="margin-left: 0.5rem; padding: 0.125rem 0.375rem; background-color: var(--bg-light); border-radius: 0.25rem; font-size: 0.75rem;">${member.source === 'task' ? 'Task Assignee' : 'Team Member'}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${canManageTeam && member.source !== 'task' ? `
+                        <button class="btn btn-sm btn-outline remove-team-member" 
+                                data-user-id="${member.user_id}" 
+                                style="color: var(--danger); border-color: var(--danger);">
+                            Remove
+                        </button>
+                    ` : ''}
+                </li>
+            `).join('');
+        }
+
+        // ========================
+        // Navigation Generation Functions
+        // ========================
+
+        function generateNavigationMenu(userRole, currentPage = 'team') {
+            const navigationConfigs = {
+                'employee': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ],
+                'team_lead': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/team', icon: '👥', label: 'Team' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ],
+                'manager': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/team', icon: '👥', label: 'Team' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ]
+            };
+
+            // Default to employee if role not found
+            const menuItems = navigationConfigs[userRole] || navigationConfigs['employee'];
+            
+            return menuItems.map(item => {
+                const isActive = item.href.includes(currentPage);
+                return `
+                    <li class="nav-item">
+                        <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}">
+                            <i>${item.icon}</i>
+                            ${item.label}
+                        </a>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // ========================
+        // Role-Based Access Control
+        // ========================
+
+        // Setup UI based on user role
+        function setupRoleBasedUI(currentUser) {
+            const isEmployee = currentUser.role === 'employee';
+            
+            // Store user role globally for other functions
+            window.currentUserRole = currentUser.role;
+            window.currentUserId = currentUser._id;
+            
+            // Generate and set navigation menu
+            const navigationMenu = document.getElementById('navigationMenu');
+            if (navigationMenu) {
+                navigationMenu.innerHTML = generateNavigationMenu(currentUser.role, 'team');
+            }
+            
+            if (isEmployee) {
+                // Add note about limited access for employees
+                const teamsMainContent = document.querySelector('.teams-main');
+                if (teamsMainContent && !document.getElementById('employee-note')) {
+                    const note = document.createElement('div');
+                    note.id = 'employee-note';
+                    note.style.cssText = `
+                        background-color: rgba(59, 130, 246, 0.1);
+                        border: 1px solid rgba(59, 130, 246, 0.2);
+                        border-radius: 0.5rem;
+                        padding: 0.75rem 1rem;
+                        margin-bottom: 1rem;
+                        color: var(--info);
+                        font-size: 0.875rem;
+                    `;
+                    note.innerHTML = `
+                        <strong>Employee View:</strong> You can see projects you're assigned to and team members you work with. You cannot add or remove team members.
+                    `;
+                    teamsMainContent.insertBefore(note, teamsMainContent.firstChild);
+                }
+            }
+        }
+
+        // Check if current user can manage team members for a project
+        function canManageTeamMembers(project, currentUser) {
+            if (!currentUser || !project) return false;
+            
+            // Admins, directors, managers, team leads can manage team members
+            if (['admin', 'director', 'manager', 'team_lead', 'hr'].includes(currentUser.role)) {
+                return true;
+            }
+            
+            // Employees can only manage team members if they created the project
+            if (currentUser.role === 'employee') {
+                return project.created_by === currentUser._id;
+            }
+            
+            return false;
+        }
+
+        // Check if current user can view project details
+        function canViewProjectDetails(project, currentUser) {
+            if (!currentUser || !project) return false;
+            
+            // Non-employees can view all projects
+            if (currentUser.role !== 'employee') {
+                return true;
+            }
+            
+            // Employees can view projects they are assigned to or have tasks in
+            const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+            const hasAssignedTasks = project.tasks && project.tasks.some(task => 
+                task.assigned_to && (
+                    (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+                    task.assigned_to === currentUser._id
+                )
+            );
+            const isCreator = project.created_by === currentUser._id;
+            
+            return isTeamMember || hasAssignedTasks || isCreator;
+        }
+
+        // ========================
+        // Team Management Functions
+        // ========================
+
+        async function addTeamMember(projectId) {
+            try {
+                const selectElement = document.getElementById('addTeamMemberSelect');
+                const userId = selectElement.value;
+                
+                if (!userId) {
+                    showToast('Please select a team member');
+                    return;
+                }
+                
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to add team member');
+                }
+                
+                showToast('Team member added successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error adding team member:', error);
+                showToast('Error adding team member');
+            }
+        }
+
+        async function removeTeamMember(projectId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove team member');
+                }
+                
+                showToast('Team member removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing team member:', error);
+                showToast('Error removing team member');
+            }
+        }
+
+        async function removeTaskAssignee(projectId, taskId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/tasks/${taskId}/assignees/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove task assignee');
+                }
+                
+                showToast('Task assignee removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing task assignee:', error);
+                showToast('Error removing task assignee');
+            }
+        }
+
+        async function saveTeamChanges(projectId) {
+            try {
+                showToast('Changes saved successfully');
+                document.getElementById('projectDetailsModal').style.display = 'none';
+                
+                // Reload the team projects to reflect changes
+                await loadTeamProjects();
+                
+            } catch (error) {
+                console.error('Error saving team changes:', error);
+                showToast('Error saving changes');
+            }
+        }
+
+        // ========================
+        // Utility Functions
+        // ========================
+
+        function initializeLiveClock(currentUser) {
+            // Initialize user info display
+            updateUserInfo(currentUser);
+            
+            // Update time displays
+            function updateTime() {
+                const now = new Date();
+                const timeString = formatTimeWithSeconds(now);
+                const timeOnlyString = formatTimeOnly(now);
+                
+                // Update sidebar time
+                const sidebarTime = document.getElementById('sidebar-time');
+                if (sidebarTime) {
+                    sidebarTime.textContent = timeString;
+                }
+                
+                // Update header time
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                if (userTimeDisplay) {
+                    userTimeDisplay.textContent = timeString;
+                }
+            }
+            
+            // Update immediately and then every second
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        function updateUserInfo(currentUser) {
+            // Update sidebar user info
+            const sidebarUsername = document.getElementById('sidebar-username');
+            const sidebarPosition = document.getElementById('sidebar-position');
+            const sidebarAvatar = document.getElementById('sidebar-user-avatar');
+            
+            if (sidebarUsername) {
+                sidebarUsername.textContent = currentUser.username || 'User';
+            }
+            if (sidebarPosition) {
+                sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
+            }
+            if (sidebarAvatar) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                sidebarAvatar.textContent = initial;
+            }
+            
+            // Update header user info
+            const userFullName = document.getElementById('userFullName');
+            const userInitials = document.getElementById('userInitials');
+            
+            if (userFullName) {
+                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+            }
+            if (userInitials) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                userInitials.textContent = initial;
+            }
+        }
+
+        function setupEventListeners() {
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    localStorage.removeItem('bhoomitechzone_user');
+                    localStorage.removeItem('bhoomitechzone_username');
+                    window.location.href = '/static/login.html';
+                });
+            }
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function() {
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!userMenu.contains(event.target)) {
+                        userDropdown.classList.remove('show');
+                    }
+                });
+            }
+            
+            // Menu toggle for sidebar
+            const menuToggle = document.getElementById('menuToggle');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            if (menuToggle && dashboardContainer) {
+                menuToggle.addEventListener('click', function() {
+                    dashboardContainer.classList.toggle('sidebar-collapsed');
+                });
+            }
+            
+            // Modal close functionality
+            const closeProjectModal = document.getElementById('closeProjectModal');
+            if (closeProjectModal) {
+                closeProjectModal.addEventListener('click', function() {
+                    document.getElementById('projectDetailsModal').style.display = 'none';
+                });
+            }
+            
+            // Close modal when clicking outside
+            const projectDetailsModal = document.getElementById('projectDetailsModal');
+            if (projectDetailsModal) {
+                projectDetailsModal.addEventListener('click', function(event) {
+                    if (event.target === projectDetailsModal) {
+                        projectDetailsModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // ========================
+        // Team Member List Generation Functions
+        // ========================
+
+        // Generate basic team members list with limited display
+        function generateTeamMembersList(teamMembers, maxDisplay = 3) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic;">No team members</li>';
+            }
+            
+            const displayMembers = teamMembers.slice(0, maxDisplay);
+            const remainingCount = teamMembers.length - maxDisplay;
+            
+            let html = displayMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div class="member-avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                        ${(member.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div class="member-info">
+                        <div class="member-name" style="font-weight: 500; font-size: 0.875rem;">${member.name || 'Unknown'}</div>
+                        <div class="member-role" style="color: var(--text-secondary); font-size: 0.75rem;">${member.role || 'Team Member'}</div>
+                    </div>
+                </li>
+            `).join('');
+            
+            if (remainingCount > 0) {
+                html += `
+                    <li style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.875rem;">
+                        +${remainingCount} more member${remainingCount > 1 ? 's' : ''}
+                    </li>
+                `;
+            }
+            
+            return html;
+        }
+
+        // Generate enhanced team members list with management controls
+        function generateEnhancedTeamMembersList(teamMembers, projectId, canManageTeam = false) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic; padding: 0.5rem 0;">No team members assigned</li>';
+            }
+            
+            return teamMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center;">
+                        <div class="member-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                            ${(member.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div class="member-info">
+                            <div class="member-name" style="font-weight: 500;">${member.name || 'Unknown'}</div>
+                            <div class="member-details" style="color: var(--text-secondary); font-size: 0.875rem;">
+                                <span class="member-role">${member.role || 'Team Member'}</span>
+                                ${member.source ? `<span class="member-source" style="margin-left: 0.5rem; padding: 0.125rem 0.375rem; background-color: var(--bg-light); border-radius: 0.25rem; font-size: 0.75rem;">${member.source === 'task' ? 'Task Assignee' : 'Team Member'}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${canManageTeam && member.source !== 'task' ? `
+                        <button class="btn btn-sm btn-outline remove-team-member" 
+                                data-user-id="${member.user_id}" 
+                                style="color: var(--danger); border-color: var(--danger);">
+                            Remove
+                        </button>
+                    ` : ''}
+                </li>
+            `).join('');
+        }
+
+        // ========================
+        // Team Management Functions
+        // ========================
+
+        async function addTeamMember(projectId) {
+            try {
+                const selectElement = document.getElementById('addTeamMemberSelect');
+                const userId = selectElement.value;
+                
+                if (!userId) {
+                    showToast('Please select a team member');
+                    return;
+                }
+                
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to add team member');
+                }
+                
+                showToast('Team member added successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error adding team member:', error);
+                showToast('Error adding team member');
+            }
+        }
+
+        async function removeTeamMember(projectId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove team member');
+                }
+                
+                showToast('Team member removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing team member:', error);
+                showToast('Error removing team member');
+            }
+        }
+
+        async function removeTaskAssignee(projectId, taskId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/tasks/${taskId}/assignees/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove task assignee');
+                }
+                
+                showToast('Task assignee removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing task assignee:', error);
+                showToast('Error removing task assignee');
+            }
+        }
+
+        async function saveTeamChanges(projectId) {
+            try {
+                showToast('Changes saved successfully');
+                document.getElementById('projectDetailsModal').style.display = 'none';
+                
+                // Reload the team projects to reflect changes
+                await loadTeamProjects();
+                
+            } catch (error) {
+                console.error('Error saving team changes:', error);
+                showToast('Error saving changes');
+            }
+        }
+
+        // ========================
+        // Utility Functions
+        // ========================
+
+        function initializeLiveClock(currentUser) {
+            // Initialize user info display
+            updateUserInfo(currentUser);
+            
+            // Update time displays
+            function updateTime() {
+                const now = new Date();
+                const timeString = formatTimeWithSeconds(now);
+                const timeOnlyString = formatTimeOnly(now);
+                
+                // Update sidebar time
+                const sidebarTime = document.getElementById('sidebar-time');
+                if (sidebarTime) {
+                    sidebarTime.textContent = timeString;
+                }
+                
+                // Update header time
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                if (userTimeDisplay) {
+                    userTimeDisplay.textContent = timeString;
+                }
+            }
+            
+            // Update immediately and then every second
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        function updateUserInfo(currentUser) {
+            // Update sidebar user info
+            const sidebarUsername = document.getElementById('sidebar-username');
+            const sidebarPosition = document.getElementById('sidebar-position');
+            const sidebarAvatar = document.getElementById('sidebar-user-avatar');
+            
+            if (sidebarUsername) {
+                sidebarUsername.textContent = currentUser.username || 'User';
+            }
+            if (sidebarPosition) {
+                sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
+            }
+            if (sidebarAvatar) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                sidebarAvatar.textContent = initial;
+            }
+            
+            // Update header user info
+            const userFullName = document.getElementById('userFullName');
+            const userInitials = document.getElementById('userInitials');
+            
+            if (userFullName) {
+                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+            }
+            if (userInitials) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                userInitials.textContent = initial;
+            }
+        }
+
+        function setupEventListeners() {
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    localStorage.removeItem('bhoomitechzone_user');
+                    localStorage.removeItem('bhoomitechzone_username');
+                    window.location.href = '/static/login.html';
+                });
+            }
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function() {
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!userMenu.contains(event.target)) {
+                        userDropdown.classList.remove('show');
+                    }
+                });
+            }
+            
+            // Menu toggle for sidebar
+            const menuToggle = document.getElementById('menuToggle');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            if (menuToggle && dashboardContainer) {
+                menuToggle.addEventListener('click', function() {
+                    dashboardContainer.classList.toggle('sidebar-collapsed');
+                });
+            }
+            
+            // Modal close functionality
+            const closeProjectModal = document.getElementById('closeProjectModal');
+            if (closeProjectModal) {
+                closeProjectModal.addEventListener('click', function() {
+                    document.getElementById('projectDetailsModal').style.display = 'none';
+                });
+            }
+            
+            // Close modal when clicking outside
+            const projectDetailsModal = document.getElementById('projectDetailsModal');
+            if (projectDetailsModal) {
+                projectDetailsModal.addEventListener('click', function(event) {
+                    if (event.target === projectDetailsModal) {
+                        projectDetailsModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // ========================
+        // Team Member List Generation Functions
+        // ========================
+
+        // Generate basic team members list with limited display
+        function generateTeamMembersList(teamMembers, maxDisplay = 3) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic;">No team members</li>';
+            }
+            
+            const displayMembers = teamMembers.slice(0, maxDisplay);
+            const remainingCount = teamMembers.length - maxDisplay;
+            
+            let html = displayMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div class="member-avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                        ${(member.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div class="member-info">
+                        <div class="member-name" style="font-weight: 500; font-size: 0.875rem;">${member.name || 'Unknown'}</div>
+                        <div class="member-role" style="color: var(--text-secondary); font-size: 0.75rem;">${member.role || 'Team Member'}</div>
+                    </div>
+                </li>
+            `).join('');
+            
+            if (remainingCount > 0) {
+                html += `
+                    <li style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.875rem;">
+                        +${remainingCount} more member${remainingCount > 1 ? 's' : ''}
+                    </li>
+                `;
+            }
+            
+            return html;
+        }
+
+        // Generate enhanced team members list with management controls
+        function generateEnhancedTeamMembersList(teamMembers, projectId, canManageTeam = false) {
+            if (!teamMembers || teamMembers.length === 0) {
+                return '<li style="color: var(--text-secondary); font-style: italic; padding: 0.5rem 0;">No team members assigned</li>';
+            }
+            
+            return teamMembers.map(member => `
+                <li class="team-member-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center;">
+                        <div class="member-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; margin-right: 0.75rem;">
+                            ${(member.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div class="member-info">
+                            <div class="member-name" style="font-weight: 500;">${member.name || 'Unknown'}</div>
+                            <div class="member-details" style="color: var(--text-secondary); font-size: 0.875rem;">
+                                <span class="member-role">${member.role || 'Team Member'}</span>
+                                ${member.source ? `<span class="member-source" style="margin-left: 0.5rem; padding: 0.125rem 0.375rem; background-color: var(--bg-light); border-radius: 0.25rem; font-size: 0.75rem;">${member.source === 'task' ? 'Task Assignee' : 'Team Member'}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${canManageTeam && member.source !== 'task' ? `
+                        <button class="btn btn-sm btn-outline remove-team-member" 
+                                data-user-id="${member.user_id}" 
+                                style="color: var(--danger); border-color: var(--danger);">
+                            Remove
+                        </button>
+                    ` : ''}
+                </li>
+            `).join('');
+        }
+
+        // ========================
+        // Team Management Functions
+        // ========================
+
+        async function addTeamMember(projectId) {
+            try {
+                const selectElement = document.getElementById('addTeamMemberSelect');
+                const userId = selectElement.value;
+                
+                if (!userId) {
+                    showToast('Please select a team member');
+                    return;
+                }
+                
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to add team member');
+                }
+                
+                showToast('Team member added successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error adding team member:', error);
+                showToast('Error adding team member');
+            }
+        }
+
+        async function removeTeamMember(projectId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/team-members/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove team member');
+                }
+                
+                showToast('Team member removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing team member:', error);
+                showToast('Error removing team member');
+            }
+        }
+
+        async function removeTaskAssignee(projectId, taskId, userId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/projects/${projectId}/tasks/${taskId}/assignees/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to remove task assignee');
+                }
+                
+                showToast('Task assignee removed successfully');
+                
+                // Refresh the project details modal
+                viewProjectDetails(projectId);
+                
+            } catch (error) {
+                console.error('Error removing task assignee:', error);
+                showToast('Error removing task assignee');
+            }
+        }
+
+        async function saveTeamChanges(projectId) {
+            try {
+                showToast('Changes saved successfully');
+                document.getElementById('projectDetailsModal').style.display = 'none';
+                
+                // Reload the team projects to reflect changes
+                await loadTeamProjects();
+                
+            } catch (error) {
+                console.error('Error saving team changes:', error);
+                showToast('Error saving changes');
+            }
+        }
+
+        // ========================
+        // Utility Functions
+        // ========================
+
+        function initializeLiveClock(currentUser) {
+            // Initialize user info display
+            updateUserInfo(currentUser);
+            
+            // Update time displays
+            function updateTime() {
+                const now = new Date();
+                const timeString = formatTimeWithSeconds(now);
+                const timeOnlyString = formatTimeOnly(now);
+                
+                // Update sidebar time                const sidebarTime = document.getElementById('sidebar-time');
+                if (sidebarTime) {
+                    sidebarTime.textContent = timeString;
+                }
+                
+                // Update header time
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                if (userTimeDisplay) {
+                    userTimeDisplay.textContent = timeString;
+                }
+            }
+            
+            // Update immediately and then every second
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        function updateUserInfo(currentUser) {
+            // Update sidebar user info
+            const sidebarUsername = document.getElementById('sidebar-username');
+            const sidebarPosition = document.getElementById('sidebar-position');
+            const sidebarAvatar = document.getElementById('sidebar-user-avatar');
+            
+            if (sidebarUsername) {
+                sidebarUsername.textContent = currentUser.username || 'User';
+            }
+            if (sidebarPosition) {
+                sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
+            }
+            if (sidebarAvatar) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                sidebarAvatar.textContent = initial;
+            }
+            
+            // Update header user info
+            const userFullName = document.getElementById('userFullName');
+            const userInitials = document.getElementById('userInitials');
+            
+            if (userFullName) {
+                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+            }
+            if (userInitials) {
+                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                userInitials.textContent = initial;
+            }
+        }
+
+        function setupEventListeners() {
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    localStorage.removeItem('bhoomitechzone_user');
+                    localStorage.removeItem('bhoomitechzone_username');
+                    window.location.href = '/static/login.html';
+                });
+            }
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function() {
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!userMenu.contains(event.target)) {
+                        userDropdown.classList.remove('show');
+                    }
+                });
+            }
+            
+            // Menu toggle for sidebar
+            const menuToggle = document.getElementById('menuToggle');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            if (menuToggle && dashboardContainer) {
+                menuToggle.addEventListener('click', function() {
+                    dashboardContainer.classList.toggle('sidebar-collapsed');
+                });
+            }
+            
+            // Modal close functionality
+            const closeProjectModal = document.getElementById('closeProjectModal');
+            if (closeProjectModal) {
+                closeProjectModal.addEventListener('click', function() {
+                    document.getElementById('projectDetailsModal').style.display = 'none';
+                });
+            }
+            
+            // Close modal when clicking outside
+            const projectDetailsModal = document.getElementById('projectDetailsModal');
+            if (projectDetailsModal) {
+                projectDetailsModal.addEventListener('click', function(event) {
+                    if (event.target === projectDetailsModal) {
+                        projectDetailsModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

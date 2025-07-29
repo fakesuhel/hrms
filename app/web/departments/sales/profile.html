@@ -1,0 +1,2232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Bhoomi TechZone HRMS</title>
+    <style>
+        /* Root Variables */
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-left: 0.75rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 0.75rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        /* Dashboard Main Content */
+        .dashboard-main {
+            padding: 2rem;
+        }
+        
+        /* Profile specific styles */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-tabs {
+            display: flex;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .tab-button {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+        
+        .tab-button.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background: var(--bg-light);
+            color: var(--text-primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        /* Form Styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-input:read-only {
+            background-color: var(--bg-light);
+        }
+        
+        /* Button Styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Document Styles */
+        .document-category {
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .category-title {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .category-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .document-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .document-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: var(--bg-light);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .document-upload:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        
+        .document-upload.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .document-upload.uploaded {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+            border-style: solid;
+        }
+        
+        .document-upload.uploaded:hover {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .upload-text strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .upload-text span {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .document-list {
+            padding: 0 1.5rem 1.5rem;
+        }
+        
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        .document-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+        
+        .document-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .document-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .document-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .document-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .document-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .document-action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        
+        .document-action-btn:hover {
+            background: var(--bg-light);
+            color: var(--text-primary);
+        }
+        
+        .document-action-btn.view {
+            color: var(--primary);
+        }
+        
+        .document-action-btn.download {
+            color: var(--secondary);
+        }
+        
+        .document-action-btn.delete {
+            color: var(--danger);
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        /* Salary Slips Styles */
+        .salary-slips-container {
+            margin-top: 1rem;
+        }
+        
+        .salary-slip-filters {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+        }
+        
+        .salary-slip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        .salary-slip-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+        
+        .salary-slip-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .salary-slip-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .salary-slip-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .salary-slip-month {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .salary-slip-amount {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .salary-slip-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .salary-slip-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>�</i>
+                            Customers
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>�</i>
+                            Reports
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link active">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">Loading...</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1>Employee Profile</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">U</div>
+                    <span id="userTimeDisplay">Loading...</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/sales/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <!-- Profile Tabs -->
+                <div class="profile-tabs">
+                    <button class="tab-button active" data-tab="details">Personal Details</button>
+                    <button class="tab-button" data-tab="documents">Documents</button>
+                    <button class="tab-button" data-tab="salary">Salary Information</button>
+                </div>
+                
+                <!-- Personal Details Tab -->
+                <div class="tab-content active" id="details-tab">
+                    <!-- Personal Information Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Personal Information</h2>
+                            <button class="btn btn-primary" id="editProfileBtn">Edit Profile</button>
+                        </div>
+                        
+                        <form id="profileForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-input" id="fullName" name="fullName">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Employee ID</label>
+                                    <input type="text" class="form-input" id="employeeId" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" id="email" name="email">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-input" id="phoneNumber" name="phoneNumber">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-input" id="dateOfBirth" name="dateOfBirth">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Gender</label>
+                                    <select class="form-input" id="gender" name="gender">
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+
+                    <!-- Address Information Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Address Information</h2>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-input" id="address" name="address">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pincode</label>
+                                <input type="text" class="form-input" id="pincode" name="pincode">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <select class="form-input" id="city" name="city">
+                                    <option value="">Select City</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">State</label>
+                                <select class="form-input" id="state" name="state">
+                                    <option value="">Select State</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-input" id="country" name="country" value="India">
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Details Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Financial Details</h2>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Bank Name</label>
+                                <input type="text" class="form-input" id="bankName" name="bankName">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Number</label>
+                                <input type="text" class="form-input" id="accountNumber" name="accountNumber">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">IFSC Code</label>
+                                <input type="text" class="form-input" id="ifscCode" name="ifscCode">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">PAN Number</label>
+                                <input type="text" class="form-input" id="panNumber" name="panNumber">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Aadhar Number</label>
+                                <input type="text" class="form-input" id="aadharNumber" name="aadharNumber">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">UAN Number</label>
+                                <input type="text" class="form-input" id="uanNumber" name="uanNumber">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employment Information Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Employment Information</h2>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Department</label>
+                                <input type="text" class="form-input" id="department" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Designation</label>
+                                <input type="text" class="form-input" id="designation" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Position</label>
+                                <input type="text" class="form-input" id="position" name="position" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Employment Type</label>
+                                <input type="text" class="form-input" id="employmentType" name="employmentType" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date of Joining</label>
+                                <input type="date" class="form-input" id="joinDate" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Manager/Reporting To</label>
+                                <input type="text" class="form-input" id="reportingTo" name="reportingTo" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Performance Incentives</label>
+                                <input type="text" class="form-input" id="performanceIncentives" name="performanceIncentives" readonly>
+                            </div>
+                            <div class="form-group">
+                                <!-- Empty slot for future fields -->
+                            </div>
+                        </div>
+                    </div>
+                    </form>
+                    
+                    <div id="editActions" style="display: none; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-outline" id="cancelEditBtn">Cancel</button>
+                    </div>
+                </div>
+                
+                <!-- Documents Tab -->
+                <div class="tab-content" id="documents-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Document Management</h2>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary" id="refreshDocumentsBtn">Refresh</button>
+                                <button class="btn btn-primary" id="downloadAllBtn">Download All as ZIP</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Categories -->
+                        <div class="document-category">
+                            <div class="category-header">
+                                <h3 class="category-title">
+                                    <span class="category-icon">🆔</span>
+                                    Identity Documents
+                                </h3>
+                                <span class="document-count" id="identity-count">0 documents</span>
+                            </div>
+                            
+                            <div class="upload-grid">
+                                <div class="document-upload" data-type="aadhar" data-category="identity">
+                                    <div class="upload-icon">📄</div>
+                                    <div class="upload-text">
+                                        <strong>Aadhar Card</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="pan" data-category="identity">
+                                    <div class="upload-icon">📄</div>
+                                    <div class="upload-text">
+                                        <strong>PAN Card</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                            </div>
+                            <div class="document-list" id="identity-list"></div>
+                        </div>
+                        
+                        <div class="document-category">
+                            <div class="category-header">
+                                <h3 class="category-title">
+                                    <span class="category-icon">🎓</span>
+                                    Educational Documents
+                                </h3>
+                                <span class="document-count" id="education-count">0 documents</span>
+                            </div>
+                            
+                            <div class="upload-grid">
+                                <div class="document-upload" data-type="10th" data-category="education">
+                                    <div class="upload-icon">📜</div>
+                                    <div class="upload-text">
+                                        <strong>10th Certificate</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="12th" data-category="education">
+                                    <div class="upload-icon">📜</div>
+                                    <div class="upload-text">
+                                        <strong>12th Certificate</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="graduation" data-category="education">
+                                    <div class="upload-icon">🎓</div>
+                                    <div class="upload-text">
+                                        <strong>Graduation</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="postgraduation" data-category="education">
+                                    <div class="upload-icon">�</div>
+                                    <div class="upload-text">
+                                        <strong>Post Graduation</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                            </div>
+                            <div class="document-list" id="education-list"></div>
+                        </div>
+                        
+                        <div class="document-category">
+                            <div class="category-header">
+                                <h3 class="category-title">
+                                    <span class="category-icon">💼</span>
+                                    Employment Documents
+                                </h3>
+                                <span class="document-count" id="employment-count">0 documents</span>
+                            </div>
+                            
+                            <div class="upload-grid">
+                                <div class="document-upload" data-type="offer" data-category="employment">
+                                    <div class="upload-icon">�</div>
+                                    <div class="upload-text">
+                                        <strong>Offer Letter</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="joining" data-category="employment">
+                                    <div class="upload-icon">�</div>
+                                    <div class="upload-text">
+                                        <strong>Joining Letter</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="experience" data-category="employment">
+                                    <div class="upload-icon">📊</div>
+                                    <div class="upload-text">
+                                        <strong>Experience Letter</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                
+                                <div class="document-upload" data-type="resignation" data-category="employment">
+                                    <div class="upload-icon">�</div>
+                                    <div class="upload-text">
+                                        <strong>Resignation Letter</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                            </div>
+                            <div class="document-list" id="employment-list"></div>
+                        </div>
+                        
+                        <div class="document-category">
+                            <div class="category-header">
+                                <h3 class="category-title">
+                                    <span class="category-icon">📁</span>
+                                    Other Documents
+                                </h3>
+                                <span class="document-count" id="other-count">0 documents</span>
+                            </div>
+                            
+                            <div class="upload-grid">
+                                <div class="document-upload" data-type="other" data-category="other">
+                                    <div class="upload-icon">📋</div>
+                                    <div class="upload-text">
+                                        <strong>Other Documents</strong>
+                                        <span>Drop here or click to upload</span>
+                                    </div>
+                                    <input type="file" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                </div>
+                            </div>
+                            <div class="document-list" id="other-list"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Salary Information Tab -->
+                <div class="tab-content" id="salary-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Current Salary Information</h2>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Base Salary</label>
+                                <input type="text" class="form-input" id="baseSalary" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Net Salary (After Deductions)</label>
+                                <input type="text" class="form-input" id="netSalary" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">HRA</label>
+                                <input type="text" class="form-input" id="hra" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Other Allowances</label>
+                                <input type="text" class="form-input" id="allowances" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Performance Incentives</label>
+                                <input type="text" class="form-input" id="incentives" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Net Salary (After Deductions)</label>
+                                <input type="text" class="form-input" id="netSalary" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">PF Deduction</label>
+                                <input type="text" class="form-input" id="pfDeduction" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tax Deduction</label>
+                                <input type="text" class="form-input" id="taxDeduction" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Penalty Deductions</label>
+                                <input type="text" class="form-input" id="penaltyDeductions" readonly>
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Salary Slips History</h2>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-outline" id="refreshSalarySlipsBtn">Refresh</button>
+                                <button class="btn btn-secondary" id="downloadCurrentSlipBtn">Download Current Month</button>
+                            </div>
+                        </div>
+                        
+                        <div class="salary-slips-container">
+                            <div class="salary-slip-filters">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Filter by Year</label>
+                                        <select class="form-input" id="salaryYear">
+                                            <option value="">All Years</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Filter by Month</label>
+                                        <select class="form-input" id="salaryMonth">
+                                            <option value="">All Months</option>
+                                            <option value="1">January</option>
+                                            <option value="2">February</option>
+                                            <option value="3">March</option>
+                                            <option value="4">April</option>
+                                            <option value="5">May</option>
+                                            <option value="6">June</option>
+                                            <option value="7">July</option>
+                                            <option value="8">August</option>
+                                            <option value="9">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="salarySlipsList">
+                                <div class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading salary slips...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            setupEventListeners();
+            loadProfileData();
+        });
+        
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('active');
+                });
+                
+                document.addEventListener('click', function() {
+                    userDropdown.classList.remove('active');
+                });
+            }
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('bhoomitechzone_token');
+                    window.location.href = '/static/login.html';
+                });
+            }
+            
+            // Tab switching
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+            
+            // Edit profile
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', function() {
+                    enableProfileEdit(true);
+                });
+            }
+            
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function() {
+                    enableProfileEdit(false);
+                    loadProfileData(); // Reload original data
+                });
+            }
+            
+            // Profile form submission
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveProfileData();
+                });
+            }
+            
+            // Save button click handler (since it's outside the form)
+            const saveButton = document.querySelector('#editActions button[type="submit"]');
+            if (saveButton) {
+                saveButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    saveProfileData();
+                });
+            }
+            
+            // Document upload handlers
+            setupDocumentUploads();
+            
+            // Postal code integration
+            setupPostalCodeIntegration();
+            
+            // Download all documents
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            if (downloadAllBtn) {
+                downloadAllBtn.addEventListener('click', downloadAllDocuments);
+            }
+            
+            // Download current salary slip
+            const downloadCurrentSlipBtn = document.getElementById('downloadCurrentSlipBtn');
+            if (downloadCurrentSlipBtn) {
+                downloadCurrentSlipBtn.addEventListener('click', downloadCurrentMonthSlip);
+            }
+            
+            // Refresh documents
+            const refreshDocumentsBtn = document.getElementById('refreshDocumentsBtn');
+            if (refreshDocumentsBtn) {
+                refreshDocumentsBtn.addEventListener('click', loadDocuments);
+            }
+        }
+        
+        function setupPostalCodeIntegration() {
+            const pincodeInput = document.getElementById('pincode');
+            const citySelect = document.getElementById('city');
+            const stateSelect = document.getElementById('state');
+            
+            if (pincodeInput && citySelect && stateSelect) {
+                pincodeInput.addEventListener('blur', async function() {
+                    const pincode = this.value.trim();
+                    if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+                        await fetchPostalData(pincode);
+                    }
+                });
+            }
+            
+            // Load states on page load
+            loadStates();
+        }
+        
+        async function fetchPostalData(pincode) {
+            try {
+                showToast('Fetching location data...');
+                
+                const response = await fetch(`/users/postal-code/${pincode}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update state
+                    const stateSelect = document.getElementById('state');
+                    if (stateSelect) {
+                        stateSelect.value = data.state;
+                    }
+                    
+                    // Update city options
+                    const citySelect = document.getElementById('city');
+                    if (citySelect) {
+                        citySelect.innerHTML = '<option value="">Select City</option>';
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.name;
+                            option.textContent = `${city.name} (${city.district})`;
+                            citySelect.appendChild(option);
+                        });
+                        
+                        // Set primary city as selected
+                        citySelect.value = data.primary_city;
+                    }
+                    
+                    showToast('Location data updated');
+                } else {
+                    showToast('Invalid pincode', 'error');
+                }
+            } catch (error) {
+                console.error('Postal API error:', error);
+                showToast('Error fetching location data', 'error');
+            }
+        }
+        
+        async function loadStates() {
+            try {
+                const response = await fetch('/users/states');
+                if (response.ok) {
+                    const data = await response.json();
+                    const stateSelect = document.getElementById('state');
+                    
+                    if (stateSelect) {
+                        stateSelect.innerHTML = '<option value="">Select State</option>';
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state;
+                            option.textContent = state;
+                            stateSelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading states:', error);
+            }
+        }
+        
+        async function downloadAllDocuments() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                window.open(`/users/documents/download-all?token=${token}`, '_blank');
+                showToast('Preparing documents for download...');
+            } catch (error) {
+                console.error('Download all error:', error);
+                showToast('Download failed', 'error');
+            }
+        }
+        
+        function switchTab(tabName) {
+            // Remove active class from all tabs and buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and button
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load tab-specific data
+            if (tabName === 'documents') {
+                loadDocuments();
+            } else if (tabName === 'salary') {
+                loadSalarySlips();
+            }
+        }
+        
+        function enableProfileEdit(enable) {
+            const inputs = document.querySelectorAll('#profileForm input:not(#employeeId), #profileForm select:not(#employeeId)');
+            const editBtn = document.getElementById('editProfileBtn');
+            const editActions = document.getElementById('editActions');
+            
+            inputs.forEach(input => {
+                if (input.tagName === 'SELECT') {
+                    input.disabled = !enable;
+                } else {
+                    input.readOnly = !enable;
+                }
+            });
+            
+            editBtn.style.display = enable ? 'none' : 'block';
+            editActions.style.display = enable ? 'block' : 'none';
+        }
+        
+        // Postal Code API Integration
+        async function fetchLocationData(pincode) {
+            try {
+                const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+                const data = await response.json();
+                
+                if (data[0].Status === 'Success') {
+                    const postOffices = data[0].PostOffice;
+                    updateLocationDropdowns(postOffices);
+                    return postOffices;
+                }
+            } catch (error) {
+                console.error('Error fetching location data:', error);
+                showToast('Error fetching location data');
+            }
+            return null;
+        }
+        
+        function updateLocationDropdowns(postOffices) {
+            const citySelect = document.getElementById('city');
+            const stateSelect = document.getElementById('state');
+            
+            // Clear existing options
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            stateSelect.innerHTML = '<option value="">Select State</option>';
+            
+            // Get unique cities and states
+            const cities = [...new Set(postOffices.map(po => po.District))];
+            const states = [...new Set(postOffices.map(po => po.State))];
+            
+            // Populate city dropdown
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+            
+            // Populate state dropdown
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                stateSelect.appendChild(option);
+            });
+            
+            // Auto-select if only one option
+            if (cities.length === 1) citySelect.value = cities[0];
+            if (states.length === 1) stateSelect.value = states[0];
+        }
+        
+        // Setup pincode change listener
+        function setupPincodeListener() {
+            const pincodeInput = document.getElementById('pincode');
+            let timeout;
+            
+            pincodeInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                const pincode = this.value.trim();
+                
+                if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+                    timeout = setTimeout(() => {
+                        fetchLocationData(pincode);
+                    }, 500);
+                }
+            });
+        }
+        
+        async function loadUserData() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('bhoomitechzone_token');
+                        window.location.href = '/static/login.html';
+                        return;
+                    }
+                    throw new Error('Failed to fetch user data');
+                }
+                
+                const userData = await response.json();
+                updateUserInterface(userData);
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showToast('Error loading user data. Please refresh the page.');
+            }
+        }
+        
+        function updateUserInterface(userData) {
+            // Update sidebar
+            const usernameElement = document.getElementById('sidebar-username');
+            if (usernameElement) {
+                usernameElement.textContent = userData.full_name || userData.username || 'Unknown User';
+            }
+            
+            const positionElement = document.getElementById('sidebar-position');
+            if (positionElement) {
+                positionElement.textContent = userData.position || userData.role || 'Employee';
+            }
+            
+            // Update user avatar
+            const userInitialsElement = document.getElementById('userInitials');
+            if (userInitialsElement) {
+                const initials = getInitials(userData.full_name || userData.username);
+                userInitialsElement.textContent = initials;
+            }
+            
+            // Update time display
+            updateTimeDisplay(userData);
+        }
+        
+        function getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+        
+        function updateTimeDisplay(userData) {
+            const userTimeDisplay = document.getElementById('userTimeDisplay');
+            if (userTimeDisplay) {
+                // Get current IST time (UTC+5:30)
+                const now = new Date();
+                const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+                const timeString = istTime.toLocaleTimeString('en-IN', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: 'Asia/Kolkata'
+                });
+                const username = userData.username || userData.full_name || 'User';
+                userTimeDisplay.textContent = `${timeString} IST - ${username}`;
+            }
+            
+            setTimeout(() => updateTimeDisplay(userData), 60000);
+        }
+        
+        async function loadProfileData() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const profileData = await response.json();
+                    populateProfileForm(profileData);
+                } else {
+                    // If profile endpoint doesn't exist, use user data
+                    const userResponse = await fetch('/users/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (userResponse.ok) {
+                        const userData = await userResponse.json();
+                        populateProfileForm(userData);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+            }
+        }
+        
+        function populateProfileForm(data) {
+            // Basic Information - with null checks
+            const fullNameEl = document.getElementById('fullName');
+            if (fullNameEl) fullNameEl.value = data.full_name || data.username || '';
+            
+            const employeeIdEl = document.getElementById('employeeId');
+            if (employeeIdEl) employeeIdEl.value = data.employee_id || data.id || '';
+            
+            const emailEl = document.getElementById('email');
+            if (emailEl) emailEl.value = data.email || '';
+            
+            const phoneNumberEl = document.getElementById('phoneNumber');
+            if (phoneNumberEl) phoneNumberEl.value = data.phone_number || '';
+            
+            const dateOfBirthEl = document.getElementById('dateOfBirth');
+            if (dateOfBirthEl) dateOfBirthEl.value = data.date_of_birth || '';
+            
+            const genderEl = document.getElementById('gender');
+            if (genderEl) genderEl.value = data.gender || '';
+            
+            // Address Information
+            const addressEl = document.getElementById('address');
+            if (addressEl) addressEl.value = data.address || '';
+            
+            const pincodeEl = document.getElementById('pincode');
+            if (pincodeEl) pincodeEl.value = data.pincode || '';
+            
+            const cityEl = document.getElementById('city');
+            if (cityEl) cityEl.value = data.city || '';
+            
+            const stateEl = document.getElementById('state');
+            if (stateEl) stateEl.value = data.state || '';
+            
+            const countryEl = document.getElementById('country');
+            if (countryEl) countryEl.value = data.country || 'India';
+            
+            // Financial Details
+            const bankNameEl = document.getElementById('bankName');
+            if (bankNameEl) bankNameEl.value = data.bank_name || '';
+            
+            const accountNumberEl = document.getElementById('accountNumber');
+            if (accountNumberEl) accountNumberEl.value = data.account_number || '';
+            
+            const ifscCodeEl = document.getElementById('ifscCode');
+            if (ifscCodeEl) ifscCodeEl.value = data.ifsc_code || '';
+            
+            const panNumberEl = document.getElementById('panNumber');
+            if (panNumberEl) panNumberEl.value = data.pan_number || '';
+            
+            const aadharNumberEl = document.getElementById('aadharNumber');
+            if (aadharNumberEl) aadharNumberEl.value = data.aadhar_number || '';
+            
+            const uanNumberEl = document.getElementById('uanNumber');
+            if (uanNumberEl) uanNumberEl.value = data.uan_number || '';
+            
+            // Employment Information
+            const departmentEl = document.getElementById('department');
+            if (departmentEl) departmentEl.value = data.department || '';
+            
+            const designationEl = document.getElementById('designation');
+            if (designationEl) designationEl.value = data.designation || data.role || '';
+            
+            const positionEl = document.getElementById('position');
+            if (positionEl) positionEl.value = data.position || '';
+            
+            const employmentTypeEl = document.getElementById('employmentType');
+            if (employmentTypeEl) employmentTypeEl.value = data.employment_type || 'Full-time';
+            
+            const joinDateEl = document.getElementById('joinDate');
+            if (joinDateEl) joinDateEl.value = data.join_date || '';
+            
+            const reportingToEl = document.getElementById('reportingTo');
+            if (reportingToEl) reportingToEl.value = data.reporting_to || '';
+            
+            const performanceIncentivesEl = document.getElementById('performanceIncentives');
+            if (performanceIncentivesEl) performanceIncentivesEl.value = data.performance_incentives || '';
+            
+            // Salary information
+            const baseSalaryEl = document.getElementById('baseSalary');
+            if (baseSalaryEl) baseSalaryEl.value = data.base_salary ? `₹${data.base_salary}` : '';
+            
+            const netSalaryEl = document.getElementById('netSalary');
+            if (netSalaryEl) netSalaryEl.value = data.net_salary ? `₹${data.net_salary}` : '';
+            
+            const hraEl = document.getElementById('hra');
+            if (hraEl) hraEl.value = data.hra ? `₹${data.hra}` : '';
+            
+            const allowancesEl = document.getElementById('allowances');
+            if (allowancesEl) allowancesEl.value = data.allowances ? `₹${data.allowances}` : '';
+            
+            const pfDeductionEl = document.getElementById('pfDeduction');
+            if (pfDeductionEl) pfDeductionEl.value = data.pf_deduction ? `₹${data.pf_deduction}` : '';
+            
+            const taxDeductionEl = document.getElementById('taxDeduction');
+            if (taxDeductionEl) taxDeductionEl.value = data.tax_deduction ? `₹${data.tax_deduction}` : '';
+            
+            const penaltyDeductionsEl = document.getElementById('penaltyDeductions');
+            if (penaltyDeductionsEl) penaltyDeductionsEl.value = data.penalty_deductions ? `₹${data.penalty_deductions}` : '';
+        }
+        
+        async function saveProfileData() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                // Collect form data
+                const profileData = {
+                    full_name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone_number: document.getElementById('phoneNumber').value,
+                    date_of_birth: document.getElementById('dateOfBirth').value,
+                    gender: document.getElementById('gender').value,
+                    address: document.getElementById('address').value,
+                    pincode: document.getElementById('pincode').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    country: document.getElementById('country').value,
+                    bank_name: document.getElementById('bankName').value,
+                    account_number: document.getElementById('accountNumber').value,
+                    ifsc_code: document.getElementById('ifscCode').value,
+                    pan_number: document.getElementById('panNumber').value,
+                    aadhar_number: document.getElementById('aadharNumber').value,
+                    uan_number: document.getElementById('uanNumber').value,
+                    department: document.getElementById('department').value,
+                    designation: document.getElementById('designation').value,
+                    position: document.getElementById('position').value,
+                    employment_type: document.getElementById('employmentType').value,
+                    join_date: document.getElementById('joinDate').value,
+                    reporting_to: document.getElementById('reportingTo').value,
+                    performance_incentives: document.getElementById('performanceIncentives').value,
+                    base_salary: document.getElementById('baseSalary') ? document.getElementById('baseSalary').value.replace('₹', '').replace(/,/g, '') : '',
+                    hra: document.getElementById('hra') ? document.getElementById('hra').value.replace('₹', '').replace(/,/g, '') : '',
+                    allowances: document.getElementById('allowances') ? document.getElementById('allowances').value.replace('₹', '').replace(/,/g, '') : '',
+                    pf_deduction: document.getElementById('pfDeduction') ? document.getElementById('pfDeduction').value.replace('₹', '').replace(/,/g, '') : '',
+                    tax_deduction: document.getElementById('taxDeduction') ? document.getElementById('taxDeduction').value.replace('₹', '').replace(/,/g, '') : '',
+                    penalty_deductions: document.getElementById('penaltyDeductions') ? document.getElementById('penaltyDeductions').value.replace('₹', '').replace(/,/g, '') : '',
+                    net_salary: document.getElementById('netSalary') ? document.getElementById('netSalary').value.replace('₹', '').replace(/,/g, '') : ''
+                };
+                
+                const response = await fetch('/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+                
+                if (response.ok) {
+                    showToast('Profile updated successfully');
+                    enableProfileEdit(false);
+                    // Reload user data to update sidebar
+                    loadUserData();
+                } else {
+                    const errorData = await response.json();
+                    showToast(`Failed to update profile: ${errorData.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                showToast('Error saving profile');
+            }
+        }
+        
+        function setupDocumentUploads() {
+            document.querySelectorAll('.document-upload').forEach(upload => {
+                const input = upload.querySelector('input[type="file"]');
+                
+                upload.addEventListener('click', () => input.click());
+                
+                upload.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    upload.style.borderColor = 'var(--primary)';
+                });
+                
+                upload.addEventListener('dragleave', () => {
+                    upload.style.borderColor = 'var(--border-color)';
+                });
+                
+                upload.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    upload.style.borderColor = 'var(--border-color)';
+                    handleFileUpload(e.dataTransfer.files, upload.dataset.type);
+                });
+                
+                input.addEventListener('change', (e) => {
+                    handleFileUpload(e.target.files, upload.dataset.type);
+                });
+            });
+        }
+        
+        async function handleFileUpload(files, documentType) {
+            if (files.length === 0) return;
+            
+            const upload = document.querySelector(`[data-type="${documentType}"]`);
+            const category = upload.dataset.category;
+            
+            for (let file of files) {
+                try {
+                    showToast('Uploading document...');
+                    
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('document_type', documentType);
+                    formData.append('category', category);
+                    
+                    const token = localStorage.getItem('bhoomitechzone_token');
+                    const response = await fetch('/users/documents/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showToast(`Document uploaded successfully: ${result.filename}`);
+                        await loadDocuments(); // Refresh document list
+                        await updateDocumentCounts(); // Update counts
+                    } else {
+                        const error = await response.json();
+                        showToast(`Upload failed: ${error.detail}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showToast('Upload failed. Please try again.', 'error');
+                }
+            }
+        }
+        
+        async function loadDocuments() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/documents', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayDocuments(data.documents);
+                    updateUploadBoxes(data.documents); // Update upload boxes to show uploaded status
+                    await updateDocumentCounts();
+                } else {
+                    console.error('Failed to load documents');
+                }
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+        
+        function updateUploadBoxes(documents) {
+            // Reset all upload boxes first
+            document.querySelectorAll('.document-upload').forEach(upload => {
+                upload.classList.remove('uploaded');
+                const text = upload.querySelector('.upload-text span');
+                if (text) {
+                    text.textContent = 'Drop here or click to upload';
+                }
+            });
+            
+            // Group documents by type
+            const documentsByType = {};
+            documents.forEach(doc => {
+                const type = doc.document_type;
+                if (!documentsByType[type]) {
+                    documentsByType[type] = [];
+                }
+                documentsByType[type].push(doc);
+            });
+            
+            // Update upload boxes for documents that exist
+            Object.keys(documentsByType).forEach(type => {
+                const upload = document.querySelector(`[data-type="${type}"]`);
+                if (upload) {
+                    const count = documentsByType[type].length;
+                    upload.classList.add('uploaded');
+                    const text = upload.querySelector('.upload-text span');
+                    if (text) {
+                        text.textContent = `✅ ${count} document${count > 1 ? 's' : ''} uploaded`;
+                    }
+                }
+            });
+        }
+        
+        function displayDocuments(documents) {
+            // Group documents by category
+            const categories = {
+                identity: [],
+                education: [],
+                employment: [],
+                other: []
+            };
+            
+            documents.forEach(doc => {
+                // Fix: use doc.category instead of doc.document_category
+                const category = doc.category || 'other';
+                if (categories[category]) {
+                    categories[category].push(doc);
+                } else {
+                    categories['other'].push(doc);
+                }
+            });
+            
+            // Display documents for each category
+            Object.keys(categories).forEach(category => {
+                const listElement = document.getElementById(`${category}-list`);
+                if (listElement) {
+                    listElement.innerHTML = '';
+                    
+                    categories[category].forEach(doc => {
+                        const docElement = createDocumentElement(doc);
+                        listElement.appendChild(docElement);
+                    });
+                }
+            });
+        }
+        
+        function createDocumentElement(doc) {
+            const div = document.createElement('div');
+            div.className = 'document-item';
+            
+            // Use created_at if upload_date is not available
+            const uploadDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Unknown date';
+            const fileSize = doc.file_size ? (doc.file_size / 1024).toFixed(1) + ' KB' : 'Unknown size';
+            
+            div.innerHTML = `
+                <div class="document-info">
+                    <span class="document-icon">📄</span>
+                    <div class="document-details">
+                        <div class="document-name">${doc.original_filename || 'Unknown file'}</div>
+                        <div class="document-meta">
+                            ${doc.document_type || 'Unknown type'} • ${fileSize} • ${uploadDate}
+                        </div>
+                    </div>
+                </div>
+                <div class="document-actions">
+                    <button class="document-action-btn view" onclick="viewDocument('${doc.id}')" title="View">
+                        👁️
+                    </button>
+                    <button class="document-action-btn download" onclick="downloadDocument('${doc.id}')" title="Download">
+                        ⬇️
+                    </button>
+                    <button class="document-action-btn delete" onclick="deleteDocument('${doc.id}')" title="Delete">
+                        🗑️
+                    </button>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        async function viewDocument(documentId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                window.open(`/users/documents/${documentId}/download?token=${token}`, '_blank');
+            } catch (error) {
+                console.error('View error:', error);
+                showToast('Failed to view document', 'error');
+            }
+        }
+        
+        async function downloadDocument(documentId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                window.open(`/users/documents/${documentId}/download?token=${token}`, '_blank');
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('Download failed', 'error');
+            }
+        }
+        
+        async function deleteDocument(documentId) {
+            // Enhanced confirmation dialog
+            const confirmed = confirm('⚠️ Are you sure you want to delete this document?\n\nThis action cannot be undone.');
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                // Show loading state
+                showToast('Deleting document...', 'info');
+                
+                const response = await fetch(`/users/documents/${documentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('✅ Document deleted successfully', 'success');
+                    // Refresh the document list and counts
+                    await loadDocuments();
+                    await updateDocumentCounts();
+                } else {
+                    const error = await response.json();
+                    showToast(`❌ Delete failed: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('❌ Failed to delete document. Please try again.', 'error');
+            }
+        }
+        
+        async function updateDocumentCounts() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/documents/categories', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const counts = data.counts;
+                    
+                    // Update count displays
+                    Object.keys(counts).forEach(category => {
+                        const countElement = document.getElementById(`${category}-count`);
+                        if (countElement) {
+                            const count = counts[category];
+                            countElement.textContent = `${count} document${count !== 1 ? 's' : ''}`;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating counts:', error);
+            }
+        }
+        
+        async function loadSalarySlips() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/salary-slips', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySalarySlips(data.salary_slips);
+                } else {
+                    const slipsList = document.getElementById('salarySlipsList');
+                    slipsList.innerHTML = '<p>No salary slips found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading salary slips:', error);
+                const slipsList = document.getElementById('salarySlipsList');
+                slipsList.innerHTML = '<p>Error loading salary slips. Please try again.</p>';
+            }
+        }
+        
+        function displaySalarySlips(slips) {
+            const slipsList = document.getElementById('salarySlipsList');
+            
+            if (slips.length === 0) {
+                slipsList.innerHTML = '<p>No salary slips available.</p>';
+                return;
+            }
+            
+            let html = '<div class="salary-slips-grid">';
+            
+            slips.forEach(slip => {
+                html += `
+                    <div class="salary-slip-card">
+                        <div class="slip-header">
+                            <h4>${slip.month_name} ${slip.year}</h4>
+                            <span class="slip-status ${slip.is_finalized ? 'finalized' : 'draft'}">
+                                ${slip.is_finalized ? 'Finalized' : 'Draft'}
+                            </span>
+                        </div>
+                        <div class="slip-details">
+                            <div class="detail-row">
+                                <span>Net Salary:</span>
+                                <span class="amount">₹${slip.net_salary.toLocaleString()}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span>Payable Amount:</span>
+                                <span class="amount payable">₹${slip.payable_salary ? slip.payable_salary.toLocaleString() : slip.net_salary.toLocaleString()}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span>Generated:</span>
+                                <span>${new Date(slip.generated_date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="slip-actions">
+                            <button class="btn btn-primary" onclick="downloadSalarySlip('${slip.id}')">
+                                📄 Download PDF
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            slipsList.innerHTML = html;
+        }
+        
+        async function downloadSalarySlip(slipId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                window.open(`/users/salary-slips/${slipId}/download?token=${token}`, '_blank');
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('Download failed', 'error');
+            }
+        }
+        
+        async function downloadCurrentMonthSlip() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/salary-slips/current', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    await downloadSalarySlip(data.salary_slip.id);
+                } else {
+                    showToast('Current month salary slip not available', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error downloading current slip', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.className = 'toast show';
+                
+                // Set color based on type
+                if (type === 'error') {
+                    toast.style.background = 'var(--danger)';
+                } else if (type === 'warning') {
+                    toast.style.background = 'var(--warning)';
+                } else {
+                    toast.style.background = 'var(--success)';
+                }
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

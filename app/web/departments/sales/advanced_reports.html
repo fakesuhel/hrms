@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Sales Reports - Bhoomi TechZone HRMS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .page-main {
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+        
+        .filters-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-change {
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+        .neutral { color: var(--text-muted); }
+        
+        .reports-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .report-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .performer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        
+        .performer-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .performer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .performer-details h4 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .performer-details p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .performer-stats {
+            text-align: right;
+        }
+        
+        .performer-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .performer-metric {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .late-member {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .late-member .performer-avatar {
+            background: var(--danger);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.success { background-color: var(--success); }
+        .toast.error { background-color: var(--danger); }
+        .toast.info { background-color: var(--info); }
+        
+        @media (max-width: 1024px) {
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#2563eb"/>
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>👥</i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link active">
+                            <i>📊</i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">User</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Sales</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle" style="background: none; border: none; cursor: pointer; display: none;">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Executive Sales Reports</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">U</div>
+                    <span id="userTimeDisplay">00:00 - User</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/sales/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div style="height: 1px; background-color: var(--border-color); margin: 0.5rem 0;"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="page-main">
+                <div class="page-header">
+                    <h1 class="page-title">Executive Sales Analytics</h1>
+                    <p class="page-subtitle">Comprehensive performance insights and team analytics</p>
+                </div>
+                
+                <!-- Filters Section -->
+                <div class="filters-section">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label class="filter-label">Start Date</label>
+                            <input type="date" class="filter-input" id="startDate">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">End Date</label>
+                            <input type="date" class="filter-input" id="endDate">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Team Member</label>
+                            <select class="filter-input" id="teamMemberFilter">
+                                <option value="">All Team Members</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Amount Range</label>
+                            <select class="filter-input" id="amountFilter">
+                                <option value="">All Amounts</option>
+                                <option value="0-25000">₹0 - ₹25,000</option>
+                                <option value="25000-50000">₹25,000 - ₹50,000</option>
+                                <option value="50000-100000">₹50,000 - ₹1,00,000</option>
+                                <option value="100000+">₹1,00,000+</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn" id="applyFilters">
+                            <span>🔍</span>
+                            Apply Filters
+                        </button>
+                        <button class="btn btn-secondary" id="resetFilters">
+                            <span>🔄</span>
+                            Reset
+                        </button>
+                        <button class="btn btn-success" id="exportReports">
+                            <span>📊</span>
+                            Export Report
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Stats Overview -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading statistics...
+                    </div>
+                </div>
+                
+                <!-- Reports Grid -->
+                <div class="reports-grid">
+                    <!-- Top Performers -->
+                    <div class="report-section">
+                        <h3 class="section-title">
+                            <span>🏆</span>
+                            Top Performers
+                        </h3>
+                        <div id="topPerformers">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading top performers...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Late Members -->
+                    <div class="report-section">
+                        <h3 class="section-title">
+                            <span>⏰</span>
+                            Late Members Today
+                        </h3>
+                        <div id="lateMembers">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading attendance data...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Chart -->
+                    <div class="report-section full-width">
+                        <h3 class="section-title">
+                            <span>📈</span>
+                            Performance Trends
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let currentUser = null;
+        let reportData = {};
+        let performanceChart = null;
+        let teamMembers = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Executive Reports page loading...');
+            
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                console.log('No token found, redirecting to login');
+                window.location.href = '/app/login';
+                return;
+            }
+            
+            try {
+                // Initialize page
+                await initializePage();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Set default date range
+                setDefaultDateRange();
+                
+                // Load data
+                await Promise.all([
+                    loadReports(),
+                    loadTeamMembers(),
+                    loadTopPerformers(),
+                    loadLateMembers()
+                ]);
+                
+                console.log('Executive Reports page loaded successfully');
+            } catch (error) {
+                console.error('Error initializing executive reports page:', error);
+                showToast('Error loading reports page', 'error');
+            }
+        });
+        
+        async function initializePage() {
+            console.log('Initializing page...');
+            
+            try {
+                // Load current user
+                await loadCurrentUser();
+                
+                console.log('Page initialized successfully');
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                throw error;
+            }
+        }
+        
+        async function loadCurrentUser() {
+            try {
+                console.log('Loading current user...');
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    currentUser = await response.json();
+                    console.log('Current user loaded:', currentUser);
+                    updateUserInfo(currentUser);
+                } else {
+                    console.error('Failed to load user:', response.status, response.statusText);
+                    throw new Error('Failed to load user data');
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                localStorage.removeItem('bhoomitechzone_token');
+                showToast('Session expired. Please login again.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/app/login';
+                }, 2000);
+                throw error;
+            }
+        }
+        
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/app/login';
+            });
+            
+            // Filter controls
+            document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+            document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
+            document.getElementById('exportReports')?.addEventListener('click', exportReports);
+        }
+        
+        function setDefaultDateRange() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+        
+        async function loadTeamMembers() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                // Only managers can see team member filter
+                if (!isManager()) {
+                    document.getElementById('teamMemberFilter').style.display = 'none';
+                    return;
+                }
+                
+                const response = await fetch('/api/sales/team-members', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    teamMembers = await response.json();
+                    
+                    const select = document.getElementById('teamMemberFilter');
+                    select.innerHTML = '<option value="">All Team Members</option>';
+                    
+                    teamMembers.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.id || member.username;
+                        option.textContent = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.username;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading team members:', error);
+            }
+        }
+        
+        async function loadReports() {
+            console.log('Loading reports...');
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const teamMember = document.getElementById('teamMemberFilter').value;
+                
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+                
+                if (teamMember && isManager()) {
+                    params.append('team_member', teamMember);
+                }
+                
+                console.log('Fetching reports data...');
+                const response = await fetch(`/api/sales/reports?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    reportData = await response.json();
+                    console.log('Reports data loaded:', reportData);
+                    renderStats();
+                    renderPerformanceChart();
+                } else {
+                    console.error('Failed to load reports:', response.status, response.statusText);
+                    throw new Error('Failed to load reports');
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                showToast('Error loading reports', 'error');
+                renderEmptyStats();
+            }
+        }
+        
+        async function loadTopPerformers() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate,
+                    limit: '5'
+                });
+                
+                const response = await fetch(`/api/sales/top-performers?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const performers = await response.json();
+                    renderTopPerformers(performers);
+                } else {
+                    renderEmptyPerformers();
+                }
+            } catch (error) {
+                console.error('Error loading top performers:', error);
+                renderEmptyPerformers();
+            }
+        }
+        
+        async function loadLateMembers() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const today = new Date().toISOString().split('T')[0];
+                
+                const response = await fetch(`/api/sales/attendance/late?date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const lateMembers = await response.json();
+                    renderLateMembers(lateMembers);
+                } else {
+                    renderEmptyLateMembers();
+                }
+            } catch (error) {
+                console.error('Error loading late members:', error);
+                renderEmptyLateMembers();
+            }
+        }
+        
+        function renderStats() {
+            console.log('Rendering stats...');
+            
+            const statsGrid = document.getElementById('statsGrid');
+            const stats = reportData.overview || {};
+            
+            const statCards = [
+                {
+                    title: 'Total Leads',
+                    value: stats.total_leads || 0,
+                    change: stats.leads_change || 0,
+                    icon: '🎯',
+                    color: 'background: rgba(59, 130, 246, 0.1); color: #3b82f6;'
+                },
+                {
+                    title: 'Converted Leads',
+                    value: stats.converted_leads || 0,
+                    change: stats.conversion_change || 0,
+                    icon: '✅',
+                    color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;'
+                },
+                {
+                    title: 'Revenue Generated',
+                    value: formatCurrency(stats.total_revenue || 0),
+                    change: stats.revenue_change || 0,
+                    icon: '💰',
+                    color: 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;'
+                },
+                {
+                    title: 'Win Rate',
+                    value: `${(stats.win_rate || 0).toFixed(1)}%`,
+                    change: stats.win_rate_change || 0,
+                    icon: '📈',
+                    color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;'
+                },
+                {
+                    title: 'Avg Deal Size',
+                    value: formatCurrency(stats.avg_deal_size || 0),
+                    change: stats.deal_size_change || 0,
+                    icon: '💎',
+                    color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;'
+                },
+                {
+                    title: 'Team Performance',
+                    value: `${(stats.team_performance || 0).toFixed(1)}%`,
+                    change: stats.team_performance_change || 0,
+                    icon: '👥',
+                    color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;'
+                }
+            ];
+            
+            statsGrid.innerHTML = statCards.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">${stat.title}</div>
+                        <div class="stat-icon" style="${stat.color}">
+                            ${stat.icon}
+                        </div>
+                    </div>
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-change ${stat.change >= 0 ? 'positive' : 'negative'}">
+                        <span>${stat.change >= 0 ? '↗️' : '↘️'}</span>
+                        ${Math.abs(stat.change).toFixed(1)}% vs last period
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderEmptyStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            const emptyCards = [
+                { title: 'Total Leads', value: '0', icon: '🎯', color: 'background: rgba(59, 130, 246, 0.1); color: #3b82f6;' },
+                { title: 'Converted Leads', value: '0', icon: '✅', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' },
+                { title: 'Revenue Generated', value: '₹0', icon: '💰', color: 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' },
+                { title: 'Win Rate', value: '0.0%', icon: '📈', color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;' },
+                { title: 'Avg Deal Size', value: '₹0', icon: '💎', color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;' },
+                { title: 'Team Performance', value: '0.0%', icon: '👥', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' }
+            ];
+            
+            statsGrid.innerHTML = emptyCards.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">${stat.title}</div>
+                        <div class="stat-icon" style="${stat.color}">
+                            ${stat.icon}
+                        </div>
+                    </div>
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-change neutral">
+                        <span>--</span>
+                        No data available
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderTopPerformers(performers) {
+            const container = document.getElementById('topPerformers');
+            
+            if (!performers || performers.length === 0) {
+                renderEmptyPerformers();
+                return;
+            }
+            
+            container.innerHTML = performers.map((performer, index) => `
+                <div class="performer-item">
+                    <div class="performer-info">
+                        <div class="performer-avatar">
+                            ${getInitials(performer.name || performer.first_name, performer.last_name)}
+                        </div>
+                        <div class="performer-details">
+                            <h4>${performer.name || `${performer.first_name || ''} ${performer.last_name || ''}`.trim() || 'Unknown'}</h4>
+                            <p>${performer.department || 'Sales'} • Rank #${index + 1}</p>
+                        </div>
+                    </div>
+                    <div class="performer-stats">
+                        <div class="performer-value">${formatCurrency(performer.total_revenue || performer.revenue || 0)}</div>
+                        <div class="performer-metric">${performer.deals_closed || 0} deals closed</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderEmptyPerformers() {
+            document.getElementById('topPerformers').innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🏆</div>
+                    <p>No performance data available for the selected period.</p>
+                </div>
+            `;
+        }
+        
+        function renderLateMembers(lateMembers) {
+            const container = document.getElementById('lateMembers');
+            
+            if (!lateMembers || lateMembers.length === 0) {
+                renderEmptyLateMembers();
+                return;
+            }
+            
+            container.innerHTML = lateMembers.map(member => `
+                <div class="performer-item late-member">
+                    <div class="performer-info">
+                        <div class="performer-avatar">
+                            ${getInitials(member.name || member.first_name, member.last_name)}
+                        </div>
+                        <div class="performer-details">
+                            <h4>${member.name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}</h4>
+                            <p>Late by ${member.late_minutes || 0} minutes</p>
+                        </div>
+                    </div>
+                    <div class="performer-stats">
+                        <div class="performer-value" style="color: var(--danger);">
+                            ${member.check_in_time || 'Not checked in'}
+                        </div>
+                        <div class="performer-metric">Expected: ${member.expected_time || '09:00'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderEmptyLateMembers() {
+            document.getElementById('lateMembers').innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">✅</div>
+                    <p>All team members are on time today!</p>
+                </div>
+            `;
+        }
+        
+        function renderPerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Destroy existing chart
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            const chartData = reportData.trends || {};
+            const labels = chartData.labels || [];
+            const revenueData = chartData.revenue || [];
+            const leadsData = chartData.leads || [];
+            
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenue (₹)',
+                            data: revenueData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Leads Count',
+                            data: leadsData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Revenue (₹)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Leads Count'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function applyFilters() {
+            showToast('Applying filters...', 'info');
+            
+            await Promise.all([
+                loadReports(),
+                loadTopPerformers(),
+                loadLateMembers()
+            ]);
+            
+            showToast('Filters applied successfully', 'success');
+        }
+        
+        function resetFilters() {
+            setDefaultDateRange();
+            document.getElementById('teamMemberFilter').value = '';
+            document.getElementById('amountFilter').value = '';
+            
+            applyFilters();
+        }
+        
+        function exportReports() {
+            try {
+                const csvContent = generateAdvancedCSVReport();
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `executive_sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showToast('Executive report exported successfully', 'success');
+            } catch (error) {
+                console.error('Error exporting report:', error);
+                showToast('Error exporting report', 'error');
+            }
+        }
+        
+        function generateAdvancedCSVReport() {
+            const headers = [
+                'Report Type', 'Metric', 'Value', 'Change (%)', 'Period'
+            ];
+            
+            const stats = reportData.overview || {};
+            const period = `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`;
+            
+            const rows = [
+                ['Overview', 'Total Leads', stats.total_leads || 0, stats.leads_change || 0, period],
+                ['Overview', 'Converted Leads', stats.converted_leads || 0, stats.conversion_change || 0, period],
+                ['Overview', 'Total Revenue', stats.total_revenue || 0, stats.revenue_change || 0, period],
+                ['Overview', 'Win Rate (%)', (stats.win_rate || 0).toFixed(1), stats.win_rate_change || 0, period],
+                ['Overview', 'Average Deal Size', stats.avg_deal_size || 0, stats.deal_size_change || 0, period],
+                ['Overview', 'Team Performance (%)', (stats.team_performance || 0).toFixed(1), stats.team_performance_change || 0, period]
+            ];
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+        
+        function isManager() {
+            if (!currentUser) return false;
+            
+            // Check role
+            if (currentUser.role && ['admin', 'director', 'manager'].includes(currentUser.role)) {
+                return true;
+            }
+            
+            // Check position
+            if (currentUser.position === 'sales_manager') {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        function getInitials(firstName, lastName) {
+            if (firstName && lastName) {
+                return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+            } else if (firstName) {
+                return firstName.charAt(0).toUpperCase();
+            } else if (lastName) {
+                return lastName.charAt(0).toUpperCase();
+            }
+            return 'U';
+        }
+        
+        function formatCurrency(amount) {
+            try {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(amount || 0);
+            } catch (error) {
+                return '₹' + (amount || 0).toLocaleString();
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        function updateUserInfo(user) {
+            try {
+                console.log('Updating user info:', user);
+                
+                const userInitials = document.getElementById('userInitials');
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                const sidebarUsername = document.getElementById('sidebar-username');
+                const sidebarPosition = document.getElementById('sidebar-position');
+                
+                // Safe fallbacks for user data
+                const firstName = user.first_name || '';
+                const lastName = user.last_name || '';
+                const username = user.username || 'User';
+                const department = user.department || 'Sales';
+                
+                // Generate initials safely
+                let initials = getInitials(firstName, lastName) || username.charAt(0).toUpperCase() || 'U';
+                
+                // Update elements safely
+                if (userInitials) userInitials.textContent = initials;
+                
+                if (userTimeDisplay) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', { 
+                        hour12: false, 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    const displayName = firstName && lastName ? `${firstName} ${lastName}` : username;
+                    userTimeDisplay.textContent = `${timeString} - ${displayName}`;
+                }
+                
+                if (sidebarUsername) {
+                    sidebarUsername.textContent = firstName && lastName ? `${firstName} ${lastName}` : username;
+                }
+                
+                if (sidebarPosition) {
+                    sidebarPosition.textContent = department;
+                }
+                
+                console.log('User info updated successfully');
+            } catch (error) {
+                console.error('Error updating user info:', error);
+            }
+        }
+    </script>
+</body>
+</html>

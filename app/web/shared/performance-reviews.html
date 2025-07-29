@@ -1105,6 +1105,7 @@
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
     
+    <script src="/static/js/role-manager.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             // Check authentication
@@ -1112,6 +1113,12 @@
             if (!token) {
                 window.location.href = '/static/login.html';
                 return;
+            }
+            
+            // Initialize role-based features
+            if (window.roleManager) {
+                window.roleManager.initialize();
+                window.roleManager.filterPageContent('performance-reviews');
             }
             
             try {

@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Leads - Bhoomi TechZone HRMS</title>
+    <style>
+        /* Root Variables */
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.5rem;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        /* Page Styles */
+        .page-main {
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+        
+        /* Controls */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.5rem 1rem;
+            min-width: 300px;
+        }
+        
+        .search-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Button Styles */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        /* Leads Grid */
+        .leads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .lead-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .lead-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .lead-info {
+            flex: 1;
+        }
+        
+        .lead-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .lead-company {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .lead-contact {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .lead-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .status-new {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .status-contacted {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-qualified {
+            background: rgba(139, 69, 19, 0.1);
+            color: #8b4513;
+        }
+        
+        .status-proposal {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+        
+        .status-closed-won {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-closed-lost {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .lead-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .lead-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .lead-date {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+        
+        .lead-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        /* Payment Tracking Styles */
+        .payment-info {
+            flex: 1;
+            margin: 0 1rem;
+        }
+        
+        .payment-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .payment-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .payment-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            transition: width 0.3s ease;
+        }
+        
+        .payment-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Payment Modal Styles */
+        .payment-summary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .payment-summary h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+        
+        .payment-summary .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .payment-summary .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .payment-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .milestones-list, .payments-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .milestone-item, .payment-item {
+            background: var(--bg-light);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--border-color);
+        }
+        
+        .milestone-item.pending {
+            border-left-color: var(--warning);
+        }
+        
+        .milestone-item.paid {
+            border-left-color: var(--success);
+        }
+        
+        .milestone-item.overdue {
+            border-left-color: var(--danger);
+        }
+        
+        .payment-item {
+            border-left-color: var(--success);
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-title {
+            font-weight: 500;
+        }
+        
+        .item-amount {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .item-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .add-form {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .leads-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: auto;
+            }
+        }
+        
+        /* Payment Tracking Styles */
+        
+        /* Modal Base Styles (Enhanced) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--bg-light);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* Payment Summary Styles */
+        .payment-summary {
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+        }
+
+        .payment-summary h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .payment-summary .amount {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .payment-summary .details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        /* Tab Styles */
+        .payment-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-light);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h3,
+        .section-header h4 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Lists */
+        .milestones-list, .payments-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .milestone-item, .payment-item {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .milestone-item:hover, .payment-item:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .milestone-item.pending,
+        .milestone-item.status-pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .milestone-item.paid,
+        .milestone-item.status-paid {
+            border-left: 4px solid var(--success);
+        }
+
+        .milestone-item.overdue,
+        .milestone-item.status-overdue {
+            border-left: 4px solid var(--danger);
+        }
+
+        .payment-item {
+            border-left: 4px solid var(--success);
+        }
+
+        /* Item Structure */
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .item-amount {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .item-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .milestone-info, .payment-info {
+            flex: 1;
+        }
+
+        .milestone-info h5, .payment-info h5 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .milestone-info p, .payment-info p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .milestone-status {
+            margin-left: 1rem;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .status-badge.status-paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.status-overdue {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Forms */
+        .add-form {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            background-color: white;
+            color: var(--text-primary);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        /* Buttons Enhanced */
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .btn.btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .btn.btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+
+        /* Payment Tracking Components */
+        .payment-overview {
+            margin-bottom: 2rem;
+        }
+
+        .payment-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .progress-fill.low {
+            background-color: #dc3545;
+        }
+
+        .progress-fill.partial {
+            background-color: #ffc107;
+        }
+
+        .progress-fill.complete {
+            background-color: #28a745;
+        }
+
+        .payment-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Payment Tracking Button */
+        .payment-tracking-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s;
+        }
+
+        .payment-tracking-btn:hover {
+            background-color: var(--bg-light);
+        }
+
+        .payment-tracking-btn.has-payments {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .payment-tracking-btn.overdue-payments {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        /* Payment Info in Lead Cards */
+        .payment-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .payment-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .payment-fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s ease;
+        }
+
+        .payment-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .payment-meta {
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        .payment-meta small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--bg-dark);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        .toast.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .toast.info {
+            background-color: #17a2b8;
+        }
+
+        /* Modal Specific Adjustments */
+        #paymentModal .modal-content {
+            max-width: 900px;
+            width: 90%;
+        }
+
+        #addPaymentModal .modal-content,
+        #addMilestoneModal .modal-content {
+            max-width: 500px;
+        }
+
+        /* Enhanced Responsive */
+        @media (max-width: 768px) {
+            .payment-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .payment-sections {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .milestone-item, .payment-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .item-details {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+            
+            .milestone-status {
+                margin-left: 0;
+                align-self: flex-start;
+            }
+            
+            .payment-summary {
+                padding: 1.5rem;
+            }
+            
+            .payment-summary .details {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#2563eb"/>
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list" id="navList">
+                    <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link active">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>👥</i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>�</i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">User</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Sales</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Sales Leads</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">U</div>
+                    <span id="userTimeDisplay">00:00 - User</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/app/sales/profile" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="page-main">
+                <div class="page-header">
+                    <h1 class="page-title">Sales Leads</h1>
+                    <p class="page-subtitle">Manage and track your sales leads</p>
+                </div>
+                
+                <div class="controls-bar">
+                    <div class="filters">
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="proposal">Proposal</option>
+                            <option value="closed_won">Closed Won</option>
+                            <option value="closed_lost">Closed Lost</option>
+                        </select>
+                        
+                        <select class="filter-select" id="assignedFilter">
+                            <option value="">All Assignments</option>
+                            <option value="mine">My Leads</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="searchInput" placeholder="Search leads by name, company, phone...">
+                            <span>🔍</span>
+                        </div>
+                        
+                        <button class="btn" id="addLeadBtn">
+                            <span>➕</span>
+                            Add Lead
+                        </button>
+                        
+                        <button class="btn btn-secondary" id="refreshBtn">
+                            <span>🔄</span>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="leadsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading leads...
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Lead Modal -->
+    <div class="modal" id="leadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Lead</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <form id="leadForm">
+                <input type="hidden" id="leadId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="contactPerson">Contact Person *</label>
+                        <input type="text" class="form-input" id="contactPerson" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="phoneNumber">Phone Number *</label>
+                        <input type="tel" class="form-input" id="phoneNumber" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="companyName">Company Name</label>
+                        <input type="text" class="form-input" id="companyName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" class="form-input" id="email">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="status">Status</label>
+                        <select class="form-input" id="status">
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="proposal">Proposal</option>
+                            <option value="closed_won">Closed Won</option>
+                            <option value="closed_lost">Closed Lost</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="dealValue">Deal Value (₹)</label>
+                        <input type="number" class="form-input" id="dealValue" min="0" step="1000">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="source">Lead Source</label>
+                    <select class="form-input" id="source">
+                        <option value="">Select Source</option>
+                        <option value="website">Website</option>
+                        <option value="referral">Referral</option>
+                        <option value="social_media">Social Media</option>
+                        <option value="cold_call">Cold Call</option>
+                        <option value="advertisement">Advertisement</option>
+                        <option value="trade_show">Trade Show</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="requirements">Requirements</label>
+                    <textarea class="form-input form-textarea" id="requirements" placeholder="Describe the lead's requirements..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="notes">Notes</label>
+                    <textarea class="form-input form-textarea" id="notes" placeholder="Additional notes..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn" id="saveBtn">Save Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Lead Details Modal -->
+    <div class="modal" id="leadDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="detailsModalTitle">Lead Details</h2>
+                <button class="close-btn" id="closeDetailsModalBtn">&times;</button>
+            </div>
+            
+            <div id="leadDetailsContent">
+                <!-- Lead details will be populated here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Tracking Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Payment Tracking</h2>
+                <button class="close-btn" id="closePaymentModalBtn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="paymentSummary" class="payment-summary">
+                    <!-- Payment summary will be populated here -->
+                </div>
+                
+                <div class="payment-tabs">
+                    <button class="tab-btn active" onclick="switchTab('milestones', event)">Milestones</button>
+                    <button class="tab-btn" onclick="switchTab('payments', event)">Payments</button>
+                    <button class="tab-btn" onclick="switchTab('add-payment', event)">Add Payment</button>
+                </div>
+                
+                <!-- Milestones Tab -->
+                <div id="milestonesTab" class="tab-content active">
+                    <div class="section-header">
+                        <h3>Payment Milestones</h3>
+                        <button class="btn btn-sm" onclick="openAddMilestoneForm()">Add Milestone</button>
+                    </div>
+                    <div id="milestonesList" class="milestones-list">
+                        <!-- Milestones will be populated here -->
+                    </div>
+                    
+                    <!-- Add Milestone Form (hidden by default) -->
+                    <div id="addMilestoneForm" class="add-form" style="display: none;">
+                        <h4>Add Payment Milestone</h4>
+                        <form id="milestoneForm">
+                            <div class="form-group">
+                                <label for="milestoneDescription">Description</label>
+                                <input type="text" id="milestoneDescription" required placeholder="e.g., Initial Payment, Milestone 1">
+                            </div>
+                            <div class="form-group">
+                                <label for="milestoneAmount">Amount</label>
+                                <input type="number" id="milestoneAmount" step="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="milestoneDueDate">Due Date</label>
+                                <input type="date" id="milestoneDueDate" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" onclick="cancelAddMilestone()">Cancel</button>
+                                <button type="submit">Add Milestone</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Payments Tab -->
+                <div id="paymentsTab" class="tab-content">
+                    <h3>Payment History</h3>
+                    <div id="paymentsList" class="payments-list">
+                        <!-- Payments will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Add Payment Tab -->
+                <div id="addPaymentTab" class="tab-content">
+                    <h3>Record New Payment</h3>
+                    <form id="paymentForm">
+                        <div class="form-group">
+                            <label for="paymentAmount">Amount Received</label>
+                            <input type="number" id="paymentAmount" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentMethod">Payment Method</label>
+                            <select id="paymentMethod" required>
+                                <option value="">Select payment method</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="check">Check</option>
+                                <option value="cash">Cash</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="online">Online Payment</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentDate">Payment Date</label>
+                            <input type="date" id="paymentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="transactionId">Transaction ID (Optional)</label>
+                            <input type="text" id="transactionId" placeholder="Reference number or transaction ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentNotes">Notes (Optional)</label>
+                            <textarea id="paymentNotes" placeholder="Additional notes about this payment..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="milestoneSelect">Link to Milestone (Optional)</label>
+                            <select id="milestoneSelect">
+                                <option value="">No milestone</option>
+                                <!-- Milestones will be populated here -->
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Record Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/role-aware.js"></script>
+    
+    <script>
+        // Global variables - currentUser is declared in api.js
+        let allLeads = [];
+        let filteredLeads = [];
+        let isLoading = false;
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            // Initialize page
+            await initializePage();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Load leads
+            await loadLeads();
+        });
+        
+        async function initializePage() {
+            try {
+                // Load current user
+                await loadCurrentUser();
+                
+                // Initialize navigation
+                initializeNavigation();
+                
+                console.log('Page initialized successfully');
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                showToast('Error loading page', 'error');
+            }
+        }
+        
+        async function loadCurrentUser() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    currentUser = await response.json();
+                    updateUserInfo(currentUser);
+                } else {
+                    throw new Error('Failed to load user data');
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                window.location.href = '/static/login.html';
+            }
+        }
+        
+        function initializeNavigation() {
+            // Simple navigation for sales department
+            const navList = document.getElementById('navList');
+            const navigationItems = [
+                { href: '/static/departments/sales/dashboard.html', text: '📊 Dashboard', active: false },
+                { href: '/static/departments/sales/leads.html', text: '🎯 Leads', active: true },
+                { href: '/static/departments/sales/customers.html', text: '👥 Customers', active: false },
+                { href: '/static/departments/sales/reports.html', text: '📈 Reports', active: false }
+            ];
+            
+            navList.innerHTML = navigationItems.map(item => `
+                <li class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        ${item.text}
+                    </a>
+                </li>
+            `).join('');
+        }
+        
+        function setupEventListeners() {
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+            
+            // Filters and search
+            document.getElementById('statusFilter').addEventListener('change', filterLeads);
+            document.getElementById('assignedFilter').addEventListener('change', filterLeads);
+            document.getElementById('searchInput').addEventListener('input', filterLeads);
+            
+            // Buttons
+            document.getElementById('addLeadBtn').addEventListener('click', () => openAddLeadModal());
+            document.getElementById('refreshBtn').addEventListener('click', () => loadLeads());
+            
+            // Modal controls
+            document.getElementById('closeModalBtn').addEventListener('click', () => closeModal('leadModal'));
+            document.getElementById('closeDetailsModalBtn').addEventListener('click', () => closeModal('leadDetailsModal'));
+            document.getElementById('cancelBtn').addEventListener('click', () => closeModal('leadModal'));
+            
+            // Form submission
+            document.getElementById('leadForm').addEventListener('submit', handleFormSubmit);
+            
+            // Close modals on outside click
+            document.getElementById('leadModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('leadModal');
+            });
+            
+            document.getElementById('leadDetailsModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('leadDetailsModal');
+            });
+        }
+        
+        async function loadLeads() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            document.getElementById('leadsContainer').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading leads...
+                </div>
+            `;
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/sales/leads', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    allLeads = await response.json();
+                    console.log('Loaded leads:', allLeads.length);
+                    filteredLeads = [...allLeads];
+                    renderLeads();
+                } else {
+                    throw new Error('Failed to load leads');
+                }
+            } catch (error) {
+                console.error('Error loading leads:', error);
+                document.getElementById('leadsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <p>Error loading leads. Please try again.</p>
+                        <button class="btn" onclick="loadLeads()">Retry</button>
+                    </div>
+                `;
+                showToast('Error loading leads', 'error');
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        function filterLeads() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const assignedFilter = document.getElementById('assignedFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredLeads = allLeads.filter(lead => {
+                // Status filter
+                if (statusFilter && lead.status !== statusFilter) return false;
+                
+                // Assignment filter
+                if (assignedFilter === 'mine' && lead.assigned_to !== currentUser._id) return false;
+                if (assignedFilter === 'unassigned' && lead.assigned_to) return false;
+                
+                // Search filter
+                if (searchTerm) {
+                    const searchableText = [
+                        lead.contact_person,
+                        lead.company_name,
+                        lead.phone_number,
+                        lead.email
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) return false;
+                }
+                
+                return true;
+            });
+            
+            renderLeads();
+        }
+        
+        function renderLeads() {
+            const container = document.getElementById('leadsContainer');
+            
+            if (filteredLeads.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <h3>No leads found</h3>
+                        <p>Try adjusting your filters or add a new lead.</p>
+                        <button class="btn" onclick="openAddLeadModal()">Add New Lead</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="leads-grid">
+                    ${filteredLeads.map(lead => createLeadCard(lead)).join('')}
+                </div>
+            `;
+        }
+        
+        function createLeadCard(lead) {
+            const statusClass = `status-${lead.status.replace('_', '-')}`;
+            const dealValue = lead.deal_value ? formatCurrency(lead.deal_value) : 'Not specified';
+            const createdDate = new Date(lead.created_at).toLocaleDateString();
+            
+            // Payment tracking info
+            const paymentTracking = lead.payment_tracking || {};
+            const totalAmount = paymentTracking.total_amount || lead.deal_value || 0;
+            const paidAmount = paymentTracking.paid_amount || 0;
+            const paymentPercentage = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
+            const hasPayments = paidAmount > 0;
+            
+            return `
+                <div class="lead-card" onclick="openLeadDetails('${lead._id}')">
+                    <div class="lead-header">
+                        <div class="lead-info">
+                            <div class="lead-name">${lead.contact_person}</div>
+                            ${lead.company_name ? `<div class="lead-company">${lead.company_name}</div>` : ''}
+                            <div class="lead-contact">📞 ${lead.phone_number}</div>
+                            ${lead.email ? `<div class="lead-contact">✉️ ${lead.email}</div>` : ''}
+                        </div>
+                        <div class="lead-status ${statusClass}">
+                            ${formatStatus(lead.status)}
+                        </div>
+                    </div>
+                    
+                    <div class="lead-details">
+                        <div class="lead-value">${dealValue}</div>
+                        ${hasPayments ? `
+                            <div class="payment-info">
+                                <div class="payment-progress">
+                                    <div class="payment-bar">
+                                        <div class="payment-fill" style="width: ${paymentPercentage}%"></div>
+                                    </div>
+                                    <span class="payment-text">${formatCurrency(paidAmount)} / ${formatCurrency(totalAmount)} (${paymentPercentage}%)</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="lead-date">${createdDate}</div>
+                    </div>
+                    
+                    <div class="lead-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-sm" onclick="editLead('${lead._id}')">Edit</button>
+                        <button class="btn btn-sm btn-success" onclick="updateLeadStatus('${lead._id}', 'contacted')">Contact</button>
+                        ${(lead.deal_value > 0 || lead.status === 'closed_won' || hasPayments) ? 
+                            `<button class="btn btn-sm btn-primary" onclick="openPaymentModal('${lead._id}')">💰 Payment</button>` : 
+                            ''
+                        }
+                    </div>
+                </div>
+            `;
+        }
+        
+        function openAddLeadModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Lead';
+            document.getElementById('leadForm').reset();
+            document.getElementById('leadId').value = '';
+            openModal('leadModal');
+        }
+        
+        function editLead(leadId) {
+            const lead = allLeads.find(l => l._id === leadId);
+            if (!lead) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            document.getElementById('leadId').value = lead._id;
+            document.getElementById('contactPerson').value = lead.contact_person || '';
+            document.getElementById('phoneNumber').value = lead.phone_number || '';
+            document.getElementById('companyName').value = lead.company_name || '';
+            document.getElementById('email').value = lead.email || '';
+            document.getElementById('status').value = lead.status || 'new';
+            document.getElementById('dealValue').value = lead.deal_value || '';
+            document.getElementById('source').value = lead.source || '';
+            document.getElementById('requirements').value = lead.requirements || '';
+            document.getElementById('notes').value = lead.notes || '';
+            
+            openModal('leadModal');
+        }
+        
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const leadId = document.getElementById('leadId').value;
+            const formData = {
+                contact_person: document.getElementById('contactPerson').value,
+                phone_number: document.getElementById('phoneNumber').value,
+                company_name: document.getElementById('companyName').value || null,
+                email: document.getElementById('email').value || null,
+                status: document.getElementById('status').value,
+                deal_value: parseFloat(document.getElementById('dealValue').value) || null,
+                source: document.getElementById('source').value || null,
+                requirements: document.getElementById('requirements').value || null,
+                notes: document.getElementById('notes').value || null
+            };
+            
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const url = leadId ? `/api/sales/leads/${leadId}` : '/api/sales/leads';
+                const method = leadId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showToast(leadId ? 'Lead updated successfully' : 'Lead created successfully', 'success');
+                    closeModal('leadModal');
+                    await loadLeads();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save lead');
+                }
+            } catch (error) {
+                console.error('Error saving lead:', error);
+                showToast(error.message, 'error');
+            }
+        }
+        
+        async function updateLeadStatus(leadId, newStatus) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/api/sales/leads/${leadId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    showToast(`Lead status updated to ${formatStatus(newStatus)}`, 'success');
+                    await loadLeads();
+                } else {
+                    throw new Error('Failed to update lead status');
+                }
+            } catch (error) {
+                console.error('Error updating lead status:', error);
+                showToast('Error updating lead status', 'error');
+            }
+        }
+        
+        function openLeadDetails(leadId) {
+            const lead = allLeads.find(l => l._id === leadId);
+            if (!lead) return;
+            
+            document.getElementById('detailsModalTitle').textContent = `${lead.contact_person} - Lead Details`;
+            
+            const content = document.getElementById('leadDetailsContent');
+            content.innerHTML = `
+                <div style="display: grid; gap: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <strong>Contact Person:</strong><br>
+                            ${lead.contact_person}
+                        </div>
+                        <div>
+                            <strong>Phone Number:</strong><br>
+                            ${lead.phone_number}
+                        </div>
+                    </div>
+                    
+                    ${lead.company_name ? `
+                        <div>
+                            <strong>Company:</strong><br>
+                            ${lead.company_name}
+                        </div>
+                    ` : ''}
+                    
+                    ${lead.email ? `
+                        <div>
+                            <strong>Email:</strong><br>
+                            ${lead.email}
+                        </div>
+                    ` : ''}
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <strong>Status:</strong><br>
+                            <span class="lead-status status-${lead.status.replace('_', '-')}">${formatStatus(lead.status)}</span>
+                        </div>
+                        <div>
+                            <strong>Deal Value:</strong><br>
+                            ${lead.deal_value ? formatCurrency(lead.deal_value) : 'Not specified'}
+                        </div>
+                    </div>
+                    
+                    ${lead.source ? `
+                        <div>
+                            <strong>Lead Source:</strong><br>
+                            ${formatStatus(lead.source)}
+                        </div>
+                    ` : ''}
+                    
+                    ${lead.requirements ? `
+                        <div>
+                            <strong>Requirements:</strong><br>
+                            ${lead.requirements}
+                        </div>
+                    ` : ''}
+                    
+                    ${lead.notes ? `
+                        <div>
+                            <strong>Notes:</strong><br>
+                            ${lead.notes}
+                        </div>
+                    ` : ''}
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
+                        <div>
+                            <strong>Created:</strong><br>
+                            ${new Date(lead.created_at).toLocaleString()}
+                        </div>
+                        <div>
+                            <strong>Last Updated:</strong><br>
+                            ${new Date(lead.updated_at).toLocaleString()}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button class="btn btn-secondary" onclick="editLead('${lead._id}'); closeModal('leadDetailsModal');">Edit Lead</button>
+                        <button class="btn" onclick="updateLeadStatus('${lead._id}', 'contacted'); closeModal('leadDetailsModal');">Mark as Contacted</button>
+                    </div>
+                </div>
+            `;
+            
+            openModal('leadDetailsModal');
+        }
+        
+        // Utility functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function updateUserInfo(userData) {
+            const initials = getInitials(userData.first_name, userData.last_name, userData.username);
+            document.getElementById('userInitials').textContent = initials;
+            
+            // Get current IST time (UTC+5:30)
+            const currentTime = new Date().toLocaleTimeString('en-IN', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Asia/Kolkata'
+            });
+            document.getElementById('userTimeDisplay').textContent = `${currentTime} IST - ${userData.username}`;
+            document.getElementById('sidebar-username').textContent = userData.username;
+            document.getElementById('sidebar-position').textContent = userData.position || 'Sales';
+        }
+        
+        function getInitials(firstName, lastName, username) {
+            if (firstName && lastName) {
+                return (firstName[0] + lastName[0]).toUpperCase();
+            } else if (firstName) {
+                return firstName[0].toUpperCase();
+            } else if (username) {
+                return username[0].toUpperCase();
+            }
+            return 'U';
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function formatStatus(status) {
+            return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                border-radius: 0.5rem;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // Payment Tracking Functions
+        let currentLeadId = null;
+        let currentPaymentData = null;
+        
+        async function openPaymentModal(leadId) {
+            currentLeadId = leadId;
+            try {
+                await loadPaymentSummary(leadId);
+                openModal('paymentModal');
+                switchTab('milestones');
+            } catch (error) {
+                console.error('Error opening payment modal:', error);
+                showToast('Error loading payment data', 'error');
+            }
+        }
+        
+        async function loadPaymentSummary(leadId) {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            try {
+                const response = await fetch(`/api/sales/leads/${leadId}/payment-summary`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    currentPaymentData = await response.json();
+                    displayPaymentSummary();
+                    loadMilestones();
+                    loadPayments();
+                    populateMilestoneSelect();
+                } else {
+                    throw new Error('Failed to load payment summary');
+                }
+            } catch (error) {
+                console.error('Error loading payment summary:', error);
+                showToast('Error loading payment data', 'error');
+            }
+        }
+        
+        function displayPaymentSummary() {
+            const summaryDiv = document.getElementById('paymentSummary');
+            const data = currentPaymentData;
+            
+            summaryDiv.innerHTML = `
+                <h3>Payment Summary</h3>
+                <div class="amount">${formatCurrency(data.paid_amount)} / ${formatCurrency(data.total_amount)}</div>
+                <div style="margin: 1rem 0;">
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${data.payment_percentage}%; height: 100%; background: white; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                <div class="details">
+                    <div>
+                        <strong>${data.payment_percentage}%</strong><br>
+                        <small>Completed</small>
+                    </div>
+                    <div>
+                        <strong>${formatCurrency(data.remaining_amount)}</strong><br>
+                        <small>Remaining</small>
+                    </div>
+                    <div>
+                        <strong>${data.payments.length}</strong><br>
+                        <small>Payments</small>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function switchTab(tabName, event) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Fallback: find the button with the matching tab name
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.textContent.toLowerCase().includes(tabName.toLowerCase())) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            // Map tab names to actual element IDs
+            const tabIdMap = {
+                'milestones': 'milestonesTab',
+                'payments': 'paymentsTab', 
+                'add-payment': 'addPaymentTab'
+            };
+            
+            const targetTabId = tabIdMap[tabName] || (tabName + 'Tab');
+            const targetTab = document.getElementById(targetTabId);
+            
+            if (targetTab) {
+                targetTab.classList.add('active');
+            } else {
+                console.warn(`Tab element not found: ${targetTabId}`);
+            }
+        }
+        
+        function loadMilestones() {
+            const milestonesList = document.getElementById('milestonesList');
+            const milestones = currentPaymentData.milestones || [];
+            
+            if (milestones.length === 0) {
+                milestonesList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No milestones set</p>';
+                return;
+            }
+            
+            milestonesList.innerHTML = milestones.map(milestone => {
+                const dueDate = new Date(milestone.due_date);
+                const isOverdue = dueDate < new Date() && milestone.status === 'pending';
+                const statusClass = isOverdue ? 'overdue' : milestone.status;
+                
+                return `
+                    <div class="milestone-item ${statusClass}">
+                        <div class="item-header">
+                            <span class="item-title">${milestone.description}</span>
+                            <span class="item-amount">${formatCurrency(milestone.amount)}</span>
+                        </div>
+                        <div class="item-details">
+                            <span>Due: ${dueDate.toLocaleDateString()}</span>
+                            <span class="status-badge status-${statusClass}">${milestone.status}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function loadPayments() {
+            const paymentsList = document.getElementById('paymentsList');
+            const payments = currentPaymentData.payments || [];
+            
+            if (payments.length === 0) {
+                paymentsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No payments recorded</p>';
+                return;
+            }
+            
+            paymentsList.innerHTML = payments.map(payment => {
+                const paymentDate = new Date(payment.payment_date);
+                
+                return `
+                    <div class="payment-item">
+                        <div class="item-header">
+                            <span class="item-title">${payment.payment_method.replace('_', ' ').toUpperCase()}</span>
+                            <span class="item-amount">${formatCurrency(payment.amount)}</span>
+                        </div>
+                        <div class="item-details">
+                            <div>Date: ${paymentDate.toLocaleDateString()}</div>
+                            ${payment.transaction_id ? `<div>Transaction: ${payment.transaction_id}</div>` : ''}
+                            ${payment.notes ? `<div>Notes: ${payment.notes}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function populateMilestoneSelect() {
+            const select = document.getElementById('milestoneSelect');
+            const milestones = currentPaymentData.milestones || [];
+            
+            select.innerHTML = '<option value="">No milestone</option>';
+            
+            milestones.filter(m => m.status === 'pending').forEach(milestone => {
+                select.innerHTML += `<option value="${milestone.id}">${milestone.description} - ${formatCurrency(milestone.amount)}</option>`;
+            });
+        }
+        
+        function openAddMilestoneForm() {
+            document.getElementById('addMilestoneForm').style.display = 'block';
+        }
+        
+        function cancelAddMilestone() {
+            document.getElementById('addMilestoneForm').style.display = 'none';
+            document.getElementById('milestoneForm').reset();
+        }
+        
+        // Event Listeners for Payment Tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close payment modal
+            document.getElementById('closePaymentModalBtn').addEventListener('click', function() {
+                closeModal('paymentModal');
+            });
+            
+            // Milestone form submission
+            document.getElementById('milestoneForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await addMilestone();
+            });
+            
+            // Payment form submission
+            document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await recordPayment();
+            });
+            
+            // Set default payment date to today
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('milestoneDueDate').value = new Date().toISOString().split('T')[0];
+        });
+        
+        async function addMilestone() {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const formData = {
+                description: document.getElementById('milestoneDescription').value,
+                amount: parseFloat(document.getElementById('milestoneAmount').value),
+                due_date: document.getElementById('milestoneDueDate').value
+            };
+            
+            try {
+                const response = await fetch(`/api/sales/leads/${currentLeadId}/payment-milestones`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showToast('Milestone added successfully', 'success');
+                    cancelAddMilestone();
+                    await loadPaymentSummary(currentLeadId);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to add milestone');
+                }
+            } catch (error) {
+                console.error('Error adding milestone:', error);
+                showToast('Error adding milestone: ' + error.message, 'error');
+            }
+        }
+        
+        async function recordPayment() {
+            const token = localStorage.getItem('bhoomitechzone_token');
+            const formData = {
+                amount: parseFloat(document.getElementById('paymentAmount').value),
+                payment_method: document.getElementById('paymentMethod').value,
+                payment_date: document.getElementById('paymentDate').value,
+                transaction_id: document.getElementById('transactionId').value,
+                notes: document.getElementById('paymentNotes').value,
+                milestone_id: document.getElementById('milestoneSelect').value || null
+            };
+            
+            try {
+                const response = await fetch(`/api/sales/leads/${currentLeadId}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast('Payment recorded successfully', 'success');
+                    document.getElementById('paymentForm').reset();
+                    document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+                    await loadPaymentSummary(currentLeadId);
+                    await loadLeads(); // Refresh leads to show updated payment status
+                    switchTab('payments');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to record payment');
+                }
+            } catch (error) {
+                console.error('Error recording payment:', error);
+                showToast('Error recording payment: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ from bson import ObjectId
 
 from app.database.daily_reports import ReportCreate, ReportUpdate, ReportResponse, DatabaseDailyReports
 from app.utils.auth import get_current_user
+from app.utils.helpers import get_ist_now, get_ist_date_today, get_ist_date_iso, IST
 
 router = APIRouter(
     prefix="/daily-reports",
@@ -44,7 +45,7 @@ async def create_daily_report(
         
 @router.get("/today", response_model=Optional[ReportResponse])
 async def get_today_report(current_user = Depends(get_current_user)):
-    today = date.today()
+    today = get_ist_date_today()
     report = await DatabaseDailyReports.get_report_by_date(str(current_user.id), today)
     
     if not report:
@@ -58,6 +59,36 @@ async def get_today_report(current_user = Depends(get_current_user)):
         report_dict["project_id"] = str(report_dict["project_id"])
         
     return report_dict
+
+@router.get("/team", response_model=List[ReportResponse])
+async def get_team_reports(current_user = Depends(get_current_user)):
+    """Get today's daily reports for team members"""
+    # Verify user has permission to view team reports
+    if current_user.role not in ['team_lead', 'manager', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view team reports"
+        )
+    
+    # Get team members
+    from app.database.users import DatabaseUsers
+    team_members = await DatabaseUsers.get_team_members_by_manager(str(current_user.id))
+    team_ids = [str(member.id) for member in team_members]
+    
+    # Get today's reports for team members
+    today = get_ist_date_today()
+    reports = await DatabaseDailyReports.get_team_reports(team_ids, today)
+    
+    response_reports = []
+    for report in reports:
+        report_dict = report.dict(by_alias=True)
+        report_dict["_id"] = str(report_dict["_id"])
+        report_dict["user_id"] = str(report_dict["user_id"])
+        if report_dict.get("project_id"):
+            report_dict["project_id"] = str(report_dict["project_id"])
+        response_reports.append(report_dict)
+    
+    return response_reports
 
 @router.get("/{report_id}", response_model=ReportResponse)
 async def get_report_by_id(report_id: str, current_user = Depends(get_current_user)):
@@ -126,7 +157,7 @@ async def get_team_today_reports(current_user = Depends(get_current_user)):
     team_ids = [str(member.id) for member in team_members]
     
     # Get today's reports
-    today = date.today()
+    today = get_ist_date_today()
     reports = await DatabaseDailyReports.get_team_reports(team_ids, today)
     
     # Convert ObjectId to string for each report

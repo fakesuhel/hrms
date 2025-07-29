@@ -1,0 +1,784 @@
+/* Payment Tracking Styles */
+
+/* CSS Variables (define if not already present) */
+:root {
+    --primary: #2563eb;
+    --secondary: #10b981;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    
+    --bg-light: #f9fafb;
+    --bg-dark: #111827;
+    --bg-card: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --border-radius: 0.5rem;
+}
+
+/* Modal Base Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Payment Summary Styles */
+.payment-summary {
+    background: linear-gradient(135deg, var(--primary), var(--info));
+    color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+}
+
+.payment-summary h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.payment-summary .amount {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.payment-summary .details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    text-align: center;
+}
+
+/* Tab Styles */
+.payment-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-light);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--bg-light);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Lists */
+.milestones-list, .payments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.milestone-item, .payment-item {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.milestone-item:hover, .payment-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.milestone-item.pending {
+    border-left: 4px solid var(--warning);
+}
+
+.milestone-item.paid {
+    border-left: 4px solid var(--success);
+}
+
+.milestone-item.overdue {
+    border-left: 4px solid var(--danger);
+}
+
+.payment-item {
+    border-left: 4px solid var(--success);
+}
+
+/* Item Structure */
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.item-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.item-amount {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.item-details {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.status-paid {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.status-overdue {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+/* Forms */
+.add-form {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.95);
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+}
+
+.payment-overview {
+    margin-bottom: 2rem;
+}
+
+.payment-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-card h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: var(--bg-light);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.progress-fill.low {
+    background-color: #dc3545;
+}
+
+.progress-fill.partial {
+    background-color: #ffc107;
+}
+
+.progress-fill.complete {
+    background-color: #28a745;
+}
+
+.payment-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* Payment Info in Lead Cards */
+.payment-info {
+    margin-top: 0.5rem;
+}
+
+.payment-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.payment-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.payment-fill {
+    height: 100%;
+    background: var(--success);
+    transition: width 0.3s ease;
+}
+
+.payment-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.payment-tracking-btn {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.payment-tracking-btn.overdue-payments {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Modal specific adjustments */
+#paymentModal .modal-content {
+    max-width: 900px;
+    width: 90%;
+}
+
+#addPaymentModal .modal-content,
+#addMilestoneModal .modal-content {
+    max-width: 500px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .payment-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .payment-sections {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .milestone-item, .payment-item {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .item-details {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .payment-summary {
+        padding: 1.5rem;
+    }
+    
+    .payment-summary .details {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+
+.progress-fill.low {
+    background-color: #dc3545;
+}
+
+.progress-fill.partial {
+    background-color: #ffc107;
+}
+
+.progress-fill.complete {
+    background-color: #28a745;
+}
+
+.payment-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .payment-sections {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.milestones-list, .payments-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.milestone-item, .payment-item {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.milestone-item.status-paid {
+    border-left: 4px solid #28a745;
+}
+
+.milestone-item.status-pending {
+    border-left: 4px solid #ffc107;
+}
+
+.milestone-item.status-overdue {
+    border-left: 4px solid #dc3545;
+}
+
+.milestone-info, .payment-info {
+    flex: 1;
+}
+
+.milestone-info h5, .payment-info h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.milestone-info p, .payment-info p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.milestone-status {
+    margin-left: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-badge.status-paid {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-overdue {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.payment-meta {
+    margin-top: 0.5rem;
+    text-align: right;
+}
+
+.payment-meta small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 2rem;
+    margin: 0;
+}
+
+/* Form styles for payment/milestone modals */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    background-color: var(--bg-white);
+    color: var(--text-primary);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Toast notification styles */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--bg-dark);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 10000;
+    max-width: 300px;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    background-color: #28a745;
+}
+
+.toast.error {
+    background-color: #dc3545;
+}
+
+.toast.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.toast.info {
+    background-color: #17a2b8;
+}
+
+/* Button styles for payment actions */
+.btn.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Payment tracking button in leads table */
+.payment-tracking-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s;
+}
+
+.payment-tracking-btn:hover {
+    background-color: var(--bg-light);
+}
+
+.payment-tracking-btn.has-payments {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.payment-tracking-btn.overdue-payments {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Modal specific adjustments */
+#paymentSummaryModal .modal-content {
+    max-width: 900px;
+    width: 90%;
+}
+
+#addPaymentModal .modal-content,
+#addMilestoneModal .modal-content {
+    max-width: 500px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .payment-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .milestone-item, .payment-item {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .milestone-status {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+}

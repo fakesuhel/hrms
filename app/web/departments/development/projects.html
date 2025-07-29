@@ -1,0 +1,3422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Projects</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Projects specific styles */
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            min-width: 150px;
+        }
+        
+        .search-box {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            min-width: 200px;
+        }
+        
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .project-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .project-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .project-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-planning {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .status-completed {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        .status-on_hold {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-cancelled {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .project-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            padding-right: 6rem;
+        }
+        
+        .project-client {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .project-dates {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .project-card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .project-description {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .project-info {
+            margin-bottom: 1rem;
+        }
+        
+        .project-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+        
+        .project-tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .tech-tag {
+            padding: 0.25rem 0.75rem;
+            background-color: var(--bg-light);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+        }
+        
+        .project-card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .team-avatars {
+            display: flex;
+            align-items: center;
+        }
+        
+        .team-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: -10px;
+            border: 2px solid white;
+        }
+        
+        .team-avatar:first-child {
+            margin-left: 0;
+        }
+        
+        .progress-container {
+            height: 6px;
+            background-color: var(--bg-light);
+            border-radius: 9999px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 9999px;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Project detail view */
+        .project-detail-header {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .project-detail-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        
+        .project-detail-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .project-detail-client {
+            color: var(--text-secondary);
+        }
+        
+        .project-detail-action {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .project-detail-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-info-item h4 {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-info-item p {
+            font-weight: 500;
+        }
+        
+        .project-detail-description {
+            margin-bottom: 1.5rem;
+        }
+        
+        .project-detail-description h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .project-tasks {
+            margin-bottom: 2rem;
+        }
+        
+        .board-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 1rem;
+            overflow-x: auto;
+        }
+        
+        .task-column {
+            background-color: var(--bg-light);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            min-width: 270px;
+        }
+        
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .column-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .column-count {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 9999px;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        .column-todo .column-title {
+            color: var(--text-secondary);
+        }
+        
+        .column-in_progress .column-title {
+            color: var(--primary);
+        }
+        
+        .column-review .column-title {
+            color: var(--warning);
+        }
+        
+        .column-completed .column-title {
+            color: var(--success);
+        }
+        
+        .task-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .task-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .task-due-date {
+            display: flex;
+            align-items: center;
+        }
+        
+        .task-assignee {
+            display: flex;
+            align-items: center;
+        }
+        
+        .assignee-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        .add-task-card {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-top: 0.75rem;
+            text-align: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        
+        .add-task-card:hover {
+            background-color: rgba(37, 99, 235, 0.05);
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+        
+        /* Project stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid var(--primary);
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { opacity: 0; transform: translateY(100%); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(100%); }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .projects-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .filter-group {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .board-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-detail-title {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .project-detail-action {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list" id="navigationMenu">
+                    <!-- Navigation will be populated dynamically based on user role -->
+                </ul>
+            </nav>
+                            <i>⭐</i>
+                            Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/leave-requests.html" class="nav-link">
+                            <i>📅</i>
+                            Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/static/settings.html" class="nav-link">
+                            <i>⚙️</i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">soherucontinue</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Project Management</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">SC</div>
+                    <span id="userTimeDisplay">07:45 - soherucontinue</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <div id="projects-view">
+                    <!-- Projects Statistics -->
+                    <div class="stats-grid" id="projectStats">
+                        <!-- Stats will be loaded dynamically -->
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Total Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Active Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tasks To Do</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tasks In Progress</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tasks Completed</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Projects Header with Filter and Actions -->
+                    <div class="projects-header">
+                        <div class="filter-group">
+                            <select class="filter-select" id="statusFilter">
+                                <option value="all">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="planning">Planning</option>
+                                <option value="on_hold">On Hold</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            
+                            <input type="text" class="search-box" id="projectSearch" placeholder="Search projects...">
+                        </div>
+                        
+                        <button class="btn btn-primary" id="createProjectBtn">
+                            <i>➕</i> New Project
+                        </button>
+                    </div>
+                    
+                    <!-- Projects Grid -->
+                    <div class="project-grid" id="projectsGrid">
+                        <!-- Projects will be loaded dynamically -->
+                        <div class="loading-message" style="grid-column: span 3; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            Loading projects...
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="project-detail-view" style="display: none;">
+                    <!-- Project Detail Header -->
+                    <div class="project-detail-header">
+                        <div class="project-detail-title">
+                            <div>
+                                <h2 class="project-detail-name" id="detailProjectName">Project Name</h2>
+                                <p class="project-detail-client" id="detailProjectClient">Client: Client Name</p>
+                            </div>
+                            
+                            <div class="project-detail-action">
+                                <button class="btn btn-outline" id="backToProjectsBtn">
+                                    <i>←</i> Back to Projects
+                                </button>
+                                <button class="btn btn-primary" id="editProjectBtn">
+                                    <i>✏️</i> Edit Project
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="project-detail-info">
+                            <div class="detail-info-item">
+                                <h4>Status</h4>
+                                <p id="detailProjectStatus">Active</p>
+                            </div>
+                            
+                            <div class="detail-info-item">
+                                <h4>Start Date</h4>
+                                <p id="detailProjectStartDate">Jan 1, 2025</p>
+                            </div>
+                            
+                            <div class="detail-info-item">
+                                <h4>End Date</h4>
+                                <p id="detailProjectEndDate">Dec 31, 2025</p>
+                            </div>
+                            
+                            <div class="detail-info-item">
+                                <h4>Manager</h4>
+                                <p id="detailProjectManager">John Doe</p>
+                            </div>
+                        </div>
+                        
+                        <div class="project-detail-description">
+                            <h4>Description</h4>
+                            <p id="detailProjectDescription">Project description will be loaded here.</p>
+                        </div>
+                        
+                        <div class="project-tech-stack" id="detailProjectTechStack">
+                            <!-- Tech stack tags will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Project Tasks -->
+                    <div class="project-tasks">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Tasks</h3>
+                                <button class="btn btn-primary" id="addTaskBtn">
+                                    <i>➕</i> Add Task
+                                </button>
+                            </div>
+                            
+                            <div class="card-body">
+                                <div class="board-container">
+                                    <!-- To Do Column -->
+                                    <div class="task-column column-todo">
+                                        <div class="column-header">
+                                            <div class="column-title">
+                                                To Do <span class="column-count" id="todoCount">0</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-list" id="todoTasks">
+                                            <!-- Tasks will be loaded dynamically -->
+                                        </div>
+                                        
+                                        <div class="add-task-card" data-status="todo">
+                                            <i>➕</i> Add Task
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- In Progress Column -->
+                                    <div class="task-column column-in_progress">
+                                        <div class="column-header">
+                                            <div class="column-title">
+                                                In Progress <span class="column-count" id="inProgressCount">0</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-list" id="inProgressTasks">
+                                            <!-- Tasks will be loaded dynamically -->
+                                        </div>
+                                        
+                                        <div class="add-task-card" data-status="in_progress">
+                                            <i>➕</i> Add Task
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Review Column -->
+                                    <div class="task-column column-review">
+                                        <div class="column-header">
+                                            <div class="column-title">
+                                                Review <span class="column-count" id="reviewCount">0</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-list" id="reviewTasks">
+                                            <!-- Tasks will be loaded dynamically -->
+                                        </div>
+                                        
+                                        <div class="add-task-card" data-status="review">
+                                            <i>➕</i> Add Task
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Completed Column -->
+                                    <div class="task-column column-completed">
+                                        <div class="column-header">
+                                            <div class="column-title">
+                                                Completed <span class="column-count" id="completedCount">0</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-list" id="completedTasks">
+                                            <!-- Tasks will be loaded dynamically -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Project</h3>
+                <button class="modal-close" id="closeCreateProjectModal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="projectName">Project Name *</label>
+                    <input type="text" id="projectName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectDescription">Description</label>
+                    <textarea id="projectDescription" class="form-control"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectClient">Client</label>
+                    <input type="text" id="projectClient" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectStatus">Status</label>
+                    <select id="projectStatus" class="form-control">
+                        <option value="planning">Planning</option>
+                        <option value="active" selected>Active</option>
+                        <option value="on_hold">On Hold</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="projectStartDate">Start Date</label>
+                        <input type="date" id="projectStartDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <label for="projectEndDate">End Date</label>
+                        <input type="date" id="projectEndDate" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectManager">Project Manager</label>
+                    <select id="projectManager" class="form-control">
+                        <option value="">Not assigned</option>
+                        <!-- Managers will be dynamically loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teamMembersSelect">Team Members</label>
+                    <select id="teamMembersSelect" class="form-control" multiple>
+                        <!-- Users will be dynamically loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectBudget">Budget</label>
+                    <input type="number" id="projectBudget" class="form-control" placeholder="Enter budget amount">
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectTechnologies">Technologies</label>
+                    <input type="text" id="projectTechnologies" class="form-control" placeholder="Enter technologies separated by commas">
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelCreateProject">Cancel</button>
+                <button class="btn btn-primary" id="confirmCreateProject">Create Project</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Project</h3>
+                <button class="modal-close" id="closeEditProjectModal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <input type="hidden" id="editProjectId">
+                
+                <div class="form-group">
+                    <label for="editProjectName">Project Name *</label>
+                    <input type="text" id="editProjectName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectDescription">Description</label>
+                    <textarea id="editProjectDescription" class="form-control"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectClient">Client</label>
+                    <input type="text" id="editProjectClient" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectStatus">Status</label>
+                    <select id="editProjectStatus" class="form-control">
+                        <option value="planning">Planning</option>
+                        <option value="active">Active</option>
+                        <option value="on_hold">On Hold</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="editProjectStartDate">Start Date</label>
+                        <input type="date" id="editProjectStartDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <label for="editProjectEndDate">End Date</label>
+                        <input type="date" id="editProjectEndDate" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectManager">Project Manager</label>
+                    <select id="editProjectManager" class="form-control">
+                        <option value="">Not assigned</option>
+                        <!-- Managers will be dynamically loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editTeamMembersSelect">Team Members</label>
+                    <select id="editTeamMembersSelect" class="form-control" multiple>
+                        <!-- Users will be dynamically loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectBudget">Budget</label>
+                    <input type="number" id="editProjectBudget" class="form-control" placeholder="Enter budget amount">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectTechnologies">Technologies</label>
+                    <input type="text" id="editProjectTechnologies" class="form-control" placeholder="Enter technologies separated by commas">
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelEditProject">Cancel</button>
+                <button class="btn btn-primary" id="confirmEditProject">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Task Modal -->
+    <!-- Updated Task Modal with User Search -->
+<div id="createTaskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Create New Task</h3>
+            <button class="modal-close" id="closeCreateTaskModal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <input type="hidden" id="taskProjectId">
+            
+            <div class="form-group">
+                <label for="taskTitle">Task Title *</label>
+                <input type="text" id="taskTitle" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Description</label>
+                <textarea id="taskDescription" class="form-control"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskStatus">Status</label>
+                <select id="taskStatus" class="form-control">
+                    <option value="todo" selected>To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskAssigneeSelect">Assigned To</label>
+                <select id="taskAssigneeSelect" class="form-control" multiple>
+                    <!-- Users will be dynamically loaded here -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDueDate">Due Date</label>
+                <input type="date" id="taskDueDate" class="form-control">
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="cancelCreateTask">Cancel</button>
+            <button class="btn btn-primary" id="confirmCreateTask">Create Task</button>
+        </div>
+    </div>
+</div>
+
+<!-- Updated Edit Task Modal with User Search -->
+<div id="editTaskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Task</h3>
+            <button class="modal-close" id="closeEditTaskModal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <input type="hidden" id="editTaskProjectId">
+            <input type="hidden" id="editTaskId">
+            
+            <div class="form-group">
+                <label for="editTaskTitle">Task Title *</label>
+                <input type="text" id="editTaskTitle" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editTaskDescription">Description</label>
+                <textarea id="editTaskDescription" class="form-control"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="editTaskStatus">Status</label>
+                <select id="editTaskStatus" class="form-control">
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editTaskAssigneeSelect">Assigned To</label>
+                <select id="editTaskAssigneeSelect" class="form-control" multiple>
+                    <!-- Users will be dynamically loaded here -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editTaskDueDate">Due Date</label>
+                <input type="date" id="editTaskDueDate" class="form-control">
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="cancelEditTask">Cancel</button>
+            <button class="btn btn-primary" id="confirmEditTask">Save Changes</button>
+            <button class="btn btn-danger" id="deleteTask">Delete Task</button>
+        </div>
+    </div>
+</div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // ========================
+        // Navigation Generation Functions
+        // ========================
+
+        function generateNavigationMenu(userRole, currentPage = 'projects') {
+            const navigationConfigs = {
+                'employee': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ],
+                'team_lead': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/team', icon: '👥', label: 'Team' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ],
+                'manager': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/team', icon: '👥', label: 'Team' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
+                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                ]
+            };
+
+            // Default to employee if role not found
+            const menuItems = navigationConfigs[userRole] || navigationConfigs['employee'];
+            
+            return menuItems.map(item => {
+                const isActive = item.href.includes(currentPage);
+                return `
+                    <li class="nav-item">
+                        <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}">
+                            <i>${item.icon}</i>
+                            ${item.label}
+                        </a>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // Setup UI based on user role
+        function setupRoleBasedUI(currentUser) {
+            // Store user role globally for other functions
+            window.currentUserRole = currentUser.role;
+            window.currentUserId = currentUser._id;
+            
+            // Generate and set navigation menu
+            const navigationMenu = document.getElementById('navigationMenu');
+            if (navigationMenu) {
+                navigationMenu.innerHTML = generateNavigationMenu(currentUser.role, 'projects');
+            }
+        }
+
+        // Projects Module - Complete JavaScript
+document.addEventListener('DOMContentLoaded', async function() {
+    // Check authentication
+    const token = localStorage.getItem('bhoomitechzone_token');
+    if (!token) {
+        window.location.href = '/static/login.html';
+        return;
+    }
+    
+    // Get current user from token
+    let currentUser;
+    try {
+        currentUser = await getCurrentUser();
+        console.log('Current user loaded:', currentUser.username);
+        
+        // Update UI with user info
+        if (currentUser) {
+            document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+            
+            // Set user initials
+            const initials = currentUser.first_name && currentUser.last_name ? 
+                            (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
+                            currentUser.username[0].toUpperCase();
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('sidebar-username').textContent = currentUser.username;
+            document.getElementById('sidebar-position').textContent = currentUser.position || 'Team Member';
+            
+            // Setup role-based UI
+            setupRoleBasedUI(currentUser);
+            
+            // Start live clock update
+            setInterval(() => {
+                document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error getting current user:', error);
+        // Default to values from the URL if user can't be loaded
+        document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - soheruwite';
+        document.getElementById('userInitials').textContent = 'SW';
+        document.getElementById('sidebar-username').textContent = 'soheruwite';
+    }
+    
+    // Add styles for user search
+    addUserSearchStyles();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Load projects list and statistics
+    loadProjectStats();
+    loadProjects();
+    
+    // Set up user search for task assignment
+    setupUserSearchFields();
+    
+    console.log(`Projects page loaded at ${getCurrentTimeFormatted()} by ${currentUser?.username || 'soheruwite'}`);
+});
+
+// ========================
+// User Authentication
+// ========================
+
+// Get current user from API
+async function getCurrentUser() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/users/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Token expired
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+                return null;
+            }
+            throw new Error('Failed to get current user');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting current user:', error);
+        return null;
+    }
+}
+
+// ========================
+// Date and Time Functions
+// ========================
+
+// Get current date and time formatted
+function getCurrentTimeFormatted() {
+    const now = new Date();
+    // Convert to IST (UTC + 5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const istTime = new Date(now.getTime() + istOffset);
+    
+    const hours = String(istTime.getUTCHours()).padStart(2, '0');
+    const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(istTime.getUTCSeconds()).padStart(2, '0');
+    
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+// Format date for input fields (YYYY-MM-DD)
+function formatDateInput(date) {
+    if (!date) return '';
+    
+    if (typeof date === 'string') {
+        // If already in YYYY-MM-DD format, return as is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return date;
+        }
+        // Otherwise parse it
+        date = new Date(date);
+    }
+    
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        return '';
+    }
+    
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+}
+
+// Format date for display (e.g., Jun 12, 2025)
+function formatDate(dateString) {
+    if (!dateString) return 'Not set';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return 'Invalid date';
+        }
+        
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString(undefined, options);
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid date';
+    }
+}
+
+// Format date and time (e.g., Jun 12, 2025, 08:26 AM)
+function formatDateTime(dateTimeString) {
+    try {
+        const date = new Date(dateTimeString);
+        if (isNaN(date.getTime())) {
+            return 'Invalid date';
+        }
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return date.toLocaleString(undefined, options);
+    } catch (error) {
+        console.error('Error formatting datetime:', error);
+        return 'Invalid date';
+    }
+}
+
+// Format time (e.g., 08:26)
+function formatTime(dateTimeString) {
+    try {
+        const date = new Date(dateTimeString);
+        if (isNaN(date.getTime())) {
+            return 'Invalid time';
+        }
+        return date.getHours().toString().padStart(2, '0') + ':' + 
+               date.getMinutes().toString().padStart(2, '0');
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return 'Invalid time';
+    }
+}
+
+// Get today's date in YYYY-MM-DD format
+function getTodayFormatted() {
+    // For demo purposes, using the specified date
+    return "2025-06-12";
+}
+
+// ========================
+// Role-Based Access Control
+// ========================
+
+// Setup UI based on user role
+function setupRoleBasedUI(currentUser) {
+    const isEmployee = currentUser.role === 'employee';
+    
+    // Hide/show UI elements based on role
+    if (isEmployee) {
+        // Hide "New Project" button for employees
+        const createProjectBtn = document.getElementById('createProjectBtn');
+        if (createProjectBtn) {
+            createProjectBtn.style.display = 'none';
+        }
+        
+        // Hide project edit button in detail view (will be checked when viewing project)
+        const editProjectBtn = document.getElementById('editProjectBtn');
+        if (editProjectBtn) {
+            editProjectBtn.style.display = 'none';
+        }
+        
+        // Add note about limited access
+        const projectsHeader = document.querySelector('.projects-header');
+        if (projectsHeader && !document.getElementById('employee-note')) {
+            const note = document.createElement('div');
+            note.id = 'employee-note';
+            note.style.cssText = `
+                background-color: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                margin-bottom: 1rem;
+                color: var(--info);
+                font-size: 0.875rem;
+            `;
+            note.innerHTML = `
+                <strong>Employee View:</strong> You can see projects you're assigned to and tasks you can work on. You can add tasks to projects you created and update status of your assigned tasks.
+            `;
+            projectsHeader.parentNode.insertBefore(note, projectsHeader.nextSibling);
+        }
+    }
+    
+    // Store user role globally for other functions
+    window.currentUserRole = currentUser.role;
+    window.currentUserId = currentUser._id;
+}
+
+// Check if current user can edit a project
+function canEditProject(project, currentUser) {
+    if (!currentUser || !project) return false;
+    
+    // Admins, directors, managers, team leads can edit any project
+    if (['admin', 'director', 'manager', 'team_lead', 'hr', 'dev_manager'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can only edit projects they created
+    if (currentUser.role === 'employee') {
+        return project.created_by === currentUser._id;
+    }
+    
+    return false;
+}
+
+// Check if current user can add tasks to a project
+function canAddTasksToProject(project, currentUser) {
+    if (!currentUser || !project) return false;
+    
+    // Admins, directors, managers, team leads can add tasks to any project
+    if (['admin', 'director', 'manager', 'team_lead', 'hr', 'dev_manager'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can add tasks to projects they created or are team members of
+    if (currentUser.role === 'employee') {
+        const isCreator = project.created_by === currentUser._id;
+        const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+        return isCreator || isTeamMember;
+    }
+    
+    return false;
+}
+
+// Check if current user can edit a specific task
+function canEditTask(task, project, currentUser) {
+    if (!currentUser || !task) return false;
+    
+    // Admins, directors, managers, team leads can edit any task
+    if (['admin', 'director', 'manager', 'team_lead', 'hr', 'dev_manager'].includes(currentUser.role)) {
+        return true;
+    }
+    
+    // Employees can edit tasks assigned to them or tasks in projects they created
+    if (currentUser.role === 'employee') {
+        const isAssigned = task.assigned_to && (
+            (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+            task.assigned_to === currentUser._id
+        );
+        const isProjectCreator = project && project.created_by === currentUser._id;
+        return isAssigned || isProjectCreator;
+    }
+    
+    return false;
+}
+
+// Get allowed task assignees based on user role
+function getAllowedTaskAssignees(project, currentUser) {
+    if (!currentUser) return [];
+    
+    // Non-employees can assign tasks to anyone in the system
+    if (currentUser.role !== 'employee') {
+        return userListCache; // Return all users
+    }
+    
+    // Employees can only assign tasks to themselves
+    return userListCache.filter(user => user._id === currentUser._id);
+}
+
+// ========================
+// Project Operations
+// ========================
+
+// Load project statistics
+async function loadProjectStats() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch('/projects/stats/summary', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load project statistics');
+        }
+        
+        const stats = await response.json();
+        
+        // Update stats display
+        const statsGrid = document.getElementById('projectStats');
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-value">${stats.total_projects || 0}</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.active_projects || 0}</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.tasks_todo || 0}</div>
+                <div class="stat-label">Tasks To Do</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.tasks_in_progress || 0}</div>
+                <div class="stat-label">Tasks In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.tasks_completed || 0}</div>
+                <div class="stat-label">Tasks Completed</div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading project statistics:', error);
+        showToast('Error loading project statistics');
+    }
+}
+
+// Load projects list
+async function loadProjects() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const currentUser = await getCurrentUser();
+        
+        const response = await fetch('/projects', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load projects');
+        }
+        
+        const allProjects = await response.json();
+        const projectsGrid = document.getElementById('projectsGrid');
+        
+        // Filter projects based on user role
+        let projects = [];
+        if (currentUser.role === 'employee') {
+            // Employees can only see projects they are assigned to or have tasks in
+            projects = allProjects.filter(project => {
+                // Check if user is in team members
+                const isTeamMember = project.team_members && project.team_members.includes(currentUser._id);
+                
+                // Check if user has tasks in this project
+                const hasAssignedTasks = project.tasks && project.tasks.some(task => 
+                    task.assigned_to && (
+                        (Array.isArray(task.assigned_to) && task.assigned_to.includes(currentUser._id)) ||
+                        task.assigned_to === currentUser._id
+                    )
+                );
+                
+                // Check if user created the project (unlikely for employee but possible)
+                const isCreator = project.created_by === currentUser._id;
+                
+                return isTeamMember || hasAssignedTasks || isCreator;
+            });
+        } else {
+            // Team leads, managers, directors, HR can see all projects
+            projects = allProjects;
+        }
+        
+        if (projects.length === 0) {
+            const emptyMessage = currentUser.role === 'employee' 
+                ? 'No assigned projects found. You will see projects here when you are assigned to them or have tasks assigned to you.'
+                : 'No projects found. Click "New Project" to create one.';
+            
+            projectsGrid.innerHTML = `
+                <div style="grid-column: span 3; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    ${emptyMessage}
+                </div>
+            `;
+            return;
+        }
+        
+        projectsGrid.innerHTML = '';
+        
+        // Sort projects by creation date (newest first)
+        projects.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        // Filter projects based on current filter
+        const statusFilter = document.getElementById('statusFilter').value;
+        const searchTerm = document.getElementById('projectSearch').value.toLowerCase();
+        
+        const filteredProjects = projects.filter(project => {
+            const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+            const matchesSearch = !searchTerm || 
+                project.name.toLowerCase().includes(searchTerm) || 
+                (project.description && project.description.toLowerCase().includes(searchTerm)) ||
+                (project.client && project.client.toLowerCase().includes(searchTerm));
+            
+            return matchesStatus && matchesSearch;
+        });
+        
+        if (filteredProjects.length === 0) {
+            projectsGrid.innerHTML = `
+                <div style="grid-column: span 3; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    No projects match the current filters.
+                </div>
+            `;
+            return;
+        }
+        
+        // Generate project cards
+        filteredProjects.forEach(project => {
+            const completedTasks = project.tasks.filter(task => task.status === 'completed').length;
+            const totalTasks = project.tasks.length;
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            const statusClasses = {
+                'active': 'status-active',
+                'planning': 'status-planning',
+                'completed': 'status-completed',
+                'on_hold': 'status-on_hold',
+                'cancelled': 'status-cancelled'
+            };
+            
+            const statusClass = statusClasses[project.status] || 'status-active';
+            const statusLabel = project.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            const startDate = project.start_date ? formatDate(project.start_date) : 'Not set';
+            const endDate = project.end_date ? formatDate(project.end_date) : 'Not set';
+            
+            // Limit team members display to first 4
+            const teamMembers = project.team_members.slice(0, 4);
+            const extraMembers = project.team_members.length > 4 ? project.team_members.length - 4 : 0;
+            
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            card.setAttribute('data-project-id', project._id);
+            card.innerHTML = `
+                <div class="project-card-header">
+                    <span class="project-status ${statusClass}">${statusLabel}</span>
+                    <h3 class="project-title">${project.name}</h3>
+                    <div class="project-client">${project.client || 'No client specified'}</div>
+                    <div class="project-dates">
+                        <div>
+                            <div class="info-label">Start</div>
+                            <div class="info-value">${startDate}</div>
+                        </div>
+                        <div>
+                            <div class="info-label">End</div>
+                            <div class="info-value">${endDate}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="project-card-body">
+                    <p class="project-description">${project.description || 'No description provided'}</p>
+                    
+                    <div class="project-info">
+                        <div class="project-info-row">
+                            <div class="info-label">Tasks</div>
+                            <div class="info-value">${totalTasks}</div>
+                        </div>
+                        <div class="project-info-row">
+                            <div class="info-label">Completed</div>
+                            <div class="info-value">${completedTasks}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span>Progress</span>
+                        <span>${progress}%</span>
+                    </div>
+                    
+                    <div class="project-tech-stack">
+                        ${project.technologies.slice(0, 3).map(tech => 
+                            `<span class="tech-tag">${tech}</span>`
+                        ).join('')}
+                        ${project.technologies.length > 3 ? 
+                            `<span class="tech-tag">+${project.technologies.length - 3}</span>` : ''}
+                    </div>
+                </div>
+                
+                <div class="project-card-footer">
+                    <div class="team-avatars">
+                        ${teamMembers.map((member, index) => 
+                            `<div class="team-avatar" title="${member}">${member.charAt(0).toUpperCase()}</div>`
+                        ).join('')}
+                        ${extraMembers > 0 ? `<div class="team-avatar">+${extraMembers}</div>` : ''}
+                    </div>
+                    <button class="btn btn-sm btn-outline view-project" data-project-id="${project._id}">View</button>
+                </div>
+            `;
+            
+            projectsGrid.appendChild(card);
+            
+            // Add click event to the card
+            card.addEventListener('click', function() {
+                loadProjectDetails(project._id);
+            });
+        });
+        
+        // Add click events for view buttons
+        document.querySelectorAll('.view-project').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent card click event
+                const projectId = this.getAttribute('data-project-id');
+                loadProjectDetails(projectId);
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error loading projects:', error);
+        document.getElementById('projectsGrid').innerHTML = `
+            <div style="grid-column: span 3; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                Error loading projects. Please try again later.
+            </div>
+        `;
+        showToast('Error loading projects');
+    }
+}
+
+// Load project details
+async function loadProjectDetails(projectId) {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch(`/projects/${projectId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load project details');
+        }
+        
+        const project = await response.json();
+        
+        // Update UI with project details
+        document.getElementById('detailProjectName').textContent = project.name;
+        document.getElementById('detailProjectClient').textContent = `Client: ${project.client || 'None specified'}`;
+        
+        const statusLabel = project.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        document.getElementById('detailProjectStatus').textContent = statusLabel;
+        
+        const startDate = project.start_date ? formatDate(project.start_date) : 'Not set';
+        const endDate = project.end_date ? formatDate(project.end_date) : 'Not set';
+        document.getElementById('detailProjectStartDate').textContent = startDate;
+        document.getElementById('detailProjectEndDate').textContent = endDate;
+        
+        // Get user details for manager
+        try {
+            if (project.manager_id && project.manager_id !== 'null' && project.manager_id !== '') {
+                const managerResponse = await fetch(`/users/${project.manager_id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (managerResponse.ok) {
+                    const manager = await managerResponse.json();
+                    const managerName = manager.first_name && manager.last_name 
+                        ? `${manager.first_name} ${manager.last_name}`
+                        : manager.username;
+                    document.getElementById('detailProjectManager').textContent = managerName;
+                } else {
+                    document.getElementById('detailProjectManager').textContent = 'Not assigned';
+                }
+            } else {
+                document.getElementById('detailProjectManager').textContent = 'Not assigned';
+            }
+        } catch (err) {
+            // Fallback if API call fails
+            document.getElementById('detailProjectManager').textContent = 'Not assigned';
+        }
+        
+        document.getElementById('detailProjectDescription').textContent = project.description || 'No description provided';
+        
+        // Show technologies
+        const techStackContainer = document.getElementById('detailProjectTechStack');
+        techStackContainer.innerHTML = '';
+        
+        if (project.technologies && project.technologies.length > 0) {
+            project.technologies.forEach(tech => {
+                const techTag = document.createElement('span');
+                techTag.className = 'tech-tag';
+                techTag.textContent = tech;
+                techStackContainer.appendChild(techTag);
+            });
+        } else {
+            techStackContainer.innerHTML = '<span class="tech-tag">No technologies specified</span>';
+        }
+        
+        // Populate task board
+        populateTaskBoard(project.tasks);
+        
+        // Check permissions and setup UI accordingly
+        const currentUser = await getCurrentUser();
+        
+        // Show/hide edit project button based on permissions
+        const editProjectBtn = document.getElementById('editProjectBtn');
+        if (editProjectBtn) {
+            if (canEditProject(project, currentUser)) {
+                editProjectBtn.style.display = 'inline-flex';
+            } else {
+                editProjectBtn.style.display = 'none';
+            }
+        }
+        
+        // Show/hide add task button based on permissions
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        if (addTaskBtn) {
+            if (canAddTasksToProject(project, currentUser)) {
+                addTaskBtn.style.display = 'inline-flex';
+            } else {
+                addTaskBtn.style.display = 'none';
+            }
+        }
+        
+        // Hide add task cards in columns for employees who can't add tasks
+        const addTaskCards = document.querySelectorAll('.add-task-card');
+        addTaskCards.forEach(card => {
+            if (canAddTasksToProject(project, currentUser)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Switch to project detail view
+        document.getElementById('projects-view').style.display = 'none';
+        document.getElementById('project-detail-view').style.display = 'block';
+        
+        // Save current project ID for task operations
+        document.getElementById('taskProjectId').value = projectId;
+        document.getElementById('editProjectId').value = projectId;
+        
+        // Set task count badges
+        updateTaskCounts(project.tasks);
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+            
+    } catch (error) {
+        console.error('Error loading project details:', error);
+        showToast('Error loading project details');
+        // Return to projects list view on error
+        document.getElementById('projects-view').style.display = 'block';
+        document.getElementById('project-detail-view').style.display = 'none';
+    }
+}
+
+// Create a new project
+async function createProject() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        
+        // Get form values
+        const name = document.getElementById('projectName').value.trim();
+        if (!name) {
+            showToast('Project name is required');
+            return;
+        }
+        
+        const description = document.getElementById('projectDescription').value.trim();
+        const client = document.getElementById('projectClient').value.trim();
+        const status = document.getElementById('projectStatus').value;
+        
+        // Get dates as strings - no need to convert
+        const startDate = document.getElementById('projectStartDate').value;
+        const endDate = document.getElementById('projectEndDate').value;
+        
+        // Get team members from Select2
+        const teamMembers = getSelectedTeamMemberIds();
+        const managerId = document.getElementById('projectManager').value;
+        const budget = document.getElementById('projectBudget').value;
+        const technologiesInput = document.getElementById('projectTechnologies').value.trim();
+        
+        // Process technologies
+        const technologies = technologiesInput ? technologiesInput.split(',').map(tech => tech.trim()) : [];
+        
+        // Prepare project data - send dates as strings
+        const projectData = {
+            name,
+            description,
+            client,
+            status,
+            start_date: startDate,
+            end_date: endDate,
+            team_members: teamMembers,
+            technologies,
+        };
+        
+        // Add manager_id if selected
+        if (managerId) {
+            projectData.manager_id = managerId;
+        }
+        
+        if (budget) projectData.budget = parseFloat(budget);
+        
+        const currentUser = await getCurrentUser();
+        console.log(`Creating project: ${name}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch('/projects', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectData)
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to create project');
+        }
+        
+        // Close modal and refresh projects
+        document.getElementById('createProjectModal').style.display = 'none';
+        showToast('Project created successfully');
+        
+        // Reset form
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectDescription').value = '';
+        document.getElementById('projectClient').value = '';
+        document.getElementById('projectStatus').value = 'active';
+        document.getElementById('projectStartDate').value = '';
+        document.getElementById('projectEndDate').value = '';
+        // Reset Select2 dropdown
+        $('#teamMembersSelect').val(null).trigger('change');
+        document.getElementById('projectBudget').value = '';
+        document.getElementById('projectTechnologies').value = '';
+        
+        // Reload projects
+        loadProjectStats();
+        loadProjects();
+        
+    } catch (error) {
+        console.error('Error creating project:', error);
+        showToast('Error creating project: ' + error.message);
+    }
+}
+
+// Update an existing project
+async function updateProject() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectId = document.getElementById('editProjectId').value;
+        
+        // Get form values
+        const name = document.getElementById('editProjectName').value.trim();
+        if (!name) {
+            showToast('Project name is required');
+            return;
+        }
+        
+        const description = document.getElementById('editProjectDescription').value.trim();
+        const client = document.getElementById('editProjectClient').value.trim();
+        const status = document.getElementById('editProjectStatus').value;
+        
+        // Get dates as strings - no need to convert
+        const startDate = document.getElementById('editProjectStartDate').value;
+        const endDate = document.getElementById('editProjectEndDate').value;
+        
+        // Get team members from edit Select2
+        const teamMembers = getSelectedEditTeamMemberIds();
+        const managerId = document.getElementById('editProjectManager').value;
+        const budget = document.getElementById('editProjectBudget').value;
+        const technologiesInput = document.getElementById('editProjectTechnologies').value.trim();
+        
+        // Process technologies
+        const technologies = technologiesInput ? technologiesInput.split(',').map(tech => tech.trim()) : [];
+        
+        // Prepare project data
+        const projectData = {
+            name,
+            description,
+            client,
+            status,
+            start_date: startDate,
+            end_date: endDate,
+            team_members: teamMembers,
+            technologies,
+        };
+        
+        // Add manager_id (can be empty string for "not assigned")
+        projectData.manager_id = managerId || null;
+        
+        if (budget) projectData.budget = parseFloat(budget);
+        
+        const currentUser = await getCurrentUser();
+        console.log(`Updating project: ${projectId}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch(`/projects/${projectId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectData)
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to update project');
+        }
+        
+        // Close modal
+        document.getElementById('editProjectModal').style.display = 'none';
+        showToast('Project updated successfully');
+        
+        // Reload project details
+        loadProjectDetails(projectId);
+        
+    } catch (error) {
+        console.error('Error updating project:', error);
+        showToast('Error updating project: ' + error.message);
+    }
+}
+
+// Delete a project
+async function deleteProject(projectId) {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const currentUser = await getCurrentUser();
+        console.log(`Deleting project: ${projectId}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch(`/projects/${projectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to delete project');
+        }
+        
+        // Return to projects list
+        document.getElementById('projects-view').style.display = 'block';
+        document.getElementById('project-detail-view').style.display = 'none';
+        
+        showToast('Project deleted successfully');
+        
+        // Reload projects list
+        loadProjectStats();
+        loadProjects();
+        
+    } catch (error) {
+        console.error('Error deleting project:', error);
+        showToast('Error deleting project: ' + error.message);
+    }
+}
+
+// ========================
+// Task Operations
+// ========================
+
+// Populate task board with tasks
+function populateTaskBoard(tasks) {
+    // Clear existing tasks
+    document.getElementById('todoTasks').innerHTML = '';
+    document.getElementById('inProgressTasks').innerHTML = '';
+    document.getElementById('reviewTasks').innerHTML = '';
+    document.getElementById('completedTasks').innerHTML = '';
+    
+    // Sort tasks by creation date (newest first)
+    const sortedTasks = [...tasks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Group tasks by status
+    sortedTasks.forEach(task => {
+        const containerID = task.status === 'todo' ? 'todoTasks' :
+                            task.status === 'in_progress' ? 'inProgressTasks' :
+                            task.status === 'review' ? 'reviewTasks' : 'completedTasks';
+        
+        const container = document.getElementById(containerID);
+        
+        const taskElement = document.createElement('div');
+        taskElement.className = 'task-card';
+        taskElement.setAttribute('data-task-id', task._id);
+        
+        const dueDate = task.due_date ? formatDate(task.due_date) : 'No due date';
+        
+        // Handle multiple assignees
+        let assigneeHtml = '<div class="task-assignee">Unassigned</div>';
+        
+        if (task.assigned_to && task.assigned_to.length > 0) {
+            // Find user names from cache
+            const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+            const assigneeNames = assignees.map(id => {
+                const user = userListCache.find(u => u._id === id);
+                return user ? (user.name || user.username) : id;
+            });
+            
+            // Create avatars for up to 3 assignees
+            const avatarsHtml = assignees.slice(0, 3).map(id => {
+                const user = userListCache.find(u => u._id === id);
+                const name = user ? (user.name || user.username) : id;
+                const initial = name.charAt(0).toUpperCase();
+                return `<div class="assignee-avatar" title="${name}">${initial}</div>`;
+            }).join('');
+            
+            // Show how many more assignees there are
+            const extraAssignees = assignees.length > 3 ? `+${assignees.length - 3}` : '';
+            const extraHtml = extraAssignees ? `<div class="assignee-avatar more-assignees" title="${assignees.length} assignees">${extraAssignees}</div>` : '';
+            
+            assigneeHtml = `
+                <div class="task-assignee">
+                    <span>${assigneeNames.length > 1 ? 'Multiple assignees' : assigneeNames[0]}</span>
+                    <div class="team-avatars">
+                        ${avatarsHtml}
+                        ${extraHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        taskElement.innerHTML = `
+            <h4 class="task-title">${task.title}</h4>
+            <p class="task-description">${task.description || 'No description'}</p>
+            <div class="task-meta">
+                <div class="task-due-date">Due: ${dueDate}</div>
+                ${assigneeHtml}
+            </div>
+        `;
+        
+        container.appendChild(taskElement);
+        
+        // Add click event for task card
+        taskElement.addEventListener('click', function() {
+            openEditTaskModal(task);
+        });
+    });
+}
+
+// Update task count badges
+function updateTaskCounts(tasks) {
+    const todoCount = tasks.filter(task => task.status === 'todo').length;
+    const inProgressCount = tasks.filter(task => task.status === 'in_progress').length;
+    const reviewCount = tasks.filter(task => task.status === 'review').length;
+    const completedCount = tasks.filter(task => task.status === 'completed').length;
+    
+    document.getElementById('todoCount').textContent = todoCount;
+    document.getElementById('inProgressCount').textContent = inProgressCount;
+    document.getElementById('reviewCount').textContent = reviewCount;
+    document.getElementById('completedCount').textContent = completedCount;
+}
+
+// Create a new task
+async function createTask() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectId = document.getElementById('taskProjectId').value;
+        
+        // Get form values
+        const title = document.getElementById('taskTitle').value.trim();
+        if (!title) {
+            showToast('Task title is required');
+            return;
+        }
+        
+        const description = document.getElementById('taskDescription').value.trim();
+        const status = document.getElementById('taskStatus').value;
+        
+        // Get assigned user IDs from Select2
+        const assignedTo = getSelectedTaskAssignees();
+        
+        // Get due date as a string - no conversion needed
+        const dueDate = document.getElementById('taskDueDate').value;
+        
+        // Prepare task data
+        const taskData = {
+            title,
+            description,
+            status,
+            assigned_to: assignedTo.length > 0 ? assignedTo[0] : '', // Send only the first assignee as a string
+            due_date: dueDate
+        };
+        
+        const currentUser = await getCurrentUser();
+        console.log(`Creating task for project: ${projectId}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch(`/projects/${projectId}/tasks`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to create task');
+        }
+        
+        // Close modal
+        document.getElementById('createTaskModal').style.display = 'none';
+        showToast('Task created successfully');
+        
+        // Reset form
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('taskStatus').value = 'todo';
+        // Reset Select2 dropdown
+        $('#taskAssigneeSelect').val(null).trigger('change');
+        document.getElementById('taskDueDate').value = '';
+        
+        // Remove selected user info if exists
+        const selectedUserInfo = document.querySelector('.selected-user-info');
+        if (selectedUserInfo) {
+            selectedUserInfo.remove();
+            document.getElementById('taskAssignee').style.display = 'block';
+        }
+        
+        // Reload project details to show new task
+        loadProjectDetails(projectId);
+        
+    } catch (error) {
+        console.error('Error creating task:', error);
+        showToast('Error creating task: ' + error.message);
+    }
+}
+
+// Update an existing task
+async function updateTask() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectId = document.getElementById('editTaskProjectId').value;
+        const taskId = document.getElementById('editTaskId').value;
+        
+        // Get form values
+        const title = document.getElementById('editTaskTitle').value.trim();
+        if (!title) {
+            showToast('Task title is required');
+            return;
+        }
+        
+        const description = document.getElementById('editTaskDescription').value.trim();
+        const status = document.getElementById('editTaskStatus').value;
+        
+        // Get assigned user IDs from Select2
+        const assignedTo = getSelectedEditTaskAssignees();
+        
+        // Get due date as a string - no conversion needed
+        const dueDate = document.getElementById('editTaskDueDate').value;
+        
+        // Prepare task data
+        const taskData = {
+            title,
+            description,
+            status,
+            assigned_to: assignedTo.length > 0 ? assignedTo[0] : '', // Send only the first assignee as a string
+            due_date: dueDate
+        };
+        
+        const currentUser = await getCurrentUser();
+        console.log(`Updating task ${taskId} in project: ${projectId}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch(`/projects/${projectId}/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to update task');
+        }
+        
+        // Close modal
+        document.getElementById('editTaskModal').style.display = 'none';
+        showToast('Task updated successfully');
+        
+        // Reload project details
+        loadProjectDetails(projectId);
+        
+    } catch (error) {
+        console.error('Error updating task:', error);
+        showToast('Error updating task: ' + error.message);
+    }
+}
+
+// Delete a task
+async function deleteTask() {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectId = document.getElementById('editTaskProjectId').value;
+        const taskId = document.getElementById('editTaskId').value;
+        
+        if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+            return;
+        }
+        
+        const currentUser = await getCurrentUser();
+        console.log(`Deleting task ${taskId} from project: ${projectId}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        
+        const response = await fetch(`/projects/${projectId}/tasks/${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || 'Failed to delete task');
+        }
+        
+        // Close modal
+        document.getElementById('editTaskModal').style.display = 'none';
+        showToast('Task deleted successfully');
+        
+        // Reload project details
+        loadProjectDetails(projectId);
+        
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        showToast('Error deleting task: ' + error.message);
+    }
+}
+
+// ========================
+// User Search Functions
+// ========================
+
+// Search users by name or username
+async function searchUsers(query) {
+    if (!query || query.length < 2) return [];
+    
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch(`/projects/users/search?query=${encodeURIComponent(query)}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to search users');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error searching users:', error);
+        return [];
+    }
+}
+
+// Initialize the user search functionality
+function initializeUserSearch(inputElement, resultsContainer) {
+    let searchTimeout;
+    
+    inputElement.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+        
+        // Clear results if query is too short
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        
+        // Set a timeout to prevent too many requests
+        searchTimeout = setTimeout(async () => {
+            const users = await searchUsers(query);
+            
+            // Display results
+            resultsContainer.innerHTML = '';
+            
+            if (users.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">No users found</div>';
+            } else {
+                users.forEach(user => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.innerHTML = `
+                        <div class="result-name">${user.full_name || user.username}</div>
+                        <div class="result-info">@${user.username}${user.position ? ` - ${user.position}` : ''}</div>
+                    `;
+                    
+                    // Add click handler to select this user
+                    resultItem.addEventListener('click', function() {
+                        inputElement.value = user.id;
+                        inputElement.setAttribute('data-selected-name', user.full_name || user.username);
+                        inputElement.setAttribute('data-selected-username', user.username);
+                        
+                        // Show the selected user info
+                        const selectedUserInfo = document.createElement('div');
+                        selectedUserInfo.className = 'selected-user-info';
+                        selectedUserInfo.innerHTML = `
+                            <div class="selected-user-avatar">${(user.full_name || user.username).charAt(0).toUpperCase()}</div>
+                            <div class="selected-user-details">
+                                <div class="selected-user-name">${user.full_name || user.username}</div>
+                                <div class="selected-user-username">@${user.username}</div>
+                            </div>
+                            <button class="clear-selection" type="button">&times;</button>
+                        `;
+                        
+                        // Clear selection button
+                        const clearButton = selectedUserInfo.querySelector('.clear-selection');
+                        clearButton.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            inputElement.value = '';
+                            inputElement.removeAttribute('data-selected-name');
+                            inputElement.removeAttribute('data-selected-username');
+                            selectedUserInfo.remove();
+                            inputElement.style.display = 'block';
+                        });
+                        
+                        // Replace the input with the selected user info
+                        inputElement.parentNode.insertBefore(selectedUserInfo, inputElement.nextSibling);
+                        inputElement.style.display = 'none';
+                        
+                        // Hide results
+                        resultsContainer.innerHTML = '';
+                        resultsContainer.style.display = 'none';
+                    });
+                    
+                    resultsContainer.appendChild(resultItem);
+                });
+            }
+            
+            resultsContainer.style.display = 'block';
+        }, 300);
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!inputElement.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+}
+
+// Setup user search fields on the page
+function setupUserSearchFields() {
+    // Fetch all users at startup to populate our cache
+    fetchAllUsers();
+    
+    // For backward compatibility, keep the old search functionality
+    // Create results containers
+    const createContainer = document.createElement('div');
+    createContainer.className = 'search-results';
+    
+    const editContainer = document.createElement('div');
+    editContainer.className = 'search-results';
+}
+
+// ========================
+// Modal and UI Functions
+// ========================
+
+// Open create task modal
+function openCreateTaskModal(initialStatus) {
+    const taskStatusSelect = document.getElementById('taskStatus');
+    taskStatusSelect.value = initialStatus || 'todo';
+    
+    // Set default due date to 7 days from now
+    const defaultDueDate = new Date('2025-06-12');
+    defaultDueDate.setDate(defaultDueDate.getDate() + 7);
+    document.getElementById('taskDueDate').value = formatDateInput(defaultDueDate);
+    
+    // Get current user and project for permission checking
+    getCurrentUser().then(currentUser => {
+        // For employees, set themselves as the default assignee
+        if (currentUser.role === 'employee') {
+            populateTaskAssigneeDropdown('taskAssigneeSelect', [currentUser._id]);
+        } else {
+            populateTaskAssigneeDropdown('taskAssigneeSelect', []);
+        }
+    });
+    
+    document.getElementById('createTaskModal').style.display = 'flex';
+}
+
+// Open edit task modal
+function openEditTaskModal(task) {
+    // Check permissions first
+    getCurrentUser().then(async currentUser => {
+        const projectId = document.getElementById('taskProjectId').value;
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const projectResponse = await fetch(`/projects/${projectId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const project = await projectResponse.json();
+        
+        if (!canEditTask(task, project, currentUser)) {
+            showToast('You do not have permission to edit this task');
+            return;
+        }
+        
+        // Populate form with task data
+        document.getElementById('editTaskId').value = task._id;
+        document.getElementById('editTaskProjectId').value = projectId;
+        document.getElementById('editTaskTitle').value = task.title || '';
+        document.getElementById('editTaskDescription').value = task.description || '';
+        document.getElementById('editTaskStatus').value = task.status || 'todo';
+        
+        // Handle assignees with Select2
+        const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : 
+                         (task.assigned_to ? [task.assigned_to] : []);
+        
+        // For employees, limit editing capabilities
+        if (currentUser.role === 'employee') {
+            // Employees can only change status, not title, description, or assignees
+            document.getElementById('editTaskTitle').disabled = true;
+            document.getElementById('editTaskDescription').disabled = true;
+            document.getElementById('editTaskDueDate').disabled = true;
+            
+            // Only allow status change if they are assigned to the task
+            const isAssigned = assignees.includes(currentUser._id);
+            if (!isAssigned && project.created_by !== currentUser._id) {
+                showToast('You can only edit tasks assigned to you or in projects you created');
+                return;
+            }
+        } else {
+            // Re-enable all fields for non-employees
+            document.getElementById('editTaskTitle').disabled = false;
+            document.getElementById('editTaskDescription').disabled = false;
+            document.getElementById('editTaskDueDate').disabled = false;
+        }
+        
+        // Initialize and populate task assignee dropdown
+        populateTaskAssigneeDropdown('editTaskAssigneeSelect', assignees);
+        
+        // Set due date
+        if (task.due_date) {
+            document.getElementById('editTaskDueDate').value = formatDateInput(task.due_date);
+        } else {
+            document.getElementById('editTaskDueDate').value = '';
+        }
+        
+        document.getElementById('editTaskModal').style.display = 'flex';
+    });
+}
+
+// Open edit project modal with current project data
+async function openEditProjectModal(projectId) {
+    try {
+        const token = localStorage.getItem('bhoomitechzone_token');
+        const response = await fetch(`/projects/${projectId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load project details');
+        }
+        
+        const project = await response.json();
+        
+        // Populate form with project data
+        document.getElementById('editProjectId').value = project._id;
+        document.getElementById('editProjectName').value = project.name || '';
+        document.getElementById('editProjectDescription').value = project.description || '';
+        document.getElementById('editProjectClient').value = project.client || '';
+        document.getElementById('editProjectStatus').value = project.status || 'active';
+        
+        if (project.start_date) {
+            document.getElementById('editProjectStartDate').value = formatDateInput(project.start_date);
+        } else {
+            document.getElementById('editProjectStartDate').value = '';
+        }
+        
+        if (project.end_date) {
+            document.getElementById('editProjectEndDate').value = formatDateInput(project.end_date);
+        } else {
+            document.getElementById('editProjectEndDate').value = '';
+        }
+        
+        // Initialize team members dropdown with current values
+        setupEditTeamMembersDropdown(project.team_members);
+        
+        // Initialize manager dropdown with current manager
+        await setupManagerDropdown('editProjectManager', project.manager_id);
+        
+        document.getElementById('editProjectBudget').value = project.budget || '';
+        document.getElementById('editProjectTechnologies').value = project.technologies.join(', ');
+        
+        document.getElementById('editProjectModal').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error loading project for editing:', error);
+        showToast('Error loading project details');
+    }
+}
+
+// Add CSS styles for user search
+function addUserSearchStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .user-search-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-result-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .result-name {
+            font-weight: 500;
+        }
+        
+        .result-info {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .selected-user-info {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            margin-top: 0.5rem;
+        }
+        
+        .selected-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.75rem;
+        }
+        
+        .selected-user-details {
+            flex: 1;
+        }
+        
+        .selected-user-name {
+            font-weight: 500;
+        }
+        
+        .selected-user-username {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .clear-selection {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+        }
+        
+        .clear-selection:hover {
+            color: var(--danger);
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Setup all event listeners
+function setupEventListeners() {
+    // Menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+        document.querySelector('.sidebar')?.classList.toggle('active');
+    });
+    
+    // User menu toggle
+    const userMenu = document.getElementById('userMenu');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    if (userMenu && userDropdown) {
+        userMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+        
+        // Close user dropdown when clicking outside
+        document.addEventListener('click', function() {
+            userDropdown.classList.remove('active');
+        });
+    }
+    
+    // Logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('bhoomitechzone_token');
+        window.location.href = '/static/login.html';
+    });
+    
+    // Status filter
+    document.getElementById('statusFilter')?.addEventListener('change', function() {
+        loadProjects();
+    });
+    
+    // Search input
+    document.getElementById('projectSearch')?.addEventListener('input', function() {
+        loadProjects();
+    });
+    
+    // Create project button
+    document.getElementById('createProjectBtn')?.addEventListener('click', function() {
+        // Set default dates
+        const today = new Date('2025-06-12');
+        document.getElementById('projectStartDate').value = formatDateInput(today);
+        
+        const endDate = new Date('2025-06-12');
+        endDate.setMonth(endDate.getMonth() + 3); // Default to 3 months from now
+        document.getElementById('projectEndDate').value = formatDateInput(endDate);
+        
+        // Initialize team members dropdown
+        setupTeamMembersDropdownForProjectEdit([]);
+        
+        // Initialize manager dropdown
+        setupManagerDropdown('projectManager', null);
+        
+        document.getElementById('createProjectModal').style.display = 'flex';
+    });
+    
+    // Back to projects button
+    document.getElementById('backToProjectsBtn')?.addEventListener('click', function() {
+        document.getElementById('projects-view').style.display = 'block';
+        document.getElementById('project-detail-view').style.display = 'none';
+    });
+    
+    // Edit project button
+    document.getElementById('editProjectBtn')?.addEventListener('click', function() {
+        const projectId = document.getElementById('editProjectId').value;
+        openEditProjectModal(projectId);
+    });
+    
+    // Add task button
+    document.getElementById('addTaskBtn')?.addEventListener('click', function() {
+        openCreateTaskModal();
+    });
+    
+    // "Add Task" buttons in columns
+    document.querySelectorAll('.add-task-card').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            openCreateTaskModal(status);
+        });
+    });
+    
+    // Create project modal
+    document.getElementById('confirmCreateProject')?.addEventListener('click', createProject);
+    document.getElementById('cancelCreateProject')?.addEventListener('click', function() {
+        document.getElementById('createProjectModal').style.display = 'none';
+    });
+    document.getElementById('closeCreateProjectModal')?.addEventListener('click', function() {
+        document.getElementById('createProjectModal').style.display = 'none';
+    });
+    
+    // Edit project modal
+    document.getElementById('confirmEditProject')?.addEventListener('click', updateProject);
+    document.getElementById('cancelEditProject')?.addEventListener('click', function() {
+        document.getElementById('editProjectModal').style.display = 'none';
+    });
+    document.getElementById('closeEditProjectModal')?.addEventListener('click', function() {
+        document.getElementById('editProjectModal').style.display = 'none';
+    });
+    
+    // Create task modal
+    document.getElementById('confirmCreateTask')?.addEventListener('click', createTask);
+    document.getElementById('cancelCreateTask')?.addEventListener('click', function() {
+        document.getElementById('createTaskModal').style.display = 'none';
+    });
+    document.getElementById('closeCreateTaskModal')?.addEventListener('click', function() {
+        document.getElementById('createTaskModal').style.display = 'none';
+    });
+    
+    // Edit task modal
+    document.getElementById('confirmEditTask')?.addEventListener('click', updateTask);
+    document.getElementById('cancelEditTask')?.addEventListener('click', function() {
+        document.getElementById('editTaskModal').style.display = 'none';
+    });
+    document.getElementById('closeEditTaskModal')?.addEventListener('click', function() {
+        document.getElementById('editTaskModal').style.display = 'none';
+    });
+    document.getElementById('deleteTask')?.addEventListener('click', deleteTask);
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    
+    toast.textContent = message;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Projects Module - Continued
+
+function populateEditTeamMembersDropdown(selectedUserIds = []) {
+    const select = document.getElementById('editTeamMembersSelect');
+    select.innerHTML = '';
+    userListCache.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = user.name || user.username || user._id;
+        if (selectedUserIds.includes(user._id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    // Initialize Select2 with enhanced search
+    $(select).select2({
+        placeholder: "Select team members",
+        allowClear: true,
+        width: '100%',
+        // Enhanced search configuration
+        matcher: function(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            // Skip if there is no 'text' property
+            if (typeof data.text !== 'string') {
+                return null;
+            }
+            
+            // `params.term` should be the term that is used for searching
+            // `data.text` is the text that is displayed for the data object
+            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                // Return modified object so Select2 can highlight the matches
+                return data;
+            }
+            
+            // Return `null` if the term should not be displayed
+            return null;
+        }
+    });
+}
+
+// Get selected team members from edit form
+function getSelectedEditTeamMemberIds() {
+    return $('#editTeamMembersSelect').val() || [];
+}
+
+// Setup edit team members dropdown
+async function setupEditTeamMembersDropdown(existingUserIds = []) {
+    await fetchAllUsers();
+    populateEditTeamMembersDropdown(existingUserIds);
+}
+    </script>
+
+<!-- Include Select2 for a better multi-select experience -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+let userListCache = [];
+
+async function fetchAllUsers() {
+    const token = localStorage.getItem('bhoomitechzone_token');
+    try {
+        const response = await fetch('/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        userListCache = await response.json();
+        return userListCache;
+    } catch (err) {
+        console.error('Error loading users:', err);
+        showToast('Error loading users');
+        return [];
+    }
+}
+
+function populateTeamMembersDropdown(selectedUserIds = []) {
+    const select = document.getElementById('teamMembersSelect');
+    select.innerHTML = '';
+    userListCache.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = user.name || user.username || user._id;
+        if (selectedUserIds.includes(user._id)) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    // Initialize Select2 with enhanced search
+    $(select).select2({
+        placeholder: "Select team members",
+        allowClear: true,
+        width: '100%',
+        // Enhanced search configuration
+        matcher: function(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            // Skip if there is no 'text' property
+            if (typeof data.text !== 'string') {
+                return null;
+            }
+            
+            // `params.term` should be the term that is used for searching
+            // `data.text` is the text that is displayed for the data object
+            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                // Return modified object so Select2 can highlight the matches
+                return data;
+            }
+            
+            // Return `null` if the term should not be displayed
+            return null;
+        }
+    });
+}
+
+// Populate manager dropdown with dev_managers and admins
+function populateManagerDropdown(selectId, selectedManagerId = null) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '';
+    
+    // Add "Not assigned" option
+    const noneOption = document.createElement('option');
+    noneOption.value = '';
+    noneOption.textContent = 'Not assigned';
+    if (!selectedManagerId || selectedManagerId === 'null') {
+        noneOption.selected = true;
+    }
+    select.appendChild(noneOption);
+    
+    // Filter users who can be managers (dev_manager, admin, director)
+    const managerRoles = ['dev_manager', 'admin', 'director', 'manager'];
+    const managers = userListCache.filter(user => managerRoles.includes(user.role));
+    
+    managers.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id;
+        option.textContent = `${user.first_name && user.last_name ? user.first_name + ' ' + user.last_name : user.username} (${user.role})`;
+        if (selectedManagerId && selectedManagerId === user._id) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+// Setup manager dropdown for project creation/editing
+async function setupManagerDropdown(selectId, selectedManagerId = null) {
+    await fetchAllUsers();
+    populateManagerDropdown(selectId, selectedManagerId);
+}
+
+// Call this function whenever you open the Project modal for Add/Edit
+async function setupTeamMembersDropdownForProjectEdit(existingUserIds = []) {
+    await fetchAllUsers();
+    populateTeamMembersDropdown(existingUserIds);
+}
+
+// When submitting the form, get selected user IDs like this:
+function getSelectedTeamMemberIds() {
+    return $('#teamMembersSelect').val() || [];
+}
+
+// Get selected task assignees
+function getSelectedTaskAssignees() {
+    return $('#taskAssigneeSelect').val() || [];
+}
+
+// Get selected task assignees for edit form
+function getSelectedEditTaskAssignees() {
+    return $('#editTaskAssigneeSelect').val() || [];
+}
+
+// Populate the task assignee dropdown
+function populateTaskAssigneeDropdown(selectId, selectedUserIds = []) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '';
+    
+    // Get allowed assignees based on current user role
+    getCurrentUser().then(currentUser => {
+        const allowedUsers = getAllowedTaskAssignees(null, currentUser);
+        
+        allowedUsers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user._id;
+            option.textContent = user.name || user.username || user._id;
+            if (selectedUserIds.includes(user._id)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        // Initialize Select2 with enhanced search
+        $(select).select2({
+            placeholder: "Select assignees",
+            allowClear: true,
+            width: '100%',
+            // Enhanced search configuration
+            matcher: function(params, data) {
+                // If there are no search terms, return all of the data
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+            
+                // Skip if there is no 'text' property
+                if (typeof data.text !== 'string') {
+                    return null;
+                }
+                
+                // `params.term` should be the term that is used for searching
+                // `data.text` is the text that is displayed for the data object
+                if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) === 0) {
+                    // Return modified object so Select2 can highlight the matches
+                    return data;
+                }
+                
+                // Return `null` if the term should not be displayed
+                return null;
+            }
+        });
+    });
+}
+</script>
+</body>
+</html>

@@ -146,7 +146,7 @@ class PerformanceReviewResponse(BaseModel):
     user_comments: Optional[str] = None
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         json_encoders = {
             datetime: lambda v: v.isoformat(),
             date: lambda v: v.isoformat()

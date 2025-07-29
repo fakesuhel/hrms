@@ -1,28 +1,39 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from bson import ObjectId
 from app.database import db
 import json
+from pydantic_core import core_schema
 
 # Get projects collection
 projects_collection = db["projects"]
 users_collection = db["users"]
 
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now()
+
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-        
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler) -> core_schema.CoreSchema:
+        return core_schema.with_info_plain_validator_function(cls.validate)
     
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def validate(cls, v, info=None):
+        if isinstance(v, ObjectId):
+            return v
+        if isinstance(v, str) and ObjectId.is_valid(v):
+            return ObjectId(v)
+        raise ValueError("Invalid ObjectId")
+    
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema: Dict[str, Any], handler) -> Dict[str, Any]:
+        return {"type": "string"}
 
 class ProjectTask(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
@@ -31,11 +42,11 @@ class ProjectTask(BaseModel):
     status: str = "todo"  # "todo", "in_progress", "review", "completed"
     assigned_to: Optional[str] = None
     due_date: Optional[str] = None  # Store as ISO formatted string
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_ist_now)
+    updated_at: datetime = Field(default_factory=get_ist_now)
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {
             ObjectId: str,
@@ -50,16 +61,16 @@ class Project(BaseModel):
     start_date: Optional[str] = None  # Store as ISO formatted string
     end_date: Optional[str] = None    # Store as ISO formatted string
     status: str = "active"  # "planning", "active", "on_hold", "completed", "cancelled"
-    manager_id: str  # Project manager user ID
+    manager_id: Optional[str] = None  # Project manager user ID - can be None until assigned
     team_members: List[str] = []  # List of user IDs
     tasks: List[ProjectTask] = []
     budget: Optional[float] = None
     technologies: List[str] = []
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_ist_now)
+    updated_at: datetime = Field(default_factory=get_ist_now)
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {
             ObjectId: str,
@@ -74,7 +85,7 @@ class ProjectResponse(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: str
-    manager_id: str
+    manager_id: Optional[str] = None
     team_members: List[str] = []
     tasks: List[dict] = []
     budget: Optional[float] = None
@@ -83,7 +94,7 @@ class ProjectResponse(BaseModel):
     updated_at: datetime
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
@@ -95,6 +106,7 @@ class ProjectCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: str = "active"
+    manager_id: Optional[str] = None
     team_members: Optional[List[str]] = []
     budget: Optional[float] = None
     technologies: Optional[List[str]] = []
@@ -106,6 +118,7 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: Optional[str] = None
+    manager_id: Optional[str] = None
     team_members: Optional[List[str]] = None
     budget: Optional[float] = None
     technologies: Optional[List[str]] = None
@@ -157,7 +170,7 @@ class DatabaseProjects:
         end_date = project_data.end_date if project_data.end_date else None
         
         # Current timestamp
-        now = datetime.utcnow()
+        now = get_ist_now()
         
         # Create new project
         new_project = {
@@ -182,14 +195,30 @@ class DatabaseProjects:
         return Project(**new_project)
     
     @staticmethod
-    async def get_projects(user_id: str, only_managed: bool = False) -> List[Project]:
-        # Build query based on user role
-        query = {"manager_id": user_id} if only_managed else {
-            "$or": [
-                {"manager_id": user_id},
-                {"team_members": user_id}
-            ]
-        }
+    async def get_projects(user_id: str, only_managed: bool = False, user_role: str = None, user_department: str = None) -> List[Project]:
+        # Privileged roles that can view all projects
+        privileged_roles = ['admin', 'director', 'dev_manager', 'manager']
+        privileged_departments = ['Human Resources']
+        
+        can_view_all = (
+            user_role in privileged_roles or 
+            user_department in privileged_departments
+        )
+        
+        if can_view_all:
+            # Privileged users can see all projects
+            query = {}
+        elif only_managed:
+            # Only projects managed by this user
+            query = {"manager_id": user_id}
+        else:
+            # Regular users see projects they manage or are team members of
+            query = {
+                "$or": [
+                    {"manager_id": user_id},
+                    {"team_members": user_id}
+                ]
+            }
         
         # Find projects
         cursor = projects_collection.find(query).sort("created_at", -1)
@@ -235,8 +264,8 @@ class DatabaseProjects:
         upcoming_tasks = 0
         
         # Current date and dates for comparison
-        today = datetime.utcnow().date().isoformat()
-        seven_days_later = (datetime.utcnow() + timedelta(days=7)).date().isoformat()
+        today = get_ist_now().date().isoformat()
+        seven_days_later = (get_ist_now() + timedelta(days=7)).date().isoformat()
         
         for project in projects:
             for task in project.get("tasks", []):
@@ -253,7 +282,7 @@ class DatabaseProjects:
                         upcoming_tasks += 1
         
         # Get current timestamp - use the passed parameter
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         
         # This object will be returned to the route handler, which will add any additional info
         return {
@@ -285,7 +314,7 @@ class DatabaseProjects:
             update_dict[field] = value
         
         # Add updated timestamp
-        update_dict["updated_at"] = datetime.utcnow()
+        update_dict["updated_at"] = get_ist_now()
         
         # Update project
         projects_collection.update_one(
@@ -314,7 +343,7 @@ class DatabaseProjects:
         due_date = task_data.due_date  # Already a string
         
         # Create new task
-        now = datetime.utcnow()
+        now = get_ist_now()
         new_task = {
             "_id": ObjectId(),
             "title": task_data.title,
@@ -353,8 +382,8 @@ class DatabaseProjects:
             update_dict[f"tasks.$.{field}"] = value
         
         # Add updated timestamp
-        update_dict["tasks.$.updated_at"] = datetime.utcnow()
-        update_dict["updated_at"] = datetime.utcnow()
+        update_dict["tasks.$.updated_at"] = get_ist_now()
+        update_dict["updated_at"] = get_ist_now()
         
         # Update task
         projects_collection.update_one(
@@ -377,7 +406,7 @@ class DatabaseProjects:
             return None
         
         # Remove task from project
-        now = datetime.utcnow()
+        now = get_ist_now()
         projects_collection.update_one(
             {"_id": ObjectId(project_id)},
             {
@@ -452,7 +481,7 @@ class DatabaseProjects:
         task_counts = {"todo": 0, "in_progress": 0, "review": 0, "completed": 0}
         overdue_tasks = 0
         upcoming_tasks = 0
-        today = datetime.utcnow().date().isoformat()
+        today = get_ist_now().date().isoformat()
         
         for project in projects:
             for task in project.get("tasks", []):
@@ -463,11 +492,11 @@ class DatabaseProjects:
                     task_due_date = task["due_date"]  # Already a string
                     if task_due_date < today and status != "completed":
                         overdue_tasks += 1
-                    elif task_due_date >= today and task_due_date <= (datetime.utcnow() + timedelta(days=7)).date().isoformat():
+                    elif task_due_date >= today and task_due_date <= (get_ist_now() + timedelta(days=7)).date().isoformat():
                         upcoming_tasks += 1
         
         # Get current timestamp
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
         
         return {
             "user_id": user_id,
