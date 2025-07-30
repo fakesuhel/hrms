@@ -336,6 +336,18 @@
                         <input type="email" id="email" name="email" class="form-input" required>
                     </div>
                     
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Username (optional)</label>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="Auto-generated if empty">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Password (optional)</label>
+                            <input type="password" id="password" name="password" class="form-input" placeholder="Default: TempPass123!">
+                        </div>
+                    </div>
+                    
                     <div class="form-group">
                         <label class="form-label">Phone</label>
                         <input type="tel" id="phone" name="phone" class="form-input">
@@ -539,6 +551,8 @@
                     document.getElementById('firstName').value = employee.first_name || '';
                     document.getElementById('lastName').value = employee.last_name || '';
                     document.getElementById('email').value = employee.email || '';
+                    document.getElementById('username').value = employee.username || '';
+                    document.getElementById('password').value = ''; // Don't populate password for security
                     document.getElementById('phone').value = employee.phone || '';
                     document.getElementById('department').value = employee.department || '';
                     document.getElementById('position').value = employee.position || '';
@@ -578,6 +592,16 @@
                 emergency_contact_phone: formData.get('emergencyContactPhone'),
                 status: formData.get('status')
             };
+            
+            // Add username and password if provided
+            const username = formData.get('username');
+            const password = formData.get('password');
+            if (username && username.trim()) {
+                employeeData.username = username.trim();
+            }
+            if (password && password.trim()) {
+                employeeData.password = password.trim();
+            }
             
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');

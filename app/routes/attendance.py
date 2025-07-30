@@ -4,13 +4,27 @@ from typing import List, Optional
 
 from app.database.attendance import AttendanceCheckIn, AttendanceCheckOut, AttendanceResponse, DatabaseAttendance
 from app.utils.auth import get_current_user
+from app.utils.helpers import get_ist_now, get_ist_date_today, get_ist_date_iso, IST
 
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
+import logging
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now(IST)
+# Use the helper function - this function just logs the IST time for debugging
+def log_ist_now():
+    """Log current datetime in IST timezone"""
+    ist_now = get_ist_now()
+    print(f"IST now: {ist_now}")
+    logger.info(f"IST now: {ist_now}")
+    return ist_now
+
+# Log the current time for debugging
+log_ist_now()
+
+# def get_ist_now():
+#     """Get current datetime in IST timezone"""
+#     return datetime.now()
 
 router = APIRouter(
     prefix="/attendance",
@@ -27,13 +41,12 @@ async def check_in(
         # Add the current user's ID to the check-in data
         check_in_data.user_id = str(current_user.id)
         
-        # If date is not provided, use today's date
+        # If date is not provided, use today's date in IST
         if not check_in_data.date:
-            check_in_data.date = datetime.utcnow().date().isoformat()
+            check_in_data.date = get_ist_date_iso()
         
         # Debug logging
         print(f"Check-in request: User ID: {check_in_data.user_id}, Date: {check_in_data.date}")
-        print(f"Current time: 2025-06-12 06:56:11, User: soherunot")
         
         attendance = await DatabaseAttendance.check_in(check_in_data)
         
@@ -79,15 +92,11 @@ async def check_out(
     try:
         # Debug logging
         print(f"Check-out request: User ID: {current_user.id}")
-        print(f"Current time: 2025-06-12 06:56:11, User: soherunot")
-        
-        # Extract date from request body if available
-        date = getattr(checkout_data, "date", None)
+        print(f"Current time (IST): {get_ist_now().strftime('%Y-%m-%d %H:%M:%S')}, User: {current_user.id}")
         
         attendance = await DatabaseAttendance.check_out(
             str(current_user.id),
-            checkout_data,
-            date
+            checkout_data
         )
         
         if not attendance:
@@ -139,13 +148,13 @@ async def get_attendance_history(
     try:
         # Default to last 30 days if dates not provided
         if not start_date:
-            start_date = date.today() - timedelta(days=30)
+            start_date = get_ist_date_today() - timedelta(days=30)
         if not end_date:
-            end_date = date.today()
+            end_date = get_ist_date_today()
         
         # Debug logging
         print(f"Getting attendance history: {start_date} to {end_date}")
-        print(f"Current time: 2025-06-12 06:56:11, User: soherunot")
+        print(f"Current time (IST): {get_ist_now().strftime('%Y-%m-%d %H:%M:%S')}, User: {current_user.id}")
         
         attendances = await DatabaseAttendance.get_user_attendance(
             str(current_user.id),
@@ -207,7 +216,7 @@ async def get_team_attendance(
         
         # Default to today if date not provided
         if not for_date:
-            for_date = date.today()
+            for_date = get_ist_date_today()
         
         # Get team members
         from app.database.users import DatabaseUsers
@@ -264,10 +273,10 @@ async def get_attendance_stats(
     try:
         # Default to current month if dates not provided
         if not start_date:
-            today = date.today()
+            today = get_ist_date_today()
             start_date = date(today.year, today.month, 1)
         if not end_date:
-            end_date = date.today()
+            end_date = get_ist_date_today()
         
         # Debug logging
         print(f"Getting attendance stats: {start_date} to {end_date}")
@@ -308,7 +317,7 @@ async def get_attendance(
         
         # Use today's date if not provided
         if not date:
-            date = datetime.utcnow().date().isoformat()
+            date = get_ist_date_iso()
         
         print(f"Getting attendance for date: {date}")
         
@@ -400,3 +409,38 @@ async def get_attendance_by_date(
             detail=f"Failed to get attendance: {str(e)}"
         )
 
+@router.delete("/{attendance_id}")
+async def delete_attendance(
+    attendance_id: str,
+    current_user = Depends(get_current_user)
+):
+    """Delete an attendance record (managers only)"""
+    try:
+        # Check if user has permission to delete attendance
+        if current_user.role not in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager', 'hr']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to delete attendance records"
+            )
+        
+        print(f"Deleting attendance record: {attendance_id} by user: {current_user.username}")
+        
+        # Delete the attendance record
+        success = await DatabaseAttendance.delete_attendance(attendance_id)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Attendance record not found"
+            )
+        
+        return {"message": "Attendance record deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in delete_attendance: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete attendance: {str(e)}"
+        )

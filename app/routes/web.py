@@ -148,6 +148,12 @@ async def hr_employees_page(request: Request):
     """Serve the HR employees page"""
     return templates.TemplateResponse("departments/hr/employees.html", {"request": request})
 
+@router.get("/app/hr/payroll", response_class=HTMLResponse)
+async def hr_payroll_main_page(request: Request):
+    """Serve the HR payroll page"""
+    return templates.TemplateResponse("departments/hr/payroll.html", {"request": request})
+
+
 @router.get("/app/hr/recruitment", response_class=HTMLResponse)
 async def hr_recruitment_page(request: Request):
     """Serve the HR recruitment page"""
@@ -188,6 +194,7 @@ async def it_attendance_page(request: Request):
 async def it_projects_page(request: Request):
     """Serve the IT projects page"""
     return templates.TemplateResponse("departments/development/projects.html", {"request": request})
+
 
 @router.get("/app/it/daily-reports", response_class=HTMLResponse)
 async def it_daily_reports_page(request: Request):

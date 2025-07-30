@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Query, UploadFile, File
 from typing import List, Optional
 from app.utils.auth import get_current_user
-from app.database.users import UserInDB, DatabaseUsers
+from app.database.users import UserInDB, DatabaseUsers, UserCreate
 from app.database.recruitment import (
     DatabaseJobPostings, DatabaseJobApplications, DatabaseInterviews,
     JobPostingCreate, JobPostingUpdate, JobPostingInDB,
@@ -100,6 +100,34 @@ async def get_today_attendance(
         return enriched_records
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching today's attendance: {str(e)}")
+
+@router.delete("/attendance/{attendance_id}")
+async def delete_attendance_record(
+    attendance_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Delete an attendance record"""
+    if current_user.role not in ["director", "hr"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete attendance records"
+        )
+    
+    try:
+        success = await DatabaseAttendance.delete_attendance(attendance_id)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Attendance record not found"
+            )
+        
+        return {"message": "Attendance record deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting attendance record: {str(e)}"
+        )
 
 @router.get("/activities/recent")
 async def get_recent_activities(current_user: UserInDB = Depends(get_current_user)):
@@ -208,6 +236,67 @@ async def get_all_employees(
             detail=f"Error fetching employees: {str(e)}"
         )
 
+@router.post("/employees")
+async def create_employee(
+    employee_data: dict,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Create a new employee"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to create employees"
+        )
+    
+    try:
+        from app.database.users import UserCreate
+        
+        # Convert dict to UserCreate model
+        # Generate a default password if not provided
+        if "password" not in employee_data:
+            employee_data["password"] = "TempPass123!"
+        
+        # Generate username if not provided (use email prefix or name)
+        if "username" not in employee_data:
+            if "email" in employee_data:
+                # Use email prefix as username
+                username = employee_data["email"].split("@")[0]
+            else:
+                # Use first_name + last_name as username
+                first_name = employee_data.get("first_name", "")
+                last_name = employee_data.get("last_name", "")
+                username = f"{first_name.lower()}{last_name.lower()}"
+            
+            # Ensure username is unique by checking database
+            from app.database.users import users_collection
+            counter = 1
+            original_username = username
+            while users_collection.find_one({"username": username}):
+                username = f"{original_username}{counter}"
+                counter += 1
+            
+            employee_data["username"] = username
+        
+        user_create = UserCreate(**employee_data)
+        new_employee = await DatabaseUsers.create_user(user_create)
+        
+        # Remove sensitive information
+        employee_dict = new_employee.model_dump()
+        employee_dict.pop("hashed_password", None)
+        employee_dict["id"] = str(employee_dict.pop("_id", employee_dict.get("id")))
+        
+        return employee_dict
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating employee: {str(e)}"
+        )
+
 @router.get("/employees/{employee_id}")
 async def get_employee_by_id(
     employee_id: str,
@@ -280,6 +369,59 @@ async def update_employee(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating employee: {str(e)}"
+        )
+
+@router.delete("/employees/{employee_id}")
+async def delete_employee(
+    employee_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Delete an employee"""
+    if current_user.role not in ["director", "hr"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete employees"
+        )
+    
+    try:
+        from app.database.users import users_collection
+        from bson import ObjectId
+        
+        # Check if employee exists
+        if ObjectId.is_valid(employee_id):
+            id_obj = ObjectId(employee_id)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid employee ID format"
+            )
+        
+        employee = users_collection.find_one({"_id": id_obj})
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Employee not found"
+            )
+        
+        # Delete employee (soft delete by setting is_active to False)
+        result = users_collection.update_one(
+            {"_id": id_obj},
+            {"$set": {"is_active": False, "deleted_at": datetime.now()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete employee"
+            )
+        
+        return {"message": "Employee deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting employee: {str(e)}"
         )
 
 # Recruitment Management
@@ -827,6 +969,14 @@ async def get_leave_summary_report(
             detail=f"Error generating leave report: {str(e)}"
         )
 
+# Import database collections at module level for better error handling
+try:
+    from app.database.users import users_collection
+    from app.database.salary_slips import salary_slips_collection
+    from app.database.attendance import attendance_collection
+except ImportError as e:
+    print(f"Warning: Database import error in hr_api.py: {e}")
+
 # Payroll Management Endpoints
 @router.get("/payroll")
 async def get_payroll_data(
@@ -843,22 +993,33 @@ async def get_payroll_data(
         )
     
     try:
-        from app.database.users import users_collection
-        from app.database.salary_slips import salary_slips_collection
-        
         current_date = datetime.now()
         target_month = month or f"{current_date.month:02d}"
         target_year = year or current_date.year
         
+        # Debug logging
+        print(f"Searching for payroll data: month={target_month}, year={target_year}, department={department}")
+        
         # Check if payroll exists for this month/year
         payroll_query = {
             "month": target_month,
-            "year": target_year
+            "year": int(target_year)  # Ensure year is integer
         }
         if department:
             payroll_query["department"] = department
         
-        payroll_records = list(salary_slips_collection.find(payroll_query))
+        print(f"Payroll query: {payroll_query}")
+        
+        # Check database connection and collection
+        try:
+            payroll_records = list(salary_slips_collection.find(payroll_query))
+            print(f"Found {len(payroll_records)} payroll records")
+        except Exception as db_error:
+            print(f"Database query error: {db_error}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database connection error: {str(db_error)}"
+            )
         
         if payroll_records:
             # Return existing payroll data
@@ -866,14 +1027,16 @@ async def get_payroll_data(
                 record["id"] = str(record.pop("_id"))
             return payroll_records
         else:
-            # Return 404 if no payroll data exists
+            # Return 404 if no payroll data exists - this is expected behavior
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No payroll data found for the specified period"
+                detail=f"No payroll data found for {target_month}/{target_year}" + 
+                       (f" in department {department}" if department else "")
             )
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Unexpected error in get_payroll_data: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching payroll data: {str(e)}"
@@ -892,10 +1055,6 @@ async def generate_payroll(
         )
     
     try:
-        from app.database.users import users_collection
-        from app.database.salary_slips import salary_slips_collection
-        from app.database.attendance import attendance_collection
-        
         month = payroll_request.get("month")
         year = payroll_request.get("year")
         department = payroll_request.get("department")
