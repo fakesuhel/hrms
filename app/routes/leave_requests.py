@@ -11,6 +11,16 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+def convert_objectids_to_strings(leave_dict):
+    """Convert ObjectId fields to strings for API response"""
+    if '_id' in leave_dict:
+        leave_dict['_id'] = str(leave_dict['_id'])
+    if 'user_id' in leave_dict:
+        leave_dict['user_id'] = str(leave_dict['user_id'])
+    if 'approver_id' in leave_dict and leave_dict['approver_id']:
+        leave_dict['approver_id'] = str(leave_dict['approver_id'])
+    return leave_dict
+
 @router.post("/", response_model=LeaveRequestResponse)
 async def create_leave_request(
     leave_data: LeaveRequestCreate,
@@ -25,7 +35,10 @@ async def create_leave_request(
     
     try:
         leave = await DatabaseLeaveRequests.create_leave_request(leave_data)
-        return LeaveRequestResponse(**leave.dict(by_alias=True))
+        
+        # Convert ObjectId fields to strings for response
+        leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+        return LeaveRequestResponse(**leave_dict)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -46,7 +59,14 @@ async def get_my_leave_requests(
         str(current_user.id),
         status
     )
-    return [LeaveRequestResponse(**leave.dict(by_alias=True)) for leave in leave_requests]
+    
+    # Convert ObjectId fields to strings for response
+    result = []
+    for leave in leave_requests:
+        leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+        result.append(LeaveRequestResponse(**leave_dict))
+    
+    return result
 
 @router.get("/pending-approval", response_model=List[LeaveRequestResponse])
 async def get_pending_approvals(current_user = Depends(get_current_user)):
@@ -58,7 +78,14 @@ async def get_pending_approvals(current_user = Depends(get_current_user)):
         )
     
     leave_requests = await DatabaseLeaveRequests.get_pending_approval_requests(str(current_user.id))
-    return [LeaveRequestResponse(**leave.dict(by_alias=True)) for leave in leave_requests]
+    
+    # Convert ObjectId fields to strings for response
+    result = []
+    for leave in leave_requests:
+        leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+        result.append(LeaveRequestResponse(**leave_dict))
+    
+    return result
 
 @router.get("/balance", response_model=dict)
 async def get_leave_balance(current_user = Depends(get_current_user)):
@@ -91,7 +118,9 @@ async def get_leave_request(
                 detail="Not authorized to view this leave request"
             )
     
-    return LeaveRequestResponse(**leave.dict(by_alias=True))
+    # Convert ObjectId fields to strings for response
+    leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+    return LeaveRequestResponse(**leave_dict)
 
 @router.put("/{leave_id}", response_model=LeaveRequestResponse)
 async def update_leave_request(
@@ -122,7 +151,10 @@ async def update_leave_request(
         )
     
     updated_leave = await DatabaseLeaveRequests.update_leave_request(leave_id, leave_data)
-    return LeaveRequestResponse(**updated_leave.dict(by_alias=True))
+    
+    # Convert ObjectId fields to strings for response
+    leave_dict = convert_objectids_to_strings(updated_leave.dict(by_alias=True))
+    return LeaveRequestResponse(**leave_dict)
 
 @router.post("/{leave_id}/approve", response_model=LeaveRequestResponse)
 async def approve_reject_leave(
@@ -168,7 +200,10 @@ async def approve_reject_leave(
     
     # Process approval/rejection
     updated_leave = await DatabaseLeaveRequests.process_leave_request(leave_id, approval_data)
-    return LeaveRequestResponse(**updated_leave.dict(by_alias=True))
+    
+    # Convert ObjectId fields to strings for response
+    leave_dict = convert_objectids_to_strings(updated_leave.dict(by_alias=True))
+    return LeaveRequestResponse(**leave_dict)
 
 @router.post("/{leave_id}/cancel", response_model=LeaveRequestResponse)
 async def cancel_leave_request(
@@ -206,7 +241,10 @@ async def cancel_leave_request(
         )
     
     updated_leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
-    return LeaveRequestResponse(**updated_leave.dict(by_alias=True))
+    
+    # Convert ObjectId fields to strings for response
+    leave_dict = convert_objectids_to_strings(updated_leave.dict(by_alias=True))
+    return LeaveRequestResponse(**leave_dict)
 
 # No code changes are needed in this file to fix the 404 error for:
 # "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1"

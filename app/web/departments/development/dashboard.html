@@ -742,7 +742,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Leave Requests</h2>
-                                    <a href="/static/leave-requests.html" class="card-action">View All</a>
+                                    <a href="/app/development/leave-requests" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="leaveRequests">
                                     <!-- Leave requests will be loaded from API -->
@@ -1482,7 +1482,7 @@
                     </div>
                 `;
                 document.getElementById('requestLeaveBtn')?.addEventListener('click', () => {
-                    window.location.href = '/static/leave-requests.html';
+                    window.location.href = '/app/development/leave-requests';
                 });
             }
             
@@ -2535,7 +2535,7 @@
                 `;
                 
                 document.getElementById('requestLeaveBtn').addEventListener('click', () => {
-                    window.location.href = '/static/leave-requests.html';
+                    window.location.href = '/app/development/leave-requests';
                 });
                 
                 return;
@@ -2589,7 +2589,7 @@
             leaveContainer.appendChild(requestBtn);
             
             document.getElementById('requestLeaveBtn').addEventListener('click', () => {
-                window.location.href = '/static/leave-requests.html';
+                window.location.href = '/app/development/leave-requests';
             });
         }
         
@@ -3165,7 +3165,7 @@
         
         function reviewLeave(leaveId) {
             // Navigate to leave request page with the ID
-            window.location.href = `/static/leave-requests.html?id=${leaveId}`;
+            window.location.href = `/app/development/leave-requests?id=${leaveId}`;
         }
         
         function setupEventListeners() {

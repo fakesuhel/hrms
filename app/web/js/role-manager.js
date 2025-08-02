@@ -108,7 +108,7 @@ class RoleManager {
                 { icon: '👥', text: 'Team', href: '/static/teams.html', id: 'team' },
                 { icon: '💰', text: 'Sales Leads', href: '/departments/sales/leads.html', id: 'sales_leads' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' },
                 { icon: '⚙️', text: 'Settings', href: '/static/settings.html', id: 'settings' }
             ],
@@ -118,7 +118,7 @@ class RoleManager {
                 { icon: '👥', text: 'Employees', href: '/departments/hr/employees.html', id: 'employees' },
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '💰', text: 'Salary Management', href: '/departments/hr/salary.html', id: 'salary' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' }
             ],
@@ -130,7 +130,7 @@ class RoleManager {
                 { icon: '📝', text: 'Reports', href: '/departments/sales/reports.html', id: 'reports' },
                 { icon: '🏢', text: 'Customers', href: '/departments/sales/customers.html', id: 'customers' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' }
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' }
             ],
             sales_executive: [
                 { icon: '📊', text: 'Dashboard', href: '/departments/sales/dashboard.html', id: 'dashboard' },
@@ -139,7 +139,7 @@ class RoleManager {
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '🏢', text: 'Customers', href: '/departments/sales/customers.html', id: 'customers' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '👤', text: 'Profile', href: '/static/profile.html', id: 'profile' }
             ],
             dev_manager: [
@@ -149,7 +149,7 @@ class RoleManager {
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '👥', text: 'Team', href: '/static/teams.html', id: 'team' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' }
             ],
             team_lead: [
@@ -159,7 +159,7 @@ class RoleManager {
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '👥', text: 'Team', href: '/static/teams.html', id: 'team' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' },
                 { icon: '👤', text: 'Profile', href: '/static/profile.html', id: 'profile' }
             ],
@@ -169,7 +169,7 @@ class RoleManager {
                 { icon: '📁', text: 'Projects', href: '/static/projects.html', id: 'projects' },
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' },
                 { icon: '👤', text: 'Profile', href: '/static/profile.html', id: 'profile' }
             ],
@@ -179,7 +179,7 @@ class RoleManager {
                 { icon: '📁', text: 'Projects', href: '/static/projects.html', id: 'projects' },
                 { icon: '📝', text: 'Daily Reports', href: '/static/daily-reports.html', id: 'daily_reports' },
                 { icon: '⭐', text: 'Performance', href: '/shared/performance-reviews.html', id: 'performance' },
-                { icon: '📅', text: 'Leave Requests', href: '/shared/leave-requests.html', id: 'leave_requests' },
+                { icon: '📅', text: 'Leave Requests', href: '/app/leave-requests', id: 'leave_requests' },
                 { icon: '⚠️', text: 'Penalties', href: '/static/penalties.html', id: 'penalties' },
                 { icon: '👤', text: 'Profile', href: '/static/profile.html', id: 'profile' }
             ]

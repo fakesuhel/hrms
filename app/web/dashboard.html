@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Dashboard</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Specific Styles */
+        .dashboard-main {
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-message h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-message p {
+            color: var(--text-secondary);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Dashboard Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            border-left: 4px solid transparent;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-attendance {
+            border-left-color: var(--primary);
+        }
+
+        .stat-projects {
+            border-left-color: var(--secondary);
+        }
+
+        .stat-performance {
+            border-left-color: var(--warning);
+        }
+
+        .stat-leave {
+            border-left-color: var(--info);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            font-size: 1.5rem;
+        }
+
+        .stat-attendance .stat-icon {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-projects .stat-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .stat-performance .stat-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-leave .stat-icon {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Team Activity */
+        .activity-card {
+            margin-bottom: 2rem;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .icon-report {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .icon-leave {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .icon-project {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .icon-review {
+            background-color: rgba(236, 72, 153, 0.1);
+            color: #ec4899;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .activity-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .activity-action {
+            font-size: 0.875rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .activity-action:hover {
+            text-decoration: underline;
+        }
+        
+        /* Project Card Styles */
+        .project-card {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .project-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .project-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-completed {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .project-dates {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .project-progress {
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-percentage {
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--bg-light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-value {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .progress-low {
+            background-color: var(--danger);
+        }
+
+        .progress-medium {
+            background-color: var(--warning);
+        }
+
+        .progress-high {
+            background-color: var(--success);
+        }
+
+        .project-team {
+            display: flex;
+            align-items: center;
+        }
+
+        .team-member {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: -0.5rem;
+            border: 2px solid white;
+        }
+        
+        /* Calendar styles */
+        .calendar-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .calendar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .calendar-btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .calendar-body {
+            padding: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+
+        .calendar-day-name {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: var(--bg-light);
+        }
+
+        .calendar-day.today {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .calendar-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+        
+        /* Notifications Styles */
+        .notifications-list {
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0.5rem;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-title {
+            font-weight: 500;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .notification-body {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .notification-action {
+            font-size: 0.75rem;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .notification-action:hover {
+            text-decoration: underline;
+        }
+
+        /* Two-column layout */
+        .dashboard-columns {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Loading states */
+        .loading-placeholder {
+            background-color: #eee;
+            border-radius: var(--border-radius);
+            animation: pulse 1.5s infinite;
+            height: 24px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .loading-placeholder.line {
+            width: 100%;
+        }
+        
+        .loading-placeholder.short {
+            width: 60%;
+        }
+        
+        .loading-placeholder.tiny {
+            width: 30%;
+        }
+        
+        .loading-placeholder.circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Toast notification styles */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: white;
+            color: var(--text-primary);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 1rem 1.5rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            min-width: 300px;
+            max-width: 400px;
+            animation: slideIn 0.3s, fadeOut 0.5s 2.5s forwards;
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast-warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast-info {
+            border-left: 4px solid var(--info);
+        }
+
+        .toast-icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        .toast-message {
+            flex: 1;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .dashboard-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .quick-actions {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            
+            .quick-actions .btn {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>📁</i>
+                            Projects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>📝</i>
+                            Daily Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>👥</i>
+                            Team
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>⭐</i>
+                            Performance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>📅</i>
+                            Leave Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i>⚙️</i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div style="font-weight: 500;">soherucreate</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Dashboard</h1>
+                </div>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">SC</div>
+                    <span id="userTimeDisplay">04:54 - soherucreate</span>
+                    <button id="logoutButton" class="btn btn-sm btn-outline" style="margin-left: 10px;">Logout</button>
+                </div>
+            </header>
+            
+            <main class="dashboard-main">
+                <div class="dashboard-header">
+                    <div class="welcome-message">
+                        <h1>Welcome back, soherucreate!</h1>
+                        <p>Here's what's happening with your team today. <span id="currentDateDisplay">June 11, 2025</span></p>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" id="newReportBtn">
+                            <i>➕</i> New Report
+                        </button>
+                        <button class="btn btn-outline" id="viewReportsBtn">
+                            <i>📊</i> View Reports
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-attendance">
+                        <div class="stat-icon">🕒</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="attendanceValue">85%</div>
+                            <div class="stat-label">Team Attendance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-projects">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="projectsValue">3</div>
+                            <div class="stat-label">Active Projects</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-performance">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="performanceValue">4.2</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-leave">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="leaveValue">2</div>
+                            <div class="stat-label">Leave Requests</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Two Column Layout -->
+                <div class="dashboard-columns">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <!-- Activity Feed -->
+                        <div class="card activity-card">
+                            <div class="card-header">
+                                <h2 class="card-title">Team Activity</h2>
+                                <button class="btn btn-sm btn-outline" id="viewAllActivityBtn">View All</button>
+                            </div>
+                            <div class="card-body">
+                                <ul class="activity-list" id="activityList">
+                                    <!-- Activity items will be populated dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Projects -->
+                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Active Projects</h3>
+                        <div id="activeProjects">
+                            <!-- Project cards will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <!-- Calendar -->
+                        <div class="calendar-card">
+                            <div class="calendar-header">
+                                <h3 class="calendar-title">June 2025</h3>
+                                <div class="calendar-actions">
+                                    <button class="calendar-btn" id="prevMonthBtn">◄</button>
+                                    <button class="calendar-btn" id="nextMonthBtn">►</button>
+                                </div>
+                            </div>
+                            <div class="calendar-body">
+                                <div class="calendar-grid">
+                                    <!-- Day names -->
+                                    <div class="calendar-day-name">Sun</div>
+                                    <div class="calendar-day-name">Mon</div>
+                                    <div class="calendar-day-name">Tue</div>
+                                    <div class="calendar-day-name">Wed</div>
+                                    <div class="calendar-day-name">Thu</div>
+                                    <div class="calendar-day-name">Fri</div>
+                                    <div class="calendar-day-name">Sat</div>
+                                    
+                                    <!-- Calendar days will be populated dynamically -->
+                                    <div id="calendarDays"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upcoming Events -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Upcoming Events</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul style="list-style: none;" id="upcomingEventsList">
+                                    <!-- Events will be populated dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Notifications -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Notifications</h2>
+                                <button class="btn btn-sm btn-outline" id="markAllReadBtn">Mark All Read</button>
+                            </div>
+                            <div class="card-body">
+                                <ul class="notifications-list" id="notificationsList">
+                                    <!-- Notifications will be populated dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Toast Container for Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <script>
+        // API Configuration - use relative URLs to work with any port
+        const API_BASE_URL = '';
+        const CURRENT_DATE = new Date('2025-06-11 04:54:00');
+        const USERNAME = 'soherucreate';
+        
+        // Mock data - in a real application, these would come from API requests
+        const mockData = {
+            user: {
+                _id: '60d21b4967d0d8820c43e123',
+                username: USERNAME,
+                email: `${USERNAME}@bhoomitechzone.com`,
+                first_name: 'Soheru',
+                last_name: 'Create',
+                position: 'Team Lead',
+                department: 'Development',
+                role: 'team_lead'
+            },
+            attendance: {
+                attendance_rate: 85,
+                present_days: 17,
+                total_days: 20,
+                late_days: 2,
+                early_checkouts: 1
+            },
+            projects: [
+                {
+                    _id: '60d21b4967d0d8820c43e111',
+                    name: 'Mobile App Redesign',
+                    status: 'active',
+                    start_date: '2025-04-15',
+                    end_date: '2025-07-30',
+                    progress: 65,
+                    members: [
+                        { user_id: '60d21b4967d0d8820c43e124', role: 'developer' },
+                        { user_id: '60d21b4967d0d8820c43e125', role: 'designer' },
+                        { user_id: '60d21b4967d0d8820c43e123', role: 'lead' }
+                    ]
+                },
+                {
+                    _id: '60d21b4967d0d8820c43e112',
+                    name: 'E-commerce Platform',
+                    status: 'active',
+                    start_date: '2025-05-01',
+                    end_date: '2025-08-15',
+                    progress: 32,
+                    members: [
+                        { user_id: '60d21b4967d0d8820c43e124', role: 'developer' },
+                        { user_id: '60d21b4967d0d8820c43e123', role: 'lead' },
+                        { user_id: '60d21b4967d0d8820c43e126', role: 'tester' }
+                    ]
+                },
+                {
+                    _id: '60d21b4967d0d8820c43e113',
+                    name: 'CRM Integration',
+                    status: 'active',
+                    start_date: '2025-06-01',
+                    end_date: '2025-09-30',
+                    progress: 15,
+                    members: [
+                        { user_id: '60d21b4967d0d8820c43e125', role: 'developer' },
+                        { user_id: '60d21b4967d0d8820c43e123', role: 'lead' }
+                    ]
+                }
+            ],
+            performance: {
+                average_rating: 4.2,
+                trend: 'improving',
+                review_count: 4,
+                last_review_date: '2025-05-15T10:00:00'
+            },
+            leaveRequests: [
+                {
+                    _id: '60d21b4967d0d8820c43e666',
+                    user_id: '60d21b4967d0d8820c43e125',
+                    leave_type: 'personal',
+                    start_date: '2025-06-19',
+                    end_date: '2025-06-20',
+                    reason: 'Family function',
+                    status: 'pending',
+                    created_at: '2025-06-09T14:30:00'
+                },
+                {
+                    _id: '60d21b4967d0d8820c43e667',
+                    user_id: '60d21b4967d0d8820c43e124',
+                    leave_type: 'sick',
+                    start_date: '2025-06-15',
+                    end_date: '2025-06-16',
+                    reason: 'Medical appointment',
+                    status: 'pending',
+                    created_at: '2025-06-10T09:15:00'
+                }
+            ],
+            activities: [
+                {
+                    type: 'report',
+                    user_id: '60d21b4967d0d8820c43e124',
+                    user_name: 'Robert Johnson',
+                    title: 'submitted a daily report',
+                    subtitle: 'Mobile App Redesign: UI components implementation',
+                    timestamp: '2025-06-11T03:45:00',
+                    link: '/daily-reports/123'
+                },
+                {
+                    type: 'leave',
+                    user_id: '60d21b4967d0d8820c43e125',
+                    user_name: 'Sarah Parker',
+                    title: 'requested leave',
+                    subtitle: 'Personal Leave: June 19-20, 2025',
+                    timestamp: '2025-06-10T16:30:00',
+                    link: '/leave-requests/60d21b4967d0d8820c43e666'
+                },
+                {
+                    type: 'project',
+                    user_id: '60d21b4967d0d8820c43e123',
+                    user_name: 'Soheru Create',
+                    title: 'completed a milestone',
+                    subtitle: 'E-commerce Platform: API Integration milestone',
+                    timestamp: '2025-06-10T14:15:00',
+                    link: '/projects/60d21b4967d0d8820c43e112'
+                },
+                {
+                    type: 'review',
+                    user_id: '60d21b4967d0d8820c43e123',
+                    user_name: 'Soheru Create',
+                    title: 'completed performance review',
+                    subtitle: 'Alice Miller\'s mid-year review has been finalized',
+                    timestamp: '2025-06-08T11:20:00',
+                    link: '/performance-reviews/456'
+                }
+            ],
+            events: [
+                {
+                    title: 'Review Meeting',
+                    date: '2025-06-11T10:00:00',
+                    type: 'meeting'
+                },
+                {
+                    title: 'Project Milestone Due',
+                    date: '2025-06-12T23:59:59',
+                    type: 'deadline',
+                    project: 'Mobile App Redesign'
+                },
+                {
+                    title: 'Team Meeting',
+                    date: '2025-06-15T14:30:00',
+                    type: 'meeting'
+                },
+                {
+                    title: 'Mid-Year Review Deadline',
+                    date: '2025-06-30T23:59:59',
+                    type: 'deadline'
+                }
+            ],
+            notifications: [
+                {
+                    title: 'Leave Request Pending',
+                    time: '2025-06-10T14:30:00',
+                    body: 'Sarah Parker has requested leave for June 19-20, 2025. Review required.',
+                    actions: [
+                        { label: 'View', link: '/leave-requests/60d21b4967d0d8820c43e666' },
+                        { label: 'Dismiss', action: 'dismiss' }
+                    ]
+                },
+                {
+                    title: 'Performance Review Due',
+                    time: '2025-06-10T09:00:00',
+                    body: 'Robert Johnson\'s mid-year review is due by June 15, 2025.',
+                    actions: [
+                        { label: 'Start Review', link: '/performance-reviews/new?user=60d21b4967d0d8820c43e124' },
+                        { label: 'Dismiss', action: 'dismiss' }
+                    ]
+                },
+                {
+                    title: 'Project Milestone Alert',
+                    time: '2025-06-09T15:45:00',
+                    body: 'Mobile App Redesign UI milestone is approaching on June 12, 2025.',
+                    actions: [
+                        { label: 'View Project', link: '/projects/60d21b4967d0d8820c43e111' },
+                        { label: 'Dismiss', action: 'dismiss' }
+                    ]
+                }
+            ]
+        };
+        
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update UI with user info
+            updateUserInfo();
+            
+            // Load dashboard data
+            loadDashboardData();
+            
+            // Set up calendar
+            setupCalendar();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Show a welcome toast
+            showToast(`Welcome back, ${mockData.user.first_name}!`, 'info');
+        });
+        
+        // Update user information in the UI
+        function updateUserInfo() {
+            const user = mockData.user;
+            
+            // Update username in the header
+            const userTimeDisplay = document.getElementById('userTimeDisplay');
+            if (userTimeDisplay) {
+                const hours = CURRENT_DATE.getHours().toString().padStart(2, '0');
+                const minutes = CURRENT_DATE.getMinutes().toString().padStart(2, '0');
+                userTimeDisplay.textContent = `${hours}:${minutes} - ${user.username}`;
+            }
+            
+            // Update current date display
+            const currentDateDisplay = document.getElementById('currentDateDisplay');
+            if (currentDateDisplay) {
+                currentDateDisplay.textContent = formatDate(CURRENT_DATE, { 
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            }
+            
+            // Update user avatar
+            const userAvatars = document.querySelectorAll('.user-avatar');
+            userAvatars.forEach(avatar => {
+                const initials = getInitials(user.first_name, user.last_name);
+                avatar.textContent = initials;
+            });
+            
+            // Update welcome message
+            const welcomeMessage = document.querySelector('.welcome-message h1');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Welcome back, ${user.first_name}!`;
+            }
+            
+            // Update sidebar user info
+            const sidebarUserInfo = document.querySelector('.sidebar-footer .user-info');
+            if (sidebarUserInfo) {
+                sidebarUserInfo.innerHTML = `
+                    <div style="font-weight: 500;">${user.username}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">${user.position}</div>
+                `;
+            }
+        }
+        
+        // Load all dashboard data
+        function loadDashboardData() {
+            // Update stat cards
+            updateStatCards();
+            
+            // Update project cards
+            updateProjectCards();
+            
+            // Update activity feed
+            updateActivityFeed();
+            
+            // Update upcoming events
+            updateUpcomingEvents();
+            
+            // Update notifications
+            updateNotifications();
+        }
+        
+        // Update stat cards with data
+        function updateStatCards() {
+            // Attendance stat
+            const attendanceValue = document.getElementById('attendanceValue');
+            if (attendanceValue) {
+                attendanceValue.textContent = `${mockData.attendance.attendance_rate}%`;
+            }
+            
+            // Projects stat
+            const projectsValue = document.getElementById('projectsValue');
+            if (projectsValue) {
+                const activeProjects = mockData.projects.filter(p => p.status === 'active').length;
+                projectsValue.textContent = activeProjects.toString();
+            }
+            
+            // Performance stat
+            const performanceValue = document.getElementById('performanceValue');
+            if (performanceValue) {
+                performanceValue.textContent = mockData.performance.average_rating.toFixed(1);
+            }
+            
+            // Leave requests stat
+            const leaveValue = document.getElementById('leaveValue');
+            if (leaveValue) {
+                leaveValue.textContent = mockData.leaveRequests.length.toString();
+            }
+        }
+        
+        // Update project cards
+        function updateProjectCards() {
+            const projectsContainer = document.getElementById('activeProjects');
+            if (!projectsContainer) return;
+            
+            // Clear existing content
+            projectsContainer.innerHTML = '';
+            
+            // Get active projects
+            const activeProjects = mockData.projects.filter(p => p.status === 'active');
+            
+            if (activeProjects.length === 0) {
+                projectsContainer.innerHTML = '<p>No active projects found.</p>';
+                return;
+            }
+            
+            // Add project cards
+            activeProjects.forEach((project, index) => {
+                const progressClass = project.progress < 30 ? 'progress-low' : 
+                                   project.progress < 70 ? 'progress-medium' : 'progress-high';
+                
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                projectCard.dataset.id = project._id;
+                projectCard.innerHTML = `
+                    <div class="project-header">
+                        <h3 class="project-title">${project.name}</h3>
+                        <div class="project-badge badge-${project.status}">${capitalizeFirstLetter(project.status)}</div>
+                    </div>
+                    <div class="project-dates">${formatDate(project.start_date)} - ${formatDate(project.end_date)}</div>
+                    <div class="project-progress">
+                        <div class="progress-label">
+                            <div>Progress</div>
+                            <div class="progress-percentage">${project.progress}%</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value ${progressClass}" style="width: ${project.progress}%;"></div>
+                        </div>
+                    </div>
+                    <div class="project-team">
+                        ${project.members.slice(0, 3).map((member, i) => `
+                            <div class="team-member" style="background-color: ${getColorForIndex(i)};">
+                                ${member.user_id.substring(0, 2)}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                projectsContainer.appendChild(projectCard);
+            });
+        }
+        
+        // Update activity feed
+        function updateActivityFeed() {
+            const activityList = document.getElementById('activityList');
+            if (!activityList) return;
+            
+            // Clear existing content
+            activityList.innerHTML = '';
+            
+            if (mockData.activities.length === 0) {
+                activityList.innerHTML = '<p>No recent activity.</p>';
+                return;
+            }
+            
+            // Add activity items
+            mockData.activities.forEach(activity => {
+                const activityType = activity.type || 'report';
+                let iconClass = 'icon-report';
+                
+                // Determine icon class
+                if (activityType === 'leave') iconClass = 'icon-leave';
+                else if (activityType === 'project') iconClass = 'icon-project';
+                else if (activityType === 'review') iconClass = 'icon-review';
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'activity-item';
+                listItem.dataset.id = activity.link.split('/').pop();
+                listItem.innerHTML = `
+                    <div class="activity-icon ${iconClass}">${getIconForActivity(activityType)}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.user_name} ${activity.title}</div>
+                        <div class="activity-subtitle">${activity.subtitle}</div>
+                        <div class="activity-meta">
+                            <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+                            <a href="#" class="activity-action" data-link="${activity.link}">View Details</a>
+                        </div>
+                    </div>
+                `;
+                
+                activityList.appendChild(listItem);
+            });
+        }
+        
+        // Update upcoming events
+        function updateUpcomingEvents() {
+            const eventsList = document.getElementById('upcomingEventsList');
+            if (!eventsList) return;
+            
+            // Clear existing content
+            eventsList.innerHTML = '';
+            
+            if (mockData.events.length === 0) {
+                eventsList.innerHTML = '<p>No upcoming events.</p>';
+                return;
+            }
+            
+            // Add event items
+            mockData.events.forEach(event => {
+                const eventDate = new Date(event.date);
+                
+                const listItem = document.createElement('li');
+                listItem.style.padding = '0.75rem 0';
+                listItem.style.borderBottom = '1px solid var(--border-color)';
+                
+                // Make the last item without a border
+                if (event === mockData.events[mockData.events.length - 1]) {
+                    listItem.style.borderBottom = 'none';
+                }
+                
+                listItem.innerHTML = `
+                    <div style="font-weight: 500; margin-bottom: 0.25rem;">${event.title}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                        ${formatDate(eventDate)} • ${formatTime(eventDate)}
+                        ${event.project ? `• ${event.project}` : ''}
+                    </div>
+                `;
+                
+                eventsList.appendChild(listItem);
+            });
+        }
+        
+        // Update notifications
+        function updateNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+            
+            // Clear existing content
+            notificationsList.innerHTML = '';
+            
+            if (mockData.notifications.length === 0) {
+                notificationsList.innerHTML = '<p>No new notifications.</p>';
+                return;
+            }
+            
+            // Add notification items
+            mockData.notifications.forEach(notification => {
+                const notificationTime = new Date(notification.time);
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'notification-item';
+                
+                listItem.innerHTML = `
+                    <div class="notification-header">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-time">${formatTimeAgo(notificationTime)}</div>
+                    </div>
+                    <div class="notification-body">${notification.body}</div>
+                    <div class="notification-actions">
+                        ${notification.actions.map(action => 
+                            `<a href="#" class="notification-action" 
+                                data-action="${action.action || ''}" 
+                                data-link="${action.link || ''}">${action.label}</a>`
+                        ).join('')}
+                    </div>
+                `;
+                
+                notificationsList.appendChild(listItem);
+            });
+        }
+        
+        // Set up calendar
+        function setupCalendar() {
+            const calendarDays = document.getElementById('calendarDays');
+            if (!calendarDays) return;
+            
+            // Clear previous content
+            while (calendarDays.firstChild) {
+                calendarDays.removeChild(calendarDays.firstChild);
+            }
+            
+            const currentMonth = CURRENT_DATE.getMonth();
+            const currentYear = CURRENT_DATE.getFullYear();
+            const today = CURRENT_DATE.getDate();
+            
+            // Get first day of month
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            
+            // Get days in month
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            // Create day elements
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Get event dates for highlighting
+            const eventDates = mockData.events.map(event => new Date(event.date).getDate());
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = i;
+                
+                // Highlight today
+                if (i === today) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Add event indicator
+                if (eventDates.includes(i)) {
+                    dayElement.classList.add('has-event');
+                }
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+            
+            // Responsive behavior
+            function handleResize() {
+                const dashboardContainer = document.getElementById('dashboardContainer');
+                if (!dashboardContainer) return;
+                
+                if (window.innerWidth <= 768) {
+                    dashboardContainer.classList.add('sidebar-hidden');
+                } else {
+                    dashboardContainer.classList.remove('sidebar-hidden');
+                }
+            }
+            
+            handleResize();
+            window.addEventListener('resize', handleResize);
+            
+            // Logout button
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showToast('Logging out...', 'info');
+                    // In a real app, this would handle logout functionality
+                    // logout();
+                    setTimeout(function() {
+                        showToast('This is a demo - logout functionality not implemented', 'warning');
+                    }, 1000);
+                });
+            }
+            
+            // New report button
+            const newReportBtn = document.getElementById('newReportBtn');
+            if (newReportBtn) {
+                newReportBtn.addEventListener('click', function() {
+                    showToast('Creating new report...', 'info');
+                    // In a real app, this would navigate to the new report page
+                });
+            }
+            
+            // View reports button
+            const viewReportsBtn = document.getElementById('viewReportsBtn');
+            if (viewReportsBtn) {
+                viewReportsBtn.addEventListener('click', function() {
+                    showToast('Navigating to reports...', 'info');
+                    // In a real app, this would navigate to the reports page
+                });
+            }
+            
+            // View all activity button
+            const viewAllActivityBtn = document.getElementById('viewAllActivityBtn');
+            if (viewAllActivityBtn) {
+                viewAllActivityBtn.addEventListener('click', function() {
+                    showToast('Viewing all activity...', 'info');
+                    // In a real app, this would navigate to the activity page
+                });
+            }
+            
+            // Mark all read button
+            const markAllReadBtn = document.getElementById('markAllReadBtn');
+            if (markAllReadBtn) {
+                markAllReadBtn.addEventListener('click', function() {
+                    showToast('Marking all notifications as read...', 'success');
+                    // In a real app, this would call an API to mark notifications as read
+                });
+            }
+            
+            // Calendar month navigation
+            const prevMonthBtn = document.getElementById('prevMonthBtn');
+            const nextMonthBtn = document.getElementById('nextMonthBtn');
+            
+            if (prevMonthBtn) {
+                prevMonthBtn.addEventListener('click', function() {
+                    showToast('This is a demo - calendar navigation not implemented', 'info');
+                });
+            }
+            
+            if (nextMonthBtn) {
+                nextMonthBtn.addEventListener('click', function() {
+                    showToast('This is a demo - calendar navigation not implemented', 'info');
+                });
+            }
+            
+            // Activity details links
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('activity-action')) {
+                    e.preventDefault();
+                    const link = e.target.getAttribute('data-link');
+                    if (link) {
+                        showToast(`Navigating to ${link}...`, 'info');
+                        // In a real app, this would navigate to the link
+                    }
+                }
+            });
+            
+            // Notification action links
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('notification-action')) {
+                    e.preventDefault();
+                    const action = e.target.getAttribute('data-action');
+                    const link = e.target.getAttribute('data-link');
+                    
+                    if (action === 'dismiss') {
+                        // Remove the notification from the UI
+                        const notificationItem = e.target.closest('.notification-item');
+                        if (notificationItem) {
+                            notificationItem.remove();
+                            showToast('Notification dismissed', 'success');
+                        }
+                    } else if (link) {
+                        showToast(`Navigating to ${link}...`, 'info');
+                        // In a real app, this would navigate to the link
+                    }
+                }
+            });
+            
+            // Project card clicks
+            document.addEventListener('click', function(e) {
+                const projectCard = e.target.closest('.project-card');
+                if (projectCard) {
+                    const projectId = projectCard.dataset.id;
+                    if (projectId) {
+                        showToast(`Viewing project details for ID: ${projectId}`, 'info');
+                        // In a real app, this would navigate to the project details page
+                    }
+                }
+            });
+        }
+        
+        // Helper functions
+        function getInitials(firstName, lastName) {
+            const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+            const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+            return firstInitial + lastInitial;
+        }
+        
+        function formatDate(dateString, options = {}) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                ...options
+            });
+        }
+        
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+        
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = CURRENT_DATE;
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+            const diffMinutes = Math.floor(diffTime / (1000 * 60));
+            
+            if (diffDays > 0) {
+                return diffDays === 1 ? 'Yesterday' : `${diffDays}d ago`;
+            } else if (diffHours > 0) {
+                return `${diffHours}h ago`;
+            } else if (diffMinutes > 0) {
+                return `${diffMinutes}m ago`;
+            } else {
+                return 'Just now';
+            }
+        }
+        
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        function getIconForActivity(type) {
+            switch (type) {
+                case 'report': return '📝';
+                case 'leave': return '📅';
+                case 'project': return '📁';
+                case 'review': return '⭐';
+                default: return '📌';
+            }
+        }
+        
+        function getColorForIndex(index) {
+            const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
+            return colors[index % colors.length];
+        }
+        
+        // Show a toast notification
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            // Icon based on type
+            let icon = '📌';
+            if (type === 'success') icon = '✅';
+            else if (type === 'error') icon = '❌';
+            else if (type === 'warning') icon = '⚠️';
+            else if (type === 'info') icon = 'ℹ️';
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.remove()">✖️</button>
+            `;
+            toastContainer.appendChild(toast);
+            // Automatically remove toast after 5 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+        // Mock logout function
+        function logout() {
+            // In a real application, this would handle the logout process
+            console.log('User logged out');
+        }
+        </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            const attendanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Present', 'Absent', 'Late', 'Early Checkout'],
+                    datasets: [{
+                        label: 'Attendance',
+                        data: [
+                            mockData.attendance.present_days,
+                            mockData.attendance.total_days - mockData.attendance.present_days,
+                            mockData.attendance.late_days,
+                            mockData.attendance.early_checkouts
+                        ],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.5)',
+                            'rgba(239, 68, 68, 0.5)',
+                            'rgba(245, 158, 11, 0.5)',
+                            'rgba(16, 185, 129, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(16, 185, 129, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    </body>
+</html>

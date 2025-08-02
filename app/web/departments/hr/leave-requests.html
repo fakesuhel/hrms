@@ -1001,38 +1001,35 @@
         // Navigation configuration for different roles
         const navigationConfig = {
             employee: [
-                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
-                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
-                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
-                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
-                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
-                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+                { icon: '📊', label: 'Dashboard', href: '/app/hr/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/hr/attendance' },
+                { icon: '�', label: 'Employees', href: '/app/hr/employees' },
+                { icon: '⭐', label: 'Performance', href: '/app/hr/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/hr/leave-requests', active: true },
+                { icon: '👤', label: 'Profile', href: '/app/hr/profile' },
+                { icon: '💰', label: 'Payroll', href: '/app/hr/payroll' }
             ],
             team_lead: [
-                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
-                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
-                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
-                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
-                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
-                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
-                { icon: '👥', label: 'Team', href: '/app/it/team' },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+                { icon: '📊', label: 'Dashboard', href: '/app/hr/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/hr/attendance' },
+                { icon: '�', label: 'Employees', href: '/app/hr/employees' },
+                { icon: '⭐', label: 'Performance', href: '/app/hr/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/hr/leave-requests', active: true },
+                { icon: '🎯', label: 'Recruitment', href: '/app/hr/recruitment' },
+                { icon: '👤', label: 'Profile', href: '/app/hr/profile' },
+                { icon: '💰', label: 'Payroll', href: '/app/hr/payroll' }
             ],
             manager: [
-                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
-                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
-                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
-                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
-                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
-                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
-                { icon: '👥', label: 'Team', href: '/app/it/team' },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' },
-                { icon: '📈', label: 'Reports', href: '/app/it/reports' },
-                { icon: '⚙️', label: 'Settings', href: '/app/it/settings' }
+                { icon: '📊', label: 'Dashboard', href: '/app/hr/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/hr/attendance' },
+                { icon: '�', label: 'Employees', href: '/app/hr/employees' },
+                { icon: '⭐', label: 'Performance', href: '/app/hr/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/hr/leave-requests', active: true },
+                { icon: '🎯', label: 'Recruitment', href: '/app/hr/recruitment' },
+                { icon: '👤', label: 'Profile', href: '/app/hr/profile' },
+                { icon: '💰', label: 'Payroll', href: '/app/hr/payroll' },
+                { icon: '📈', label: 'Reports', href: '/app/hr/reports' },
+                { icon: '⚙️', label: 'Settings', href: '/app/hr/settings' }
             ]
         };
 
@@ -1197,6 +1194,14 @@
                 window.currentUser = userData;
                 window.userRole = userData.role;
                 
+                // Debug: Log the complete user object structure
+                console.log("=== USER OBJECT DEBUG ===");
+                console.log("Complete userData:", userData);
+                console.log("userData.id:", userData.id);
+                console.log("userData._id:", userData._id);
+                console.log("All user keys:", Object.keys(userData));
+                console.log("=== END USER DEBUG ===");
+                
                 // Update UI with user info using the required values
                 document.getElementById('userInitials').textContent = 'S';
                 document.getElementById('userTimeDisplay').textContent = `14:11 - soheru`;
@@ -1272,7 +1277,7 @@
         async function loadMyLeaves(status = '') {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                let url = '/leave-requests';
+                let url = '/leave-requests/';
                 if (status) {
                     url += `?status=${status}`;
                 }
@@ -1332,11 +1337,11 @@
                         <td><span class="badge ${statusClass}">${capitalizeFirstLetter(leave.status)}</span></td>
                         <td>${formatDate(leave.created_at, true)}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave.id}">
+                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave._id}">
                                 View
                             </button>
                             ${leave.status === 'pending' ? `
-                                <button class="btn btn-sm btn-danger cancel-leave-btn" data-id="${leave.id}">
+                                <button class="btn btn-sm btn-danger cancel-leave-btn" data-id="${leave._id}">
                                     Cancel
                                 </button>
                             ` : ''}
@@ -1412,10 +1417,10 @@
                         <td>${startDate} - ${endDate}</td>
                         <td>${formatDate(leave.created_at, true)}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave.id}">
+                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave._id}">
                                 View
                             </button>
-                            <button class="btn btn-sm btn-success approve-leave-btn" data-id="${leave.id}">
+                            <button class="btn btn-sm btn-success approve-leave-btn" data-id="${leave._id}">
                                 Approve
                             </button>
                         </td>
@@ -1557,13 +1562,14 @@
                 modalFooter.innerHTML += `<button class="btn btn-outline" id="closeLeaveDetailsBtn">Close</button>`;
                 
                 // If user is the requester and leave is pending, add cancel button
-                if (leave.user_id === window.currentUser?.id && leave.status === 'pending') {
+                const currentUserId = window.currentUser?.id || window.currentUser?._id;
+                if (leave.user_id === currentUserId && leave.status === 'pending') {
                     modalFooter.innerHTML += `<button class="btn btn-danger" id="cancelLeaveDetailsBtn">Cancel Request</button>`;
                 }
                 
                 // If user is a manager and leave is pending, add approve/reject buttons
                 const isManager = window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole);
-                if (isManager && leave.status === 'pending' && leave.user_id !== window.currentUser?.id) {
+                if (isManager && leave.status === 'pending' && leave.user_id !== currentUserId) {
                     modalFooter.innerHTML += `
                         <button class="btn btn-danger" id="rejectLeaveDetailsBtn">Reject</button>
                         <button class="btn btn-success" id="approveLeaveDetailsBtn">Approve</button>
@@ -1579,7 +1585,7 @@
                 if (cancelBtn) {
                     cancelBtn.addEventListener('click', function() {
                         document.getElementById('viewLeaveModal').style.display = 'none';
-                        confirmCancelLeave(leave.id);
+                        confirmCancelLeave(leave._id);
                     });
                 }
                 
@@ -1587,7 +1593,7 @@
                 if (approveBtn) {
                     approveBtn.addEventListener('click', function() {
                         document.getElementById('viewLeaveModal').style.display = 'none';
-                        openApproveModal(leave.id, true);
+                        openApproveModal(leave._id, true);
                     });
                 }
                 
@@ -1595,7 +1601,7 @@
                 if (rejectBtn) {
                     rejectBtn.addEventListener('click', function() {
                         document.getElementById('viewLeaveModal').style.display = 'none';
-                        openApproveModal(leave.id, false);
+                        openApproveModal(leave._id, false);
                     });
                 }
                 
@@ -1677,8 +1683,25 @@
                     };
                 } else {
                     // For new requests - include user_id
+                    if (!window.currentUser) {
+                        console.error("No current user found!");
+                        console.log("window.currentUser:", window.currentUser);
+                        showToast('Error: User information not available');
+                        return;
+                    }
+                    
+                    // Try different possible ID field names
+                    const userId = window.currentUser.id || window.currentUser._id;
+                    if (!userId) {
+                        console.error("No user ID found in current user object!");
+                        console.log("window.currentUser:", window.currentUser);
+                        console.log("Available keys:", Object.keys(window.currentUser));
+                        showToast('Error: User ID not available');
+                        return;
+                    }
+                    
                     leaveData = {
-                        user_id: window.currentUser._id || window.currentUser.id,
+                        user_id: userId,
                         leave_type: leaveType,
                         start_date: startDate,
                         end_date: endDate,
@@ -1687,6 +1710,11 @@
                     };
                 }
                 
+                // Get userId for logging from window.currentUser
+                const logUserId = window.currentUser?.id || window.currentUser?._id;
+                console.log("Current user:", window.currentUser);
+                console.log("User ID being sent:", logUserId);
+                console.log("User ID type:", typeof logUserId);
                 console.log("Submitting leave data:", JSON.stringify(leaveData));
                 
                 let response;
@@ -1701,7 +1729,7 @@
                         body: JSON.stringify(leaveData)
                     });
                 } else {
-                    response = await fetch('/leave-requests', {
+                    response = await fetch('/leave-requests/', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -1713,8 +1741,20 @@
                 
                 // Check for errors - important for debugging API issues
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("API Error Response:", errorData);
+                    const errorText = await response.text();
+                    console.error("HTTP Error Response Status:", response.status);
+                    console.error("HTTP Error Response Headers:", [...response.headers.entries()]);
+                    console.error("HTTP Error Response Text:", errorText);
+                    
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                        console.error("Parsed Error Data:", errorData);
+                    } catch (parseError) {
+                        console.error("Could not parse error response as JSON:", parseError);
+                        errorData = { detail: errorText };
+                    }
+                    
                     throw new Error(
                         errorData.detail ? 
                         (Array.isArray(errorData.detail) ? errorData.detail[0].msg : errorData.detail) : 

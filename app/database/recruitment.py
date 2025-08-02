@@ -275,6 +275,12 @@ class DatabaseJobApplications:
         return JobApplicationInDB(**app_dict)
     
     @classmethod
+    async def get_all_applications(cls) -> List[JobApplicationInDB]:
+        """Get all job applications"""
+        applications = list(cls.collection.find({}).sort("applied_date", -1))
+        return [JobApplicationInDB(**app) for app in applications]
+    
+    @classmethod
     async def get_applications_by_job(cls, job_posting_id: str) -> List[JobApplicationInDB]:
         """Get all applications for a job posting"""
         applications = list(cls.collection.find({"job_posting_id": job_posting_id}).sort("applied_date", -1))

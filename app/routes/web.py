@@ -63,6 +63,16 @@ async def teams_page(request: Request):
     """Serve the teams page"""
     return templates.TemplateResponse("teams.html", {"request": request})
 
+@router.get("/app/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    """Serve the general settings page"""
+    return templates.TemplateResponse("settings.html", {"request": request})
+
+@router.get("/app/leave-requests", response_class=HTMLResponse)
+async def leave_requests_page(request: Request):
+    """Serve the general leave requests page"""
+    return templates.TemplateResponse("shared/leave-requests.html", {"request": request})
+
 @router.get("/app/js/{filename}")
 async def serve_js(filename: str):
     """Serve JavaScript files"""
@@ -178,6 +188,11 @@ async def hr_reports_page(request: Request):
 async def hr_settings_page(request: Request):
     """Serve the HR settings page"""
     return templates.TemplateResponse("departments/hr/settings.html", {"request": request})
+
+@router.get("/app/hr/profile", response_class=HTMLResponse)
+async def hr_profile_page(request: Request):
+    """Serve the HR profile page"""
+    return templates.TemplateResponse("departments/hr/profile.html", {"request": request})
 
 # IT Department Routes  
 @router.get("/app/it/dashboard", response_class=HTMLResponse)

@@ -38,7 +38,7 @@ const NAVIGATION_CONFIG = {
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'all' },
             { href: '/projects.html', icon: '📂', text: 'Projects', access: 'all' },
             { href: '/leads.html', icon: '🎯', text: 'Leads', access: 'all' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'all' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'all' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'all' },
             { href: '/penalties.html', icon: '⚠️', text: 'Penalties', access: 'all' },
             { href: '/salary.html', icon: '💰', text: 'Salary Management', access: 'all' },
@@ -53,7 +53,7 @@ const NAVIGATION_CONFIG = {
             { href: '/attendance.html', icon: '⏰', text: 'Attendance', access: 'manage' },
             { href: '/users.html', icon: '👥', text: 'All Employees', access: 'manage' },
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'view_all' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'approve' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'approve' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'view_all' },
             { href: '/salary.html', icon: '💰', text: 'Salary Management', access: 'generate' },
             { href: '/profile.html', icon: '👤', text: 'Profile', access: 'own' }
@@ -92,7 +92,7 @@ const NAVIGATION_CONFIG = {
             { href: '/projects.html', icon: '📂', text: 'Projects', access: 'all_dev' },
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'team' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'team' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'own' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'own' },
             { href: '/penalties.html', icon: '⚠️', text: 'Penalties', access: 'team' },
             { href: '/profile.html', icon: '👤', text: 'Profile', access: 'own' }
         ]
@@ -106,7 +106,7 @@ const NAVIGATION_CONFIG = {
             { href: '/projects.html', icon: '📂', text: 'Projects', access: 'assigned_create' },
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'team_view' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'own' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'own' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'own' },
             { href: '/penalties.html', icon: '⚠️', text: 'Penalties', access: 'team_warn' },
             { href: '/profile.html', icon: '👤', text: 'Profile', access: 'team_view' }
         ]
@@ -120,7 +120,7 @@ const NAVIGATION_CONFIG = {
             { href: '/projects.html', icon: '📂', text: 'Projects', access: 'assigned_only' },
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'own' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'own' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'own' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'own' },
             { href: '/penalties.html', icon: '⚠️', text: 'Penalties', access: 'own' },
             { href: '/profile.html', icon: '👤', text: 'Profile', access: 'own' }
         ]
@@ -134,7 +134,7 @@ const NAVIGATION_CONFIG = {
             { href: '/projects.html', icon: '📂', text: 'Projects', access: 'assigned_only' },
             { href: '/daily-reports.html', icon: '📋', text: 'Daily Reports', access: 'own' },
             { href: '/performance-reviews.html', icon: '⭐', text: 'Performance', access: 'own' },
-            { href: '/leave-requests.html', icon: '🏖️', text: 'Leave Requests', access: 'own' },
+            { href: '/app/leave-requests', icon: '🏖️', text: 'Leave Requests', access: 'own' },
             { href: '/penalties.html', icon: '⚠️', text: 'Penalties', access: 'own' },
             { href: '/profile.html', icon: '👤', text: 'Profile', access: 'own' }
         ]

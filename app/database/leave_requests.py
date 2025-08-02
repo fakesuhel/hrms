@@ -41,6 +41,12 @@ class LeaveRequestInDB(LeaveRequestBase):
     duration_days: int = 1
     
     class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            date: lambda d: d.isoformat(),
+            datetime: lambda dt: dt.isoformat()
+        }
         json_schema_extra = {
             "example": {
                 "_id": "60d21b4967d0d8820c43e666",
@@ -96,6 +102,14 @@ class LeaveRequestResponse(BaseModel):
     updated_at: datetime
     approved_at: Optional[datetime] = None
     duration_days: int
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            date: lambda d: d.isoformat(),
+            datetime: lambda dt: dt.isoformat()
+        }
 
 class DatabaseLeaveRequests:
     collection: Collection = leave_requests_collection
@@ -113,7 +127,16 @@ class DatabaseLeaveRequests:
             updated_at=datetime.now()
         )
         
-        result = cls.collection.insert_one(leave_in_db.dict(by_alias=True))
+        # Convert to dict with proper date serialization
+        leave_dict = leave_in_db.dict(by_alias=True)
+        
+        # Ensure dates are stored as datetime objects in MongoDB
+        if isinstance(leave_dict.get('start_date'), date):
+            leave_dict['start_date'] = datetime.combine(leave_dict['start_date'], datetime.min.time())
+        if isinstance(leave_dict.get('end_date'), date):
+            leave_dict['end_date'] = datetime.combine(leave_dict['end_date'], datetime.min.time())
+        
+        result = cls.collection.insert_one(leave_dict)
         leave_in_db.id = result.inserted_id
         return leave_in_db
     
@@ -191,7 +214,18 @@ class DatabaseLeaveRequests:
             query["status"] = status
         
         cursor = cls.collection.find(query).sort("created_at", -1)
-        return [LeaveRequestInDB(**leave) for leave in cursor]
+        leave_requests = []
+        
+        for leave_data in cursor:
+            # Convert datetime back to date for start_date and end_date if needed
+            if isinstance(leave_data.get('start_date'), datetime):
+                leave_data['start_date'] = leave_data['start_date'].date()
+            if isinstance(leave_data.get('end_date'), datetime):
+                leave_data['end_date'] = leave_data['end_date'].date()
+            
+            leave_requests.append(LeaveRequestInDB(**leave_data))
+        
+        return leave_requests
     
     @classmethod
     async def get_pending_approval_requests(cls, approver_id: str) -> List[LeaveRequestInDB]:
