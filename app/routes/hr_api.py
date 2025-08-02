@@ -1767,7 +1767,7 @@ async def generate_payroll_report(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate payroll report"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to generate payroll reports"
@@ -1817,8 +1817,13 @@ async def generate_leave_report_post(
     try:
         # Get year from config or use current year
         year = datetime.now().year
-        if report_config.get("start_date"):
-            year = datetime.strptime(report_config["start_date"], "%Y-%m-%d").year
+        start_date = report_config.get("start_date", "")
+        if start_date and start_date.strip():
+            try:
+                year = datetime.strptime(start_date, "%Y-%m-%d").year
+            except ValueError:
+                # If date format is invalid, use current year
+                year = datetime.now().year
         
         # Generate report data directly instead of calling GET endpoint
         department = report_config.get("department")
@@ -1835,22 +1840,47 @@ async def generate_leave_report_post(
         report_data = []
         for emp in employees:
             emp_id = str(emp["_id"])
-            
+        # Get year from config or use current year
+        start_date = report_config.get("start_date")
+        if start_date:
+            try:
+                year = datetime.strptime(start_date, "%Y-%m-%d").year
+            except Exception:
+                year = datetime.now().year
+        else:
+            year = datetime.now().year
+
+        # Generate report data directly instead of calling GET endpoint
+        department = report_config.get("department")
+
+        # Get all employees
+        from app.database.users import users_collection
+        query = {"is_active": True}
+        if department:
+            query["department"] = department
+
+        employees = list(users_collection.find(query, {"_id": 1, "full_name": 1, "department": 1}))
+
+        # Get leave data for each employee
+        report_data = []
+        for emp in employees:
+            emp_id = str(emp["_id"])
+
             # Get leave requests for the year
             leave_requests = await DatabaseLeaveRequests.get_user_leave_requests(emp_id)
             year_leaves = [
                 lr for lr in leave_requests 
                 if lr.start_date.year == year or lr.end_date.year == year
             ]
-            
+
             approved_leaves = [lr for lr in year_leaves if lr.status == "approved"]
             total_leave_days = sum(lr.duration_days for lr in approved_leaves)
-            
+
             # Categorize by leave type
             leave_types = {}
             for lr in approved_leaves:
                 leave_types[lr.leave_type] = leave_types.get(lr.leave_type, 0) + lr.duration_days
-            
+
             report_data.append({
                 "employee_id": emp_id,
                 "employee_name": emp["full_name"],
@@ -1865,41 +1895,21 @@ async def generate_leave_report_post(
             "department": department,
             "employees": report_data
         }
-        
+
         # Generate file
         from io import BytesIO
         import json
-        
+
         output = BytesIO()
         output.write(json.dumps(final_report, indent=2, default=str).encode())
         output.seek(0)
-        
+
         from fastapi.responses import StreamingResponse
         return StreamingResponse(
             BytesIO(output.getvalue()),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": "attachment; filename=leave_report.xlsx"}
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating leave report: {str(e)}"
-        )
-
-@router.post("/reports/performance")
-async def generate_performance_report(
-    report_config: dict = Body(...),
-    current_user: UserInDB = Depends(get_current_user)
-):
-    """Generate performance report"""
-    if current_user.role not in ["director", "hr", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to generate performance reports"
-        )
-    
-    try:
-        # Mock performance report data
         from io import BytesIO
         import json
         

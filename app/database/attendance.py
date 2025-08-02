@@ -139,7 +139,49 @@ class DatabaseAttendance:
         
         # Use list() instead of to_list() for synchronous PyMongo
         attendance_records = list(cursor)
-        return [Attendance(**record) for record in attendance_records]
+        
+        # Process and validate records before creating Attendance objects
+        validated_records = []
+        for record in attendance_records:
+            try:
+                # Handle check_in and check_out time strings
+                if 'check_in' in record and record['check_in']:
+                    if isinstance(record['check_in'], str) and len(record['check_in']) <= 5:
+                        # Handle time strings like "09:00" - convert to datetime
+                        date_str = record.get('date', start_date_str)
+                        try:
+                            record['check_in'] = datetime.fromisoformat(f"{date_str}T{record['check_in']}:00")
+                        except:
+                            record['check_in'] = None
+                
+                if 'check_out' in record and record['check_out']:
+                    if isinstance(record['check_out'], str) and len(record['check_out']) <= 5:
+                        # Handle time strings like "18:00" - convert to datetime
+                        date_str = record.get('date', start_date_str)
+                        try:
+                            record['check_out'] = datetime.fromisoformat(f"{date_str}T{record['check_out']}:00")
+                        except:
+                            record['check_out'] = None
+                
+                validated_records.append(Attendance(**record))
+            except Exception as e:
+                print(f"Error processing attendance record {record.get('_id', 'unknown')}: {e}")
+                # Skip invalid records or create with minimal data
+                try:
+                    safe_record = {
+                        '_id': record.get('_id'),
+                        'user_id': record.get('user_id', user_id),
+                        'date': record.get('date', start_date_str),
+                        'status': record.get('status', 'present'),
+                        'is_late': record.get('is_late', False),
+                        'is_complete': record.get('is_complete', False)
+                    }
+                    validated_records.append(Attendance(**safe_record))
+                except Exception as safe_error:
+                    print(f"Failed to create safe attendance record: {safe_error}")
+                    continue
+        
+        return validated_records
     
     
     @staticmethod
