@@ -107,7 +107,7 @@ async def delete_attendance_record(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Delete an attendance record"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete attendance records"
@@ -127,6 +127,35 @@ async def delete_attendance_record(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting attendance record: {str(e)}"
+        )
+
+@router.put("/attendance/{attendance_id}")
+async def update_attendance_record(
+    attendance_id: str,
+    attendance_data: dict,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Update an attendance record"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update attendance records"
+        )
+    
+    try:
+        success = await DatabaseAttendance.update_attendance(attendance_id, attendance_data)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Attendance record not found"
+            )
+        
+        return {"message": "Attendance record updated successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating attendance record: {str(e)}"
         )
 
 @router.get("/attendance")
@@ -1791,15 +1820,58 @@ async def generate_leave_report_post(
         if report_config.get("start_date"):
             year = datetime.strptime(report_config["start_date"], "%Y-%m-%d").year
         
-        # Call existing leave summary endpoint
-        report_data = await get_leave_summary_report(year, report_config.get("department"), current_user)
+        # Generate report data directly instead of calling GET endpoint
+        department = report_config.get("department")
+        
+        # Get all employees
+        from app.database.users import users_collection
+        query = {"is_active": True}
+        if department:
+            query["department"] = department
+
+        employees = list(users_collection.find(query, {"_id": 1, "full_name": 1, "department": 1}))
+        
+        # Get leave data for each employee
+        report_data = []
+        for emp in employees:
+            emp_id = str(emp["_id"])
+            
+            # Get leave requests for the year
+            leave_requests = await DatabaseLeaveRequests.get_user_leave_requests(emp_id)
+            year_leaves = [
+                lr for lr in leave_requests 
+                if lr.start_date.year == year or lr.end_date.year == year
+            ]
+            
+            approved_leaves = [lr for lr in year_leaves if lr.status == "approved"]
+            total_leave_days = sum(lr.duration_days for lr in approved_leaves)
+            
+            # Categorize by leave type
+            leave_types = {}
+            for lr in approved_leaves:
+                leave_types[lr.leave_type] = leave_types.get(lr.leave_type, 0) + lr.duration_days
+            
+            report_data.append({
+                "employee_id": emp_id,
+                "employee_name": emp["full_name"],
+                "department": emp.get("department", ""),
+                "total_leave_days": total_leave_days,
+                "leave_types": leave_types,
+                "pending_requests": len([lr for lr in year_leaves if lr.status == "pending"])
+            })
+
+        final_report = {
+            "year": year,
+            "department": department,
+            "employees": report_data
+        }
         
         # Generate file
         from io import BytesIO
         import json
         
         output = BytesIO()
-        output.write(json.dumps(report_data, indent=2, default=str).encode())
+        output.write(json.dumps(final_report, indent=2, default=str).encode())
         output.seek(0)
         
         from fastapi.responses import StreamingResponse
@@ -1869,9 +1941,14 @@ async def generate_recruitment_report(
     
     try:
         # Get recruitment data
-        job_postings = await DatabaseJobPostings.get_all()
-        applications = await DatabaseJobApplications.get_all()
-        interviews = await DatabaseInterviews.get_all()
+        job_postings = await DatabaseJobPostings.get_all_job_postings()
+        applications = await DatabaseJobApplications.get_all_applications()
+        
+        # Get interviews if method exists, otherwise create empty list
+        try:
+            interviews = await DatabaseInterviews.get_all_interviews() if hasattr(DatabaseInterviews, 'get_all_interviews') else []
+        except:
+            interviews = []
         
         report_data = {
             "report_type": "recruitment",
@@ -1931,15 +2008,54 @@ async def generate_attendance_report_post(
             start_date = f"{today.year}-{today.month:02d}-01"
             end_date = today.strftime("%Y-%m-%d")
         
-        # Call existing attendance report endpoint
-        report_data = await get_attendance_report(start_date, end_date, department, current_user)
+        # Generate report data directly instead of calling GET endpoint
+        # Convert string dates to date objects
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+        
+        # Get all employees
+        from app.database.users import users_collection
+        query = {"is_active": True}
+        if department:
+            query["department"] = department
+
+        employees = list(users_collection.find(query, {"_id": 1, "full_name": 1, "department": 1}))
+        
+        # Get attendance data for each employee
+        report_data = []
+        for emp in employees:
+            emp_id = str(emp["_id"])
+            attendance_records = await DatabaseAttendance.get_attendance_by_date_range(
+                emp_id, start_date_obj, end_date_obj
+            )
+            
+            present_days = len([a for a in attendance_records if a.status == "present"])
+            absent_days = len([a for a in attendance_records if a.status == "absent"])
+            late_days = len([a for a in attendance_records if a.is_late])
+            
+            report_data.append({
+                "employee_id": emp_id,
+                "employee_name": emp["full_name"],
+                "department": emp.get("department", ""),
+                "present_days": present_days,
+                "absent_days": absent_days,
+                "late_days": late_days,
+                "total_working_days": len(attendance_records)
+            })
+
+        final_report = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "department": department,
+            "employees": report_data
+        }
         
         # Generate file
         from io import BytesIO
         import json
         
         output = BytesIO()
-        output.write(json.dumps(report_data, indent=2, default=str).encode())
+        output.write(json.dumps(final_report, indent=2, default=str).encode())
         output.seek(0)
         
         from fastapi.responses import StreamingResponse
@@ -1971,7 +2087,7 @@ async def get_payroll_data(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get payroll data for specified month/year"""
-    if current_user.role not in ["director", "hr", "manager"]:
+    if current_user.role not in ["director", "hr", "manager", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view payroll data"
@@ -2033,7 +2149,7 @@ async def generate_payroll(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate payroll for specified month/year"""
-    if current_user.role not in ["director", "hr", "manager"]:
+    if current_user.role not in ["director", "hr", "manager", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to generate payroll"
@@ -2062,7 +2178,11 @@ async def generate_payroll(
         payroll_records = []
         for employee in employees:
             emp_id = str(employee["_id"])
-            base_salary = employee.get("salary", 0)
+            base_salary = employee.get("salary", 0) or 0  # Ensure it's not None
+            
+            # Skip employees with no salary set
+            if base_salary <= 0:
+                continue
             
             # Calculate allowances
             hra = base_salary * 0.20  # 20% HRA
@@ -2158,7 +2278,7 @@ async def download_salary_slip(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Download salary slip PDF for an employee"""
-    if current_user.role not in ["director", "hr", "manager"] and str(current_user.id) != employee_id:
+    if current_user.role not in ["director", "hr", "manager", "admin"] and str(current_user.id) != employee_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to download this salary slip"
@@ -2213,7 +2333,7 @@ async def mark_payroll_as_paid(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Mark an employee's payroll as paid"""
-    if current_user.role not in ["director", "hr", "manager"]:
+    if current_user.role not in ["director", "hr", "manager", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to mark payroll as paid"
@@ -2264,7 +2384,7 @@ async def download_bulk_salary_slips(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Download bulk salary slips as ZIP file"""
-    if current_user.role not in ["director", "hr", "manager"]:
+    if current_user.role not in ["director", "hr", "manager", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to download bulk salary slips"

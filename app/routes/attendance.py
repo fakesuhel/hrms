@@ -416,8 +416,16 @@ async def delete_attendance(
 ):
     """Delete an attendance record (managers only)"""
     try:
+        # Debug: Print user information
+        print(f"DELETE request - User: {current_user.username}")
+        print(f"DELETE request - User role: '{current_user.role}'")
+        print(f"DELETE request - User role type: {type(current_user.role)}")
+        print(f"DELETE request - Allowed roles: ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager', 'hr']")
+        print(f"DELETE request - Role check result: {current_user.role in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager', 'hr']}")
+        
         # Check if user has permission to delete attendance
         if current_user.role not in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager', 'hr']:
+            print(f"DELETE request - PERMISSION DENIED for role: '{current_user.role}'")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions to delete attendance records"

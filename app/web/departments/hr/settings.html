@@ -779,7 +779,7 @@
                 
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userInitials">S</div>
-                    <span id="userTimeDisplay">08:26 - soheru</span>
+                    <span id="userTimeDisplay">soheru</span>
                     
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/static/profile.html" class="dropdown-item">
@@ -1497,7 +1497,7 @@
             console.log("Current User's Login: soheru");
             
             // Set time and username in header
-            document.getElementById('userTimeDisplay').textContent = '08:26 - soheru';
+            document.getElementById('userTimeDisplay').textContent = 'soheru';
             
             try {
                 // Check auth token
@@ -1961,7 +1961,10 @@
                     return;
                 }
                 
-                await changePassword(currentPassword, newPassword);
+                await changePassword({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                });
             });
             
             // Appearance form submission
@@ -2537,10 +2540,151 @@
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
         
+        // Update user profile data
+        async function updateUserData(userData) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                const response = await fetch('/users/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to update profile');
+                }
+                
+                const updatedUser = await response.json();
+                
+                // Update local user data
+                window.currentUser = { ...window.currentUser, ...updatedUser };
+                
+                showToast('Profile updated successfully');
+                showAlert('Profile updated successfully', 'success');
+                
+                return updatedUser;
+            } catch (error) {
+                console.error('Error updating user data:', error);
+                showToast('Error updating profile');
+                showAlert(`Error updating profile: ${error.message}`, 'danger');
+                throw error;
+            }
+        }
+        
+        // Update user preferences
+        async function updateUserPreferences(preferencesData) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                const response = await fetch('/users/me/preferences', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(preferencesData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to update preferences');
+                }
+                
+                const updatedPreferences = await response.json();
+                
+                // Update local user preferences
+                if (window.currentUser) {
+                    window.currentUser.preferences = { ...window.currentUser.preferences, ...updatedPreferences };
+                }
+                
+                showToast('Preferences updated successfully');
+                showAlert('Preferences updated successfully', 'success');
+                
+                return updatedPreferences;
+            } catch (error) {
+                console.error('Error updating preferences:', error);
+                showToast('Error updating preferences');
+                showAlert(`Error updating preferences: ${error.message}`, 'danger');
+                throw error;
+            }
+        }
+        
+        // Update company settings (director only)
+        async function updateCompanySettings(settingsData) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                const response = await fetch('/company/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settingsData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to update company settings');
+                }
+                
+                const updatedSettings = await response.json();
+                
+                showToast('Company settings updated successfully');
+                showAlert('Company settings updated successfully', 'success');
+                
+                return updatedSettings;
+            } catch (error) {
+                console.error('Error updating company settings:', error);
+                showToast('Error updating company settings');
+                showAlert(`Error updating company settings: ${error.message}`, 'danger');
+                throw error;
+            }
+        }
+        
+        // Change password
+        async function changePassword(passwordData) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                const response = await fetch('/users/me/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(passwordData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to change password');
+                }
+                
+                showToast('Password changed successfully');
+                showAlert('Password changed successfully', 'success');
+                
+                // Clear password form
+                document.getElementById('passwordForm').reset();
+                
+                return true;
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showToast('Error changing password');
+                showAlert(`Error changing password: ${error.message}`, 'danger');
+                throw error;
+            }
+        }
+        
         // Update the displayed time
         document.addEventListener('DOMContentLoaded', function() {
-            const currentTimestamp = "2025-06-17 09:24:54";  // Updated timestamp
-            document.getElementById('userTimeDisplay').textContent = `09:24 - soheru`;
+            const currentTimestamp = "2025-08-02 13:07:25";  // Updated timestamp
+            document.getElementById('userTimeDisplay').textContent = `soheru`;
         });
     </script>
 </body>

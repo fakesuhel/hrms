@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi TechZone - Performance Reviews</title>
+    <style>
+        /* CSS Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+            --bg-card: #ffffff;
+            
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --border-color: #e5e7eb;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        /* Layout Styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .company-logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo svg {
+            margin-right: 0.75rem;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.25rem 1.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0da271;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Performance Reviews Specific Styles */
+        .performance-main {
+            padding: 2rem;
+        }
+
+        .performance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .performance-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .performance-title p {
+            color: var(--text-secondary);
+        }
+
+        /* Performance Stat Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .rating-indicator {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Reviews Table */
+        .reviews-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .reviews-table th, 
+        .reviews-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .reviews-table th {
+            font-weight: 600;
+            color: var(--text-primary);
+            background-color: var(--bg-light);
+        }
+
+        .reviews-table tr:hover {
+            background-color: var(--bg-light);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-draft {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .badge-in-progress {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .badge-completed {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-acknowledged {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+
+        /* Review Detail Sections */
+        .review-detail {
+            margin-top: 1.5rem;
+        }
+
+        .review-section {
+            margin-bottom: 2rem;
+        }
+
+        .review-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .review-meta {
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .meta-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-value {
+            font-weight: 500;
+        }
+
+        /* Rating scales */
+        .rating-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .rating-category {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .rating-value {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .rating-bar {
+            height: 8px;
+            background-color: var(--bg-light);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+        }
+
+        .rating-comment {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* List items */
+        .list-bullet {
+            list-style-position: inside;
+            margin-bottom: 1rem;
+        }
+
+        .list-bullet li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-state img {
+            max-width: 150px;
+            margin-bottom: 1.5rem;
+            opacity: 0.6;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Loading state */
+        .skeleton-loading {
+            animation: skeleton-loading 1.5s infinite alternate;
+            background-color: #e5e7eb;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0.9;
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: toast-in-out 3s forwards;
+        }
+        
+        @keyframes toast-in-out {
+            0% { transform: translateY(100%); opacity: 0; }
+            15% { transform: translateY(0); opacity: 1; }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .performance-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .reviews-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .review-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" id="dashboardContainer">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul id="navigationMenu" class="nav-list">
+                    <!-- Dynamic navigation will be populated here -->
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">soheruNow</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team</div>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="main-content">
+            <header class="top-header">
+                <div class="left-section">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <h1 class="page-title">Performance Reviews</h1>
+                </div>
+                
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar" id="userInitials">SN</div>
+                    <span id="userTimeDisplay">13:37 - soheruNow</span>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/static/profile.html" class="dropdown-item">
+                            <i>👤</i> Your Profile
+                        </a>
+                        <a href="/static/settings.html" class="dropdown-item">
+                            <i>⚙️</i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i>🚪</i> Log Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="performance-main">
+                <div class="performance-header">
+                    <div class="performance-title">
+                        <h1>Performance Reviews</h1>
+                        <p>Track and manage your performance reviews</p>
+                    </div>
+                    
+                    <div id="managerActions" style="display: none;">
+                        <button class="btn btn-primary" id="createReviewBtn">
+                            <i>✏️</i> Create Review
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Performance Stats -->
+                <div class="stats-container" id="statsContainer">
+                    <div class="skeleton-loading" style="height: 120px;"></div>
+                    <div class="skeleton-loading" style="height: 120px;"></div>
+                    <div class="skeleton-loading" style="height: 120px;"></div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="tabs" id="reviewTabs">
+                    <div class="tab active" data-tab="myReviews">My Reviews</div>
+                    <div class="tab" data-tab="conductingReviews" id="conductingReviewsTab" style="display: none;">Team Reviews</div>
+                </div>
+                
+                <!-- My Reviews Tab -->
+                <div class="tab-content active" id="myReviews">
+                    <div id="myReviewsLoading">
+                        <div class="skeleton-loading" style="height: 300px;"></div>
+                    </div>
+                    
+                    <div id="myReviewsList" style="display: none;">
+                        <table class="reviews-table">
+                            <thead>
+                                <tr>
+                                    <th>Review Period</th>
+                                    <th>Type</th>
+                                    <th>Overall Rating</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myReviewsTableBody">
+                                <!-- Reviews will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="myReviewsEmpty" style="display: none;" class="empty-state">
+                        <h3>No Reviews Yet</h3>
+                        <p>You don't have any performance reviews yet.</p>
+                    </div>
+                </div>
+                
+                <!-- Conducting Reviews Tab -->
+                <div class="tab-content" id="conductingReviews">
+                    <div id="conductingReviewsLoading">
+                        <div class="skeleton-loading" style="height: 300px;"></div>
+                    </div>
+                    
+                    <div id="conductingReviewsList" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div class="form-group" style="max-width: 300px;">
+                                <label class="form-label">Filter by Status</label>
+                                <select class="form-control" id="statusFilter">
+                                    <option value="">All</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <table class="reviews-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Review Period</th>
+                                    <th>Type</th>
+                                    <th>Overall Rating</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="conductingReviewsTableBody">
+                                <!-- Reviews will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="conductingReviewsEmpty" style="display: none;" class="empty-state">
+                        <h3>No Reviews to Conduct</h3>
+                        <p>You haven't created any performance reviews yet.</p>
+                        <button class="btn btn-primary" id="createReviewEmptyBtn">
+                            <i>✏️</i> Create Review
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- View Review Modal -->
+    <div class="modal" id="viewReviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Performance Review</h2>
+                <button class="modal-close" id="closeViewReviewModal">&times;</button>
+            </div>
+            <div class="modal-body" id="viewReviewModalBody">
+                <!-- Review details will be loaded dynamically -->
+            </div>
+            <div class="modal-footer" id="viewReviewModalFooter">
+                <!-- Action buttons will be added based on context -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create/Edit Review Modal -->
+    <div class="modal" id="editReviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="editReviewModalTitle">Create Performance Review</h2>
+                <button class="modal-close" id="closeEditReviewModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <input type="hidden" id="reviewId">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="employeeSelect">Employee</label>
+                        <select class="form-control" id="employeeSelect" required>
+                            <option value="">Select Employee</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="reviewPeriod">Review Period</label>
+                        <input type="text" class="form-control" id="reviewPeriod" placeholder="e.g. 2025-H1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="reviewType">Review Type</label>
+                        <select class="form-control" id="reviewType" required>
+                            <option value="">Select Type</option>
+                            <option value="annual">Annual</option>
+                            <option value="mid-year">Mid-Year</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="probation">Probation</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="endDate">End Date</label>
+                        <input type="date" class="form-control" id="endDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Ratings</label>
+                        <div id="ratingsContainer">
+                            <div class="rating-input" style="margin-bottom: 1rem; border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--border-radius);">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-control rating-category-select">
+                                        <option value="technical_skills">Technical Skills</option>
+                                        <option value="communication">Communication</option>
+                                        <option value="teamwork">Teamwork</option>
+                                        <option value="leadership">Leadership</option>
+                                        <option value="problem_solving">Problem Solving</option>
+                                        <option value="initiative">Initiative</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Rating (1-5)</label>
+                                    <select class="form-control rating-value-select">
+                                        <option value="1">1 - Needs Significant Improvement</option>
+                                        <option value="2">2 - Needs Improvement</option>
+                                        <option value="3">3 - Meets Expectations</option>
+                                        <option value="4">4 - Exceeds Expectations</option>
+                                        <option value="5">5 - Outstanding</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Comments</label>
+                                    <textarea class="form-control rating-comments" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline" id="addRatingBtn">
+                            <i>➕</i> Add Rating Category
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="overallRating">Overall Rating (1-5)</label>
+                        <select class="form-control" id="overallRating" required>
+                            <option value="">Select Rating</option>
+                            <option value="1">1 - Needs Significant Improvement</option>
+                            <option value="2">2 - Needs Improvement</option>
+                            <option value="3">3 - Meets Expectations</option>
+                            <option value="4">4 - Exceeds Expectations</option>
+                            <option value="5">5 - Outstanding</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="strengths">Strengths</label>
+                        <textarea class="form-control" id="strengths" placeholder="Enter strengths, one per line"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="improvementAreas">Areas for Improvement</label>
+                        <textarea class="form-control" id="improvementAreas" placeholder="Enter areas for improvement, one per line"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="goals">Goals for Next Period</label>
+                        <textarea class="form-control" id="goals" placeholder="Enter goals, one per line"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="overallComments">Overall Comments</label>
+                        <textarea class="form-control" id="overallComments"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="reviewStatus">Status</label>
+                        <select class="form-control" id="reviewStatus" required>
+                            <option value="draft">Draft</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelEditReview">Cancel</button>
+                <button class="btn btn-primary" id="saveReviewBtn">Save Review</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Acknowledge Review Modal -->
+    <div class="modal" id="acknowledgeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Acknowledge Performance Review</h2>
+                <button class="modal-close" id="closeAcknowledgeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Please provide any comments or feedback regarding your performance review.</p>
+                <form id="acknowledgeForm">
+                    <input type="hidden" id="acknowledgeReviewId">
+                    <div class="form-group">
+                        <label class="form-label" for="acknowledgeComments">Your Comments</label>
+                        <textarea class="form-control" id="acknowledgeComments" rows="5"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelAcknowledge">Cancel</button>
+                <button class="btn btn-primary" id="submitAcknowledge">Submit Acknowledgement</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // IST timezone conversion (UTC +5:30)
+        function getCurrentTimeFormatted() {
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const istTime = new Date(now.getTime() + istOffset);
+            return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
+        }
+
+        // Navigation configuration for different roles
+        const navigationConfig = {
+            employee: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance', active: true },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance', active: true },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+            ],
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance', active: true },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
+                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' },
+                { icon: '📈', label: 'Reports', href: '/app/it/reports' },
+                { icon: '⚙️', label: 'Settings', href: '/app/it/settings' }
+            ]
+        };
+
+        // Generate navigation menu based on user role
+        function generateNavigationMenu(userRole) {
+            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            const navigationMenu = document.getElementById('navigationMenu');
+            
+            if (!navigationMenu) return;
+            
+            navigationMenu.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = item.active ? 'nav-link active' : 'nav-link';
+                a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                
+                li.appendChild(a);
+                navigationMenu.appendChild(li);
+            });
+        }
+
+        // Setup role-based UI elements
+        function setupRoleBasedUI(user) {
+            const userRole = user.role || 'employee';
+            generateNavigationMenu(userRole);
+            
+            // Log user role for debugging
+            console.log('User role detected:', userRole);
+        }
+
+        // Get current user from API or localStorage
+        async function getCurrentUser() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                if (!token) return null;
+                
+                const response = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+            
+            // Fallback to mock user if API fails
+            return {
+                id: 1,
+                username: 'soheruNow',
+                first_name: 'Soheru',
+                last_name: 'User',
+                role: 'employee',
+                position: 'Developer'
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('bhoomitechzone_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            try {
+                // Get current user and setup UI
+                const currentUser = await getCurrentUser();
+                
+                // Update UI with user info
+                if (currentUser) {
+                    const userTimeElement = document.getElementById('userTimeDisplay');
+                    if (userTimeElement) {
+                        userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        
+                        // Start live clock update
+                        setInterval(() => {
+                            userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                        }, 1000);
+                    }
+                    
+                    // Set user initials
+                    const initials = currentUser.first_name && currentUser.last_name ? 
+                                    (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
+                                    currentUser.username[0].toUpperCase();
+                    const userInitialsElement = document.getElementById('userInitials');
+                    if (userInitialsElement) {
+                        userInitialsElement.textContent = initials;
+                    }
+                    
+                    const sidebarUsernameElement = document.getElementById('sidebar-username');
+                    if (sidebarUsernameElement) {
+                        sidebarUsernameElement.textContent = currentUser.username;
+                    }
+                    
+                    const sidebarPositionElement = document.getElementById('sidebar-position');
+                    if (sidebarPositionElement) {
+                        sidebarPositionElement.textContent = currentUser.position || 'Team Member';
+                    }
+                    
+                    // Setup role-based UI
+                    setupRoleBasedUI(currentUser);
+                }
+                
+                // Set current datetime
+                console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 13:37:02");
+                console.log("Current User's Login: soheruNow");
+                
+                // Initialize UI with user data
+                await loadUserData();
+                
+                // Load performance stats
+                await loadPerformanceStats();
+                
+                // Load reviews data
+                await loadMyReviews();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Load team reviews data if user is manager/team lead
+                if (window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole)) {
+                    document.getElementById('managerActions').style.display = 'block';
+                    document.getElementById('conductingReviewsTab').style.display = 'block';
+                    await loadConductingReviews();
+                }
+                
+            } catch (error) {
+                console.error('Error initializing performance page:', error);
+                showToast('Error loading performance data');
+            }
+        });
+        
+        async function loadUserData() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('bhoomitechzone_token');
+                        window.location.href = '/static/login.html';
+                        return;
+                    }
+                    throw new Error('Failed to fetch user data');
+                }
+                
+                const userData = await response.json();
+                
+                // Store user info for later use
+                window.currentUser = userData;
+                window.userRole = userData.role;
+                
+                // Update UI with user info - using the required values
+                document.getElementById('userInitials').textContent = 'S';
+                document.getElementById('userTimeDisplay').textContent = `13:52 - soheru`;
+                document.getElementById('sidebar-username').textContent = 'soheru';
+                document.getElementById('sidebar-position').textContent = userData.position || 'Team';
+                
+                // Log the timestamp and username as required
+                console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 13:52:47");
+                console.log("Current User's Login: soheru");
+                
+                return userData;
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                return null;
+            }
+        }
+        
+        async function loadPerformanceStats() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/performance-reviews/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load performance stats');
+                }
+                
+                const stats = await response.json();
+                
+                // Update stats container
+                const statsContainer = document.getElementById('statsContainer');
+                statsContainer.innerHTML = '';
+                
+                // Average rating card
+                const avgRating = stats.average_rating.toFixed(1) || 'N/A';
+                let ratingEmoji = '😐';
+                if (stats.average_rating >= 4.5) ratingEmoji = '🌟';
+                else if (stats.average_rating >= 4) ratingEmoji = '😄';
+                else if (stats.average_rating >= 3) ratingEmoji = '🙂';
+                else if (stats.average_rating >= 2) ratingEmoji = '😐';
+                else ratingEmoji = '😟';
+                
+                statsContainer.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-title">Average Rating</div>
+                        <div class="stat-value">${avgRating} <span class="rating-indicator">${ratingEmoji}</span></div>
+                        <div class="stat-subtitle">Trend: ${stats.trend === 'improving' ? '📈 Improving' : stats.trend === 'declining' ? '📉 Declining' : '📊 Stable'}</div>
+                    </div>
+                `;
+                
+                // Reviews count card
+                statsContainer.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-title">Completed Reviews</div>
+                        <div class="stat-value">${stats.review_count}</div>
+                        <div class="stat-subtitle">Last period: ${stats.last_period || 'N/A'}</div>
+                    </div>
+                `;
+                
+                // Last review date
+                const lastReviewDate = stats.last_review_date ? new Date(stats.last_review_date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : 'No reviews yet';
+                
+                statsContainer.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-title">Last Review</div>
+                        <div class="stat-value" style="font-size: 1.25rem;">${lastReviewDate}</div>
+                        <div class="stat-subtitle">Next review in: ${getNextReviewCountdown(stats.last_review_date)}</div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading performance stats:', error);
+                
+                // Show fallback stats
+                const statsContainer = document.getElementById('statsContainer');
+                statsContainer.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-title">Average Rating</div>
+                        <div class="stat-value">N/A</div>
+                        <div class="stat-subtitle">No reviews available</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Completed Reviews</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-subtitle">No reviews yet</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Last Review</div>
+                        <div class="stat-value" style="font-size: 1.25rem;">No reviews yet</div>
+                        <div class="stat-subtitle">Schedule a review with your manager</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function getNextReviewCountdown(lastReviewDate) {
+            if (!lastReviewDate) return 'Not scheduled';
+            
+            // Typically reviews happen every 6 months
+            const lastReview = new Date(lastReviewDate);
+            const nextReview = new Date(lastReview);
+            nextReview.setMonth(nextReview.getMonth() + 6);
+            
+            const today = new Date();
+            const diffTime = nextReview - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return 'Overdue';
+            } else if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return 'Tomorrow';
+            } else if (diffDays < 31) {
+                return `${diffDays} days`;
+            } else {
+                const months = Math.floor(diffDays / 30);
+                return `~${months} ${months === 1 ? 'month' : 'months'}`;
+            }
+        }
+        
+        async function loadMyReviews() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/performance-reviews', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load reviews');
+                }
+                
+                const reviews = await response.json();
+                
+                // Hide loading state
+                document.getElementById('myReviewsLoading').style.display = 'none';
+                
+                // Check if there are any reviews
+                if (reviews.length === 0) {
+                    document.getElementById('myReviewsEmpty').style.display = 'block';
+                    return;
+                }
+                
+                // Show reviews list
+                document.getElementById('myReviewsList').style.display = 'block';
+                
+                // Populate reviews table
+                const tableBody = document.getElementById('myReviewsTableBody');
+                tableBody.innerHTML = '';
+                
+                reviews.forEach(review => {
+                    // Format the status for display
+                    let statusClass = 'badge-draft';
+                    
+                    switch(review.status) {
+                        case 'in_progress':
+                            statusClass = 'badge-in-progress';
+                            break;
+                        case 'completed':
+                            statusClass = 'badge-completed';
+                            break;
+                        case 'acknowledged':
+                            statusClass = 'badge-acknowledged';
+                            break;
+                    }
+                    
+                    // Format the date for display
+                    const dateStr = new Date(review.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${review.review_period}</td>
+                        <td>${capitalizeFirstLetter(review.review_type.replace('_', ' '))}</td>
+                        <td>${review.overall_rating ? review.overall_rating.toFixed(1) : 'N/A'}</td>
+                        <td><span class="badge ${statusClass}">${formatStatus(review.status)}</span></td>
+                        <td>${dateStr}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline view-review-btn" data-id="${review._id}">
+                                View
+                            </button>
+                            ${(review.status === 'completed' && !review.acknowledged_by_user) ?
+                                `<button class="btn btn-sm btn-primary acknowledge-btn" data-id="${review._id}">
+                                    Acknowledge
+                                </button>` : ''
+                            }
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        viewReviewDetails(reviewId);
+                    });
+                });
+                
+                // Add event listeners to acknowledge buttons
+                document.querySelectorAll('.acknowledge-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        openAcknowledgeModal(reviewId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                document.getElementById('myReviewsLoading').style.display = 'none';
+                document.getElementById('myReviewsEmpty').style.display = 'block';
+                document.querySelector('#myReviewsEmpty h3').textContent = 'Error Loading Reviews';
+                document.querySelector('#myReviewsEmpty p').textContent = 'Failed to load your performance reviews. Please try again later.';
+            }
+        }
+        
+        async function loadConductingReviews(status = '') {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                let url = '/performance-reviews/conducting';
+                if (status) {
+                    url += `?status=${status}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load conducting reviews');
+                }
+                
+                const reviews = await response.json();
+                
+                // Hide loading state
+                document.getElementById('conductingReviewsLoading').style.display = 'none';
+                
+                // Check if there are any reviews
+                if (reviews.length === 0) {
+                    document.getElementById('conductingReviewsEmpty').style.display = 'block';
+                    return;
+                }
+                
+                // Show reviews list
+                document.getElementById('conductingReviewsList').style.display = 'block';
+                
+                // Populate reviews table
+                const tableBody = document.getElementById('conductingReviewsTableBody');
+                tableBody.innerHTML = '';
+                
+                reviews.forEach(review => {
+                    // Format the status for display
+                    let statusClass = 'badge-draft';
+                    
+                    switch(review.status) {
+                        case 'in_progress':
+                            statusClass = 'badge-in-progress';
+                            break;
+                        case 'completed':
+                            statusClass = 'badge-completed';
+                            break;
+                        case 'acknowledged':
+                            statusClass = 'badge-acknowledged';
+                            break;
+                    }
+                    
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${review.user_id}</td>
+                        <td>${review.review_period}</td>
+                        <td>${capitalizeFirstLetter(review.review_type.replace('_', ' '))}</td>
+                        <td>${review.overall_rating ? review.overall_rating.toFixed(1) : 'N/A'}</td>
+                        <td><span class="badge ${statusClass}">${formatStatus(review.status)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline view-review-btn" data-id="${review._id}">
+                                View
+                            </button>
+                            ${(review.status !== 'acknowledged') ?
+                                `<button class="btn btn-sm btn-primary edit-review-btn" data-id="${review._id}">
+                                    Edit
+                                </button>` : ''
+                            }
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        viewReviewDetails(reviewId);
+                    });
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        editReview(reviewId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading conducting reviews:', error);
+                document.getElementById('conductingReviewsLoading').style.display = 'none';
+                document.getElementById('conductingReviewsEmpty').style.display = 'block';
+                document.querySelector('#conductingReviewsEmpty h3').textContent = 'Error Loading Reviews';
+                document.querySelector('#conductingReviewsEmpty p').textContent = 'Failed to load team reviews. Please try again later.';
+            }
+        }
+        
+        async function viewReviewDetails(reviewId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/performance-reviews/${reviewId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load review details');
+                }
+                
+                const review = await response.json();
+                
+                // Store the review data for potential actions
+                window.currentReview = review;
+                
+                // Create the review details HTML
+                let detailsHtml = `
+                    <div class="review-detail">
+                        <div class="review-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">Review Period</div>
+                                <div class="meta-value">${review.review_period}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Type</div>
+                                <div class="meta-value">${capitalizeFirstLetter(review.review_type.replace('_', ' '))}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Status</div>
+                                <div class="meta-value">${formatStatus(review.status)}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Date Range</div>
+                                <div class="meta-value">${formatDate(review.start_date)} - ${formatDate(review.end_date)}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Last Updated</div>
+                                <div class="meta-value">${formatDate(review.updated_at)}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Overall Rating</div>
+                                <div class="meta-value" style="color: var(--primary); font-size: 1.25rem; font-weight: 600;">
+                                    ${review.overall_rating ? review.overall_rating.toFixed(1) : 'N/A'} / 5.0
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="review-section">
+                            <h3 class="review-section-title">Ratings</h3>
+                            ${review.ratings && review.ratings.length > 0 ? 
+                                review.ratings.map(rating => `
+                                    <div class="rating-item">
+                                        <div class="rating-category">
+                                            <span>${formatCategory(rating.category)}</span>
+                                            <span class="rating-value">${rating.rating.toFixed(1)}</span>
+                                        </div>
+                                        <div class="rating-bar">
+                                            <div class="rating-fill" style="width: ${(rating.rating / 5) * 100}%;"></div>
+                                        </div>
+                                        ${rating.comments ? `<div class="rating-comment">"${rating.comments}"</div>` : ''}
+                                    </div>
+                                `).join('') :
+                                '<p>No specific ratings provided.</p>'
+                            }
+                        </div>
+                        
+                        <div class="review-section">
+                            <h3 class="review-section-title">Strengths</h3>
+                            ${review.strengths && review.strengths.length > 0 ?
+                                `<ul class="list-bullet">
+                                    ${review.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                                </ul>` :
+                                '<p>No specific strengths highlighted.</p>'
+                            }
+                        </div>
+                        
+                        <div class="review-section">
+                            <h3 class="review-section-title">Areas for Improvement</h3>
+                            ${review.areas_for_improvement && review.areas_for_improvement.length > 0 ?
+                                `<ul class="list-bullet">
+                                    ${review.areas_for_improvement.map(area => `<li>${area}</li>`).join('')}
+                                </ul>` :
+                                '<p>No specific areas for improvement highlighted.</p>'
+                            }
+                        </div>
+                        
+                        <div class="review-section">
+                            <h3 class="review-section-title">Goals for Next Period</h3>
+                            ${review.goals_for_next_period && review.goals_for_next_period.length > 0 ?
+                                `<ul class="list-bullet">
+                                    ${review.goals_for_next_period.map(goal => `<li>${goal}</li>`).join('')}
+                                </ul>` :
+                                '<p>No specific goals set for next period.</p>'
+                            }
+                        </div>
+                        
+                        <div class="review-section">
+                            <h3 class="review-section-title">Overall Comments</h3>
+                            <p>${review.overall_comments || 'No overall comments provided.'}</p>
+                        </div>
+                        
+                        ${review.acknowledged_by_user ? `
+                            <div class="review-section">
+                                <h3 class="review-section-title">Employee Acknowledgement</h3>
+                                <p style="font-style: italic;">${review.user_comments || 'No additional comments provided.'}</p>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                                    Acknowledged on ${formatDate(review.acknowledged_at)}
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Populate the modal
+                document.getElementById('viewReviewModalBody').innerHTML = detailsHtml;
+                
+                // Setup footer buttons based on review state and user role
+                const modalFooter = document.getElementById('viewReviewModalFooter');
+                modalFooter.innerHTML = '';
+                
+                const isReviewer = review.reviewer_id === (window.currentUser?.id);
+                
+                // Close button
+                modalFooter.innerHTML += `<button class="btn btn-outline" id="closeReviewBtn">Close</button>`;
+                
+                // If user is the employee being reviewed and review is completed but not acknowledged
+                if (review.user_id === window.currentUser?.id && review.status === 'completed' && !review.acknowledged_by_user) {
+                    modalFooter.innerHTML += `<button class="btn btn-primary" id="acknowledgeReviewBtn">Acknowledge Review</button>`;
+                }
+                
+                // If user is the reviewer and review is not acknowledged
+                if (isReviewer && review.status !== 'acknowledged') {
+                    modalFooter.innerHTML += `<button class="btn btn-primary" id="editReviewBtn">Edit Review</button>`;
+                }
+                
+                // Add event listeners
+                document.getElementById('closeReviewBtn').addEventListener('click', function() {
+                    document.getElementById('viewReviewModal').style.display = 'none';
+                });
+                
+                const acknowledgeBtn = document.getElementById('acknowledgeReviewBtn');
+                if (acknowledgeBtn) {
+                    acknowledgeBtn.addEventListener('click', function() {
+                        document.getElementById('viewReviewModal').style.display = 'none';
+                        openAcknowledgeModal(review._id);
+                    });
+                }
+                
+                const editBtn = document.getElementById('editReviewBtn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', function() {
+                        document.getElementById('viewReviewModal').style.display = 'none';
+                        editReview(review._id);
+                    });
+                }
+                
+                // Show the modal
+                document.getElementById('viewReviewModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading review details:', error);
+                showToast('Error loading review details');
+            }
+        }
+        
+        async function openAcknowledgeModal(reviewId) {
+            // Reset form
+            document.getElementById('acknowledgeForm').reset();
+            document.getElementById('acknowledgeReviewId').value = reviewId;
+            
+            // Show modal
+            document.getElementById('acknowledgeModal').style.display = 'flex';
+        }
+        
+        async function acknowledgeReview() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const reviewId = document.getElementById('acknowledgeReviewId').value;
+                const comments = document.getElementById('acknowledgeComments').value;
+                
+                const response = await fetch(`/performance-reviews/${reviewId}/acknowledge`, {
+                                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_comments: comments })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to acknowledge review');
+                }
+                
+                // Close modal
+                document.getElementById('acknowledgeModal').style.display = 'none';
+                
+                // Show success message
+                showToast('Review acknowledged successfully');
+                
+                // Reload reviews
+                await loadMyReviews();
+                await loadPerformanceStats();
+                
+            } catch (error) {
+                console.error('Error acknowledging review:', error);
+                showToast('Error acknowledging review');
+            }
+        }
+        
+        async function editReview(reviewId) {
+            try {
+                // Set modal title based on whether it's an edit or create
+                document.getElementById('editReviewModalTitle').textContent = reviewId ? 'Edit Performance Review' : 'Create Performance Review';
+                
+                // Reset form
+                document.getElementById('reviewForm').reset();
+                document.getElementById('reviewId').value = reviewId || '';
+                
+                // Clear rating inputs except the first one
+                const ratingsContainer = document.getElementById('ratingsContainer');
+                const firstRating = ratingsContainer.firstElementChild;
+                if (firstRating) {
+                    ratingsContainer.innerHTML = '';
+                    ratingsContainer.appendChild(firstRating);
+                    firstRating.querySelector('.rating-category-select').value = 'technical_skills';
+                    firstRating.querySelector('.rating-value-select').value = '3';
+                    firstRating.querySelector('.rating-comments').value = '';
+                }
+                
+                if (reviewId) {
+                    // Load review data
+                    const token = localStorage.getItem('bhoomitechzone_token');
+                    const response = await fetch(`/performance-reviews/${reviewId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load review data');
+                    }
+                    
+                    const review = await response.json();
+                    
+                    // Populate form fields
+                    document.getElementById('employeeSelect').value = review.user_id;
+                    document.getElementById('employeeSelect').disabled = true; // Cannot change employee on edit
+                    document.getElementById('reviewPeriod').value = review.review_period;
+                    document.getElementById('reviewType').value = review.review_type;
+                    document.getElementById('startDate').value = formatDateForInput(review.start_date);
+                    document.getElementById('endDate').value = formatDateForInput(review.end_date);
+                    document.getElementById('overallRating').value = review.overall_rating || '';
+                    document.getElementById('strengths').value = review.strengths ? review.strengths.join('\n') : '';
+                    document.getElementById('improvementAreas').value = review.areas_for_improvement ? review.areas_for_improvement.join('\n') : '';
+                    document.getElementById('goals').value = review.goals_for_next_period ? review.goals_for_next_period.join('\n') : '';
+                    document.getElementById('overallComments').value = review.overall_comments || '';
+                    document.getElementById('reviewStatus').value = review.status;
+                    
+                    // Add ratings
+                    if (review.ratings && review.ratings.length > 0) {
+                        ratingsContainer.innerHTML = '';
+                        
+                        review.ratings.forEach(rating => {
+                            const ratingDiv = createRatingInput();
+                            ratingDiv.querySelector('.rating-category-select').value = rating.category;
+                            ratingDiv.querySelector('.rating-value-select').value = rating.rating;
+                            ratingDiv.querySelector('.rating-comments').value = rating.comments || '';
+                            ratingsContainer.appendChild(ratingDiv);
+                        });
+                    }
+                } else {
+                    // For new review, load team members
+                    await loadTeamMembers();
+                    document.getElementById('employeeSelect').disabled = false;
+                }
+                
+                // Show modal
+                document.getElementById('editReviewModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading review data for edit:', error);
+                showToast('Error loading review data');
+            }
+        }
+        
+        async function loadTeamMembers() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Use new endpoint to get only eligible users for review
+                const response = await fetch('/performance-reviews/eligible-users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load eligible users');
+                }
+                
+                const users = await response.json();
+                console.log("Loaded eligible users:", users); // Debug log
+                
+                // Populate employee select
+                const employeeSelect = document.getElementById('employeeSelect');
+                employeeSelect.innerHTML = '<option value="">Select Employee</option>';
+                
+                users.forEach(user => {
+                    // Skip the current user, we don't want to review ourselves
+                    if (user.username !== window.currentUser?.username) {
+                        const option = document.createElement('option');
+                        option.value = user._id || user.id;
+                        option.textContent = user.full_name || user.name || user.username || ((user.first_name || '') + ' ' + (user.last_name || '')).trim();
+                        employeeSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading eligible users:', error);
+                showToast('Error loading eligible users');
+            }
+        }
+        
+        async function saveReview() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const reviewId = document.getElementById('reviewId').value;
+                
+                // Gather form data
+                const userId = document.getElementById('employeeSelect').value;
+                const reviewPeriod = document.getElementById('reviewPeriod').value;
+                const reviewType = document.getElementById('reviewType').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const overallRating = parseFloat(document.getElementById('overallRating').value) || null;
+                const strengths = document.getElementById('strengths').value.split('\n').filter(s => s.trim());
+                const improvementAreas = document.getElementById('improvementAreas').value.split('\n').filter(s => s.trim());
+                const goals = document.getElementById('goals').value.split('\n').filter(s => s.trim());
+                const overallComments = document.getElementById('overallComments').value;
+                const status = document.getElementById('reviewStatus').value;
+                
+                // Gather ratings
+                const ratings = [];
+                document.querySelectorAll('.rating-input').forEach(ratingEl => {
+                    const category = ratingEl.querySelector('.rating-category-select').value;
+                    const rating = parseFloat(ratingEl.querySelector('.rating-value-select').value);
+                    const comments = ratingEl.querySelector('.rating-comments').value;
+                    
+                    ratings.push({
+                        category,
+                        rating,
+                        comments: comments.trim() || null
+                    });
+                });
+                
+                let response;
+                
+                if (reviewId) {
+                    // Update existing review
+                    const reviewData = {
+                        ratings,
+                        strengths,
+                        areas_for_improvement: improvementAreas,
+                        overall_comments: overallComments,
+                        overall_rating: overallRating,
+                        goals_for_next_period: goals,
+                        status
+                    };
+                    
+                    response = await fetch(`/performance-reviews/${reviewId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(reviewData)
+                    });
+                } else {
+                    // Create new review
+                    // IMPORTANT: Include reviewer_id for new reviews
+                    const createData = {
+                        user_id: userId,
+                        reviewer_id: window.currentUser.id || window.currentUser._id, // Use ID in whatever format your API expects
+                        review_period: reviewPeriod,
+                        review_type: reviewType,
+                        start_date: startDate,
+                        end_date: endDate,
+                        ratings,
+                        strengths,
+                        areas_for_improvement: improvementAreas,
+                        overall_comments: overallComments,
+                        overall_rating: overallRating,
+                        goals_for_next_period: goals,
+                        status
+                    };
+                    
+                    console.log("Creating review with data:", createData); // Debug log
+                    
+                    response = await fetch('/performance-reviews', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(createData)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("API Error:", errorData); // Log the full error
+                    throw new Error(errorData.detail ? 
+                        (Array.isArray(errorData.detail) ? errorData.detail[0].msg : errorData.detail) 
+                        : 'Failed to save review');
+                }
+                
+                // Close modal
+                document.getElementById('editReviewModal').style.display = 'none';
+                
+                // Show success message
+                showToast(reviewId ? 'Review updated successfully' : 'Review created successfully');
+                
+                // Reload reviews
+                if (reviewId) {
+                    await loadConductingReviews(document.getElementById('statusFilter').value);
+                } else {
+                    await loadConductingReviews('');
+                }
+                
+            } catch (error) {
+                console.error('Error saving review:', error);
+                showToast(`Error: ${error.message}`);
+            }
+        }
+        
+        function createRatingInput() {
+            const ratingDiv = document.createElement('div');
+            ratingDiv.className = 'rating-input';
+            ratingDiv.style.marginBottom = '1rem';
+            ratingDiv.style.border = '1px solid var(--border-color)';
+            ratingDiv.style.padding = '1rem';
+            ratingDiv.style.borderRadius = 'var(--border-radius)';
+            
+            ratingDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <div style="font-weight: 500;">Rating Category</div>
+                    <button type="button" class="btn btn-sm btn-outline remove-rating-btn" style="padding: 0.25rem 0.5rem;">
+                        <i>❌</i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <select class="form-control rating-category-select">
+                        <option value="technical_skills">Technical Skills</option>
+                        <option value="communication">Communication</option>
+                        <option value="teamwork">Teamwork</option>
+                        <option value="leadership">Leadership</option>
+                        <option value="problem_solving">Problem Solving</option>
+                        <option value="initiative">Initiative</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rating (1-5)</label>
+                    <select class="form-control rating-value-select">
+                        <option value="1">1 - Needs Significant Improvement</option>
+                        <option value="2">2 - Needs Improvement</option>
+                        <option value="3">3 - Meets Expectations</option>
+                        <option value="4">4 - Exceeds Expectations</option>
+                        <option value="5">5 - Outstanding</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Comments</label>
+                    <textarea class="form-control rating-comments" rows="2"></textarea>
+                </div>
+            `;
+            
+            // Add remove button event listener
+            ratingDiv.querySelector('.remove-rating-btn').addEventListener('click', function() {
+                ratingDiv.remove();
+            });
+            
+            return ratingDiv;
+        }
+        
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            menuToggle.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+            
+            // User menu toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('active');
+            });
+            
+            // Close user dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('active');
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+            
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Status filter
+            document.getElementById('statusFilter').addEventListener('change', function() {
+                loadConductingReviews(this.value);
+            });
+            
+            // Create review button
+            document.getElementById('createReviewBtn').addEventListener('click', function() {
+                editReview(); // No ID means create new
+            });
+            
+            // Create review button in empty state
+            const createEmptyBtn = document.getElementById('createReviewEmptyBtn');
+            if (createEmptyBtn) {
+                createEmptyBtn.addEventListener('click', function() {
+                    editReview(); // No ID means create new
+                });
+            }
+            
+            // Close view review modal
+            document.getElementById('closeViewReviewModal').addEventListener('click', function() {
+                document.getElementById('viewReviewModal').style.display = 'none';
+            });
+            
+            // Close edit review modal
+            document.getElementById('closeEditReviewModal').addEventListener('click', function() {
+                document.getElementById('editReviewModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelEditReview').addEventListener('click', function() {
+                document.getElementById('editReviewModal').style.display = 'none';
+            });
+            
+            // Save review
+            document.getElementById('saveReviewBtn').addEventListener('click', function() {
+                saveReview();
+            });
+            
+            // Add rating button
+            document.getElementById('addRatingBtn').addEventListener('click', function() {
+                const ratingDiv = createRatingInput();
+                document.getElementById('ratingsContainer').appendChild(ratingDiv);
+            });
+            
+            // Close acknowledge modal
+            document.getElementById('closeAcknowledgeModal').addEventListener('click', function() {
+                document.getElementById('acknowledgeModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelAcknowledge').addEventListener('click', function() {
+                document.getElementById('acknowledgeModal').style.display = 'none';
+            });
+            
+            // Submit acknowledgement
+            document.getElementById('submitAcknowledge').addEventListener('click', function() {
+                acknowledgeReview();
+            });
+            
+            // Close modals when clicking outside
+            document.getElementById('viewReviewModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('editReviewModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('acknowledgeModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        }
+        
+        // Helper Functions
+        function formatStatus(status) {
+            switch(status) {
+                case 'in_progress':
+                    return 'In Progress';
+                case 'draft':
+                    return 'Draft';
+                case 'completed':
+                    return 'Completed';
+                case 'acknowledged':
+                    return 'Acknowledged';
+                default:
+                    return capitalizeFirstLetter(status);
+            }
+        }
+        
+        function formatCategory(category) {
+            return category.split('_').map(word => capitalizeFirstLetter(word)).join(' ');
+        }
+        
+        function capitalizeFirstLetter(string) {
+            if (!string) return '';
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+        
+        function getInitials(firstName, lastName) {
+            if (!firstName && !lastName) return 'SN';
+            
+            let initials = '';
+            if (firstName) initials += firstName.charAt(0).toUpperCase();
+            if (lastName) initials += lastName.charAt(0).toUpperCase();
+            
+
+            
+            return initials || 'SN';
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

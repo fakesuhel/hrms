@@ -156,52 +156,55 @@ class DatabaseSettings:
     @classmethod
     async def update_user_settings(cls, user_id: str, settings_data: UserSettingsUpdate) -> Optional[UserSettingsInDB]:
         """Update settings for a user with upsert logic"""
-        # Get current settings to merge notification preferences properly
+        # Get current settings first
         current_settings = await cls.get_user_settings(user_id)
         
+        # Prepare update data, excluding None values
         update_data = {k: v for k, v in settings_data.dict().items() if v is not None}
         update_data["updated_at"] = datetime.now()
         
-        # Handle notification preferences merging
-        if "notification_preferences" in update_data and current_settings and current_settings.notification_preferences:
-            # Merge new notification preferences with existing ones
-            merged_notifications = {**current_settings.notification_preferences}
-            merged_notifications.update(update_data["notification_preferences"])
-            update_data["notification_preferences"] = merged_notifications
+        # Handle notification preferences merging if they exist
+        if "notification_preferences" in update_data and current_settings:
+            if current_settings.notification_preferences:
+                # Merge new notification preferences with existing ones
+                merged_notifications = {**current_settings.notification_preferences}
+                merged_notifications.update(update_data["notification_preferences"])
+                update_data["notification_preferences"] = merged_notifications
         
-        # Default values for new documents
-        default_settings = {
-            "user_id": ObjectId(user_id),
-            "setting_type": "user",
-            "theme": "light",
-            "color_accent": "blue",
-            "date_format": "DD/MM/YYYY",
-            "time_format": "12h",
-            "language": "en",
-            "timezone": "UTC+05:30",
-            "notification_preferences": {
-                "email_project_updates": True,
-                "email_leave_requests": True,
-                "email_daily_reports": False,
-                "browser_notifications": True,
-                "sound_alerts": False
-            },
-            "created_at": datetime.now()
-        }
-        
-        result = cls.collection.update_one(
-            {"user_id": ObjectId(user_id), "setting_type": "user"},
-            {
-                "$set": update_data,
-                "$setOnInsert": default_settings
-            },
-            upsert=True  # Create document if it doesn't exist
-        )
-        
-        if result.matched_count > 0 or result.upserted_id:
-            return await cls.get_user_settings(user_id)
+        if current_settings:
+            # Document exists, just update it
+            result = cls.collection.update_one(
+                {"user_id": ObjectId(user_id), "setting_type": "user"},
+                {"$set": update_data}
+            )
+        else:
+            # Document doesn't exist, create with defaults merged with update data
+            default_settings = {
+                "user_id": ObjectId(user_id),
+                "setting_type": "user",
+                "theme": "light",
+                "color_accent": "blue",
+                "date_format": "DD/MM/YYYY",
+                "time_format": "12h",
+                "language": "en",
+                "timezone": "UTC+05:30",
+                "notification_preferences": {
+                    "email_project_updates": True,
+                    "email_leave_requests": True,
+                    "email_daily_reports": False,
+                    "browser_notifications": True,
+                    "sound_alerts": False
+                },
+                "created_at": datetime.now()
+            }
             
-        return None
+            # Merge defaults with update data
+            full_document = {**default_settings, **update_data}
+            
+            result = cls.collection.insert_one(full_document)
+        
+        # Return updated document
+        return await cls.get_user_settings(user_id)
     
     @classmethod
     async def get_system_setting(cls, key: str) -> Optional[SystemSettingsInDB]:

@@ -362,6 +362,51 @@ class DatabaseAttendance:
         }
     
     @staticmethod
+    @staticmethod
+    async def update_attendance(attendance_id: str, update_data: dict) -> bool:
+        """Update an attendance record by ID"""
+        try:
+            # Convert string to ObjectId
+            attendance_obj_id = ObjectId(attendance_id)
+            
+            # Prepare update data
+            update_fields = {}
+            
+            # Process each field
+            if "employee_id" in update_data and update_data["employee_id"]:
+                update_fields["user_id"] = str(update_data["employee_id"])
+            
+            if "date" in update_data and update_data["date"]:
+                update_fields["date"] = update_data["date"]
+            
+            if "check_in" in update_data:
+                update_fields["check_in"] = update_data["check_in"]
+            
+            if "check_out" in update_data:
+                update_fields["check_out"] = update_data["check_out"]
+            
+            if "status" in update_data and update_data["status"]:
+                update_fields["status"] = update_data["status"]
+            
+            if "notes" in update_data:
+                update_fields["notes"] = update_data["notes"]
+            
+            # Add updated timestamp
+            update_fields["updated_at"] = datetime.now(IST)
+            
+            # Update the attendance record
+            result = attendance_collection.update_one(
+                {"_id": attendance_obj_id},
+                {"$set": update_fields}
+            )
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            print(f"Error updating attendance: {str(e)}")
+            return False
+
+    @staticmethod
     async def delete_attendance(attendance_id: str) -> bool:
         """Delete an attendance record by ID"""
         try:

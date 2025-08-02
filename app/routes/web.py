@@ -177,7 +177,7 @@ async def hr_leave_requests_page(request: Request):
 @router.get("/app/hr/performance", response_class=HTMLResponse)
 async def hr_performance_page(request: Request):
     """Serve the HR performance page"""
-    return templates.TemplateResponse("departments/hr/performance.html", {"request": request})
+    return templates.TemplateResponse("departments/hr/performance-reviews.html", {"request": request})
 
 @router.get("/app/hr/reports", response_class=HTMLResponse)
 async def hr_reports_page(request: Request):

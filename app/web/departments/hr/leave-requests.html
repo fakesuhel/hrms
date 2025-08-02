@@ -335,47 +335,6 @@
             color: var(--text-secondary);
         }
 
-        /* Balance Cards */
-        .balance-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .balance-card {
-            background-color: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .balance-type {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            text-transform: capitalize;
-        }
-
-        .balance-value {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .balance-total {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .balance-total .balance-type {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
         /* Tabs */
         .tabs {
             display: flex;
@@ -775,32 +734,6 @@
                     </div>
                 </div>
                 
-                <!-- Leave Balances -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Leave Balances</h2>
-                        <div id="balanceLastUpdated" style="font-size: 0.875rem; color: var(--text-secondary);">
-                            Updated: Loading...
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="balanceLoading">
-                            <div class="skeleton-loading" style="height: 100px; margin-bottom: 1rem;"></div>
-                        </div>
-                        
-                        <div id="balanceContent" style="display: none;">
-                            <div class="balance-container">
-                                <div class="balance-card balance-total">
-                                    <div class="balance-type">Total Available</div>
-                                    <div class="balance-value" id="totalBalance">0</div>
-                                    <div>days</div>
-                                </div>
-                                <!-- Balance cards will be added dynamically here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Leave Requests Section -->
                 <div class="card">
                     <div class="card-header">
@@ -1112,12 +1045,7 @@
                 if (currentUser) {
                     const userTimeElement = document.getElementById('userTimeDisplay');
                     if (userTimeElement) {
-                        userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
-                        
-                        // Start live clock update
-                        setInterval(() => {
-                            userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
-                        }, 1000);
+                        userTimeElement.textContent = currentUser.username;
                     }
                     
                     // Set user initials
@@ -1148,9 +1076,6 @@
                 
                 // Initialize user data
                 await loadUserData();
-                
-                // Load leave balances
-                await loadLeaveBalances();
                 
                 // Load leave requests
                 await loadMyLeaves();
@@ -1204,7 +1129,7 @@
                 
                 // Update UI with user info using the required values
                 document.getElementById('userInitials').textContent = 'S';
-                document.getElementById('userTimeDisplay').textContent = `14:11 - soheru`;
+                document.getElementById('userTimeDisplay').textContent = `soheru`;
                 document.getElementById('sidebar-username').textContent = 'soheru';
                 document.getElementById('sidebar-position').textContent = userData.position || 'Team';
                 
@@ -1216,61 +1141,6 @@
             } catch (error) {
                 console.error('Error loading user data:', error);
                 return null;
-            }
-        }
-        
-        async function loadLeaveBalances() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/leave-requests/balance', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load leave balances');
-                }
-                
-                const balanceData = await response.json();
-                
-                // Hide loading, show content
-                document.getElementById('balanceLoading').style.display = 'none';
-                document.getElementById('balanceContent').style.display = 'block';
-                
-                // Update last updated timestamp
-                const lastUpdated = new Date();
-                document.getElementById('balanceLastUpdated').textContent = 
-                    `Updated: ${lastUpdated.toLocaleDateString()} at ${lastUpdated.toLocaleTimeString()}`;
-                
-                // Update total balance
-                document.getElementById('totalBalance').textContent = balanceData.total_available;
-                
-                // Create balance cards for each leave type
-                const balanceContainer = document.querySelector('.balance-container');
-                
-                // Keep only the total balance card
-                balanceContainer.innerHTML = balanceContainer.firstElementChild.outerHTML;
-                
-                // Add cards for each leave type
-                for (const [leaveType, balance] of Object.entries(balanceData.balances)) {
-                    const card = document.createElement('div');
-                    card.className = 'balance-card';
-                    card.innerHTML = `
-                        <div class="balance-type">${formatLeaveType(leaveType)}</div>
-                        <div class="balance-value">${balance}</div>
-                        <div>days</div>
-                    `;
-                    balanceContainer.appendChild(card);
-                }
-                
-            } catch (error) {
-                console.error('Error loading leave balances:', error);
-                document.getElementById('balanceLoading').style.display = 'none';
-                document.getElementById('balanceContent').style.display = 'block';
-                document.getElementById('balanceContent').innerHTML = `
-                    <div style="text-align: center; padding: 1rem;">
-                        <p>Failed to load leave balances. Please try again later.</p>
-                    </div>
-                `;
             }
         }
         
@@ -1772,7 +1642,6 @@
                 showToast(leaveId ? 'Leave request updated successfully' : 'Leave request submitted successfully');
                 
                 // Refresh data
-                await loadLeaveBalances();
                 await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
                 
             } catch (error) {
@@ -1806,7 +1675,6 @@
                 showToast('Leave request cancelled successfully');
                 
                 // Refresh data
-                await loadLeaveBalances();
                 await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
                 
             } catch (error) {

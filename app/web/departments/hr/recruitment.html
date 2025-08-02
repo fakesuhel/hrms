@@ -784,10 +784,10 @@
                             Posted on ${new Date(job.created_at || Date.now()).toLocaleDateString()}
                         </small>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-sm btn-outline" onclick="editJob('${job._id}')">
+                            <button class="btn btn-sm btn-outline" onclick="editJob('${job.id || job._id}')">
                                 <i>✏️</i> Edit
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job.id || job._id}')">
                                 <i>🗑️</i> Delete
                             </button>
                         </div>
@@ -893,9 +893,9 @@
             
             if (jobId) {
                 modalTitle.textContent = 'Edit Job Posting';
-                const job = jobPostings.find(j => j._id === jobId);
+                const job = jobPostings.find(j => (j.id || j._id) === jobId);
                 if (job) {
-                    document.getElementById('jobId').value = job._id;
+                    document.getElementById('jobId').value = job.id || job._id;
                     document.getElementById('jobTitle').value = job.title;
                     document.getElementById('jobDepartment').value = job.department;
                     document.getElementById('experienceLevel').value = job.experience_level;
