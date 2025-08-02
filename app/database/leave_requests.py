@@ -207,6 +207,7 @@ class DatabaseLeaveRequests:
         return result.modified_count > 0
     
     @classmethod
+    @classmethod
     async def get_user_leave_requests(cls, user_id: str, status: Optional[str] = None) -> List[LeaveRequestInDB]:
         """Get a user's leave requests"""
         query = {"user_id": ObjectId(user_id)}
@@ -216,7 +217,7 @@ class DatabaseLeaveRequests:
         cursor = cls.collection.find(query).sort("created_at", -1)
         leave_requests = []
         
-        for leave_data in cursor:
+        async for leave_data in cursor:
             # Convert datetime back to date for start_date and end_date if needed
             if isinstance(leave_data.get('start_date'), datetime):
                 leave_data['start_date'] = leave_data['start_date'].date()

@@ -90,6 +90,8 @@ async def get_all_users(current_user = Depends(get_current_user)):
             user_dict["id"] = str(_id) if _id is not None else str(getattr(user, "id", ""))
             if "_id" in user_dict:
                 user_dict.pop("_id")
+        if "id" in user_dict and not isinstance(user_dict["id"], str):
+            user_dict["id"] = str(user_dict["id"])
         response_users.append(UserResponse(**user_dict))
     return response_users
 
@@ -133,6 +135,8 @@ async def create_user(user: UserCreate):
             user_dict["id"] = str(_id) if _id is not None else str(getattr(user_in_db, "id", ""))
             if "_id" in user_dict:
                 user_dict.pop("_id")
+        if "id" in user_dict and not isinstance(user_dict["id"], str):
+            user_dict["id"] = str(user_dict["id"])
         return UserResponse(**user_dict)
     
     except HTTPException as e:
@@ -193,6 +197,8 @@ async def create_employee(user: UserCreate, current_user = Depends(get_current_u
             user_dict["id"] = str(_id) if _id is not None else str(getattr(user_in_db, "id", ""))
             if "_id" in user_dict:
                 user_dict.pop("_id")
+        if "id" in user_dict and not isinstance(user_dict["id"], str):
+            user_dict["id"] = str(user_dict["id"])
         return UserResponse(**user_dict)
     
     except HTTPException as e:
@@ -210,18 +216,10 @@ async def create_employee(user: UserCreate, current_user = Depends(get_current_u
 async def read_users_me(current_user = Depends(get_current_user)):
     """Get current user profile"""
     user_dict = dict(current_user) if not isinstance(current_user, dict) else current_user.copy()
-    
-    # Handle ObjectId conversion
     if "_id" in user_dict:
         user_dict["id"] = str(user_dict.pop("_id"))
-    elif "id" in user_dict:
+    if "id" in user_dict and not isinstance(user_dict["id"], str):
         user_dict["id"] = str(user_dict["id"])
-    
-    # Ensure all ObjectId fields are converted to strings
-    for key, value in user_dict.items():
-        if hasattr(value, '__class__') and value.__class__.__name__ == 'ObjectId':
-            user_dict[key] = str(value)
-    
     return UserResponse(**user_dict)
 
 @router.put("/me", response_model=UserResponse)
@@ -269,6 +267,8 @@ async def get_team_members(current_user = Depends(get_current_user)):
             member_dict["id"] = str(_id) if _id is not None else str(getattr(member, "id", ""))
             if "_id" in member_dict:
                 member_dict.pop("_id")
+        if "id" in member_dict and not isinstance(member_dict["id"], str):
+            member_dict["id"] = str(member_dict["id"])
         response_members.append(UserResponse(**member_dict))
     return response_members
 

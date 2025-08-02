@@ -139,49 +139,7 @@ class DatabaseAttendance:
         
         # Use list() instead of to_list() for synchronous PyMongo
         attendance_records = list(cursor)
-        
-        # Process and validate records before creating Attendance objects
-        validated_records = []
-        for record in attendance_records:
-            try:
-                # Handle check_in and check_out time strings
-                if 'check_in' in record and record['check_in']:
-                    if isinstance(record['check_in'], str) and len(record['check_in']) <= 5:
-                        # Handle time strings like "09:00" - convert to datetime
-                        date_str = record.get('date', start_date_str)
-                        try:
-                            record['check_in'] = datetime.fromisoformat(f"{date_str}T{record['check_in']}:00")
-                        except:
-                            record['check_in'] = None
-                
-                if 'check_out' in record and record['check_out']:
-                    if isinstance(record['check_out'], str) and len(record['check_out']) <= 5:
-                        # Handle time strings like "18:00" - convert to datetime
-                        date_str = record.get('date', start_date_str)
-                        try:
-                            record['check_out'] = datetime.fromisoformat(f"{date_str}T{record['check_out']}:00")
-                        except:
-                            record['check_out'] = None
-                
-                validated_records.append(Attendance(**record))
-            except Exception as e:
-                print(f"Error processing attendance record {record.get('_id', 'unknown')}: {e}")
-                # Skip invalid records or create with minimal data
-                try:
-                    safe_record = {
-                        '_id': record.get('_id'),
-                        'user_id': record.get('user_id', user_id),
-                        'date': record.get('date', start_date_str),
-                        'status': record.get('status', 'present'),
-                        'is_late': record.get('is_late', False),
-                        'is_complete': record.get('is_complete', False)
-                    }
-                    validated_records.append(Attendance(**safe_record))
-                except Exception as safe_error:
-                    print(f"Failed to create safe attendance record: {safe_error}")
-                    continue
-        
-        return validated_records
+        return [Attendance(**record) for record in attendance_records]
     
     
     @staticmethod
@@ -403,51 +361,6 @@ class DatabaseAttendance:
             "current_user": current_user
         }
     
-    @staticmethod
-    @staticmethod
-    async def update_attendance(attendance_id: str, update_data: dict) -> bool:
-        """Update an attendance record by ID"""
-        try:
-            # Convert string to ObjectId
-            attendance_obj_id = ObjectId(attendance_id)
-            
-            # Prepare update data
-            update_fields = {}
-            
-            # Process each field
-            if "employee_id" in update_data and update_data["employee_id"]:
-                update_fields["user_id"] = str(update_data["employee_id"])
-            
-            if "date" in update_data and update_data["date"]:
-                update_fields["date"] = update_data["date"]
-            
-            if "check_in" in update_data:
-                update_fields["check_in"] = update_data["check_in"]
-            
-            if "check_out" in update_data:
-                update_fields["check_out"] = update_data["check_out"]
-            
-            if "status" in update_data and update_data["status"]:
-                update_fields["status"] = update_data["status"]
-            
-            if "notes" in update_data:
-                update_fields["notes"] = update_data["notes"]
-            
-            # Add updated timestamp
-            update_fields["updated_at"] = datetime.now(IST)
-            
-            # Update the attendance record
-            result = attendance_collection.update_one(
-                {"_id": attendance_obj_id},
-                {"$set": update_fields}
-            )
-            
-            return result.modified_count > 0
-            
-        except Exception as e:
-            print(f"Error updating attendance: {str(e)}")
-            return False
-
     @staticmethod
     async def delete_attendance(attendance_id: str) -> bool:
         """Delete an attendance record by ID"""

@@ -784,10 +784,10 @@
                             Posted on ${new Date(job.created_at || Date.now()).toLocaleDateString()}
                         </small>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-sm btn-outline" onclick="editJob('${job.id || job._id}')">
+                            <button class="btn btn-sm btn-outline" onclick="editJob('${job._id}')">
                                 <i>✏️</i> Edit
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job.id || job._id}')">
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">
                                 <i>🗑️</i> Delete
                             </button>
                         </div>
@@ -840,26 +840,14 @@
         // Populate job select in candidate form
         function populateJobSelect() {
             const select = document.getElementById('candidateJob');
-            if (!select) {
-                console.error('candidateJob select element not found');
-                return;
-            }
-            
             select.innerHTML = '<option value="">Select Position</option>';
             
-            const activeJobs = jobPostings.filter(job => job.status === 'active');
-            console.log('Populating job select with', activeJobs.length, 'active jobs:', activeJobs);
-            
-            activeJobs.forEach(job => {
+            jobPostings.filter(job => job.status === 'active').forEach(job => {
                 const option = document.createElement('option');
-                // Use job.id if available, fallback to job._id for compatibility
-                option.value = job.id || job._id;
+                option.value = job._id;
                 option.textContent = `${job.title} (${job.department})`;
                 select.appendChild(option);
-                console.log('Added job option:', option.value, option.textContent);
             });
-            
-            console.log('Job select populated with options:', select.options.length);
         }
         
         // Filter job postings
@@ -893,9 +881,9 @@
             
             if (jobId) {
                 modalTitle.textContent = 'Edit Job Posting';
-                const job = jobPostings.find(j => (j.id || j._id) === jobId);
+                const job = jobPostings.find(j => j._id === jobId);
                 if (job) {
-                    document.getElementById('jobId').value = job.id || job._id;
+                    document.getElementById('jobId').value = job._id;
                     document.getElementById('jobTitle').value = job.title;
                     document.getElementById('jobDepartment').value = job.department;
                     document.getElementById('experienceLevel').value = job.experience_level;
@@ -1007,9 +995,6 @@
             form.reset();
             document.getElementById('candidateStage').value = 'applied';
             
-            // Populate job dropdown with available positions
-            populateJobSelect();
-            
             modal.style.display = 'flex';
         }
         
@@ -1031,19 +1016,6 @@
                 notes: formData.get('notes'),
                 stage: formData.get('stage')
             };
-            
-            console.log('Submitting candidate data:', candidateData);
-            
-            // Validate required fields
-            if (!candidateData.first_name || !candidateData.last_name || !candidateData.email) {
-                showToast('Please fill in all required fields');
-                return;
-            }
-            
-            if (!candidateData.job_id || candidateData.job_id === '') {
-                showToast('Please select a job position for the candidate');
-                return;
-            }
             
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
