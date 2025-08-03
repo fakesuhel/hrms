@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bhoomi TechZone - Payroll Management</title>
+    <link rel="stylesheet" href="/static/css/date-picker.css">
     <style>
         /* Include all the same CSS styles from dashboard.html */
         * {
@@ -307,26 +308,30 @@
                             <div class="search-box">
                                 <input type="text" id="searchInput" class="form-input" placeholder="Search employees...">
                             </div>
-                            <select id="monthFilter" class="form-select" style="min-width: 120px;">
-                                <option value="">Current Month</option>
-                                <option value="01">January</option>
-                                <option value="02">February</option>
-                                <option value="03">March</option>
-                                <option value="04">April</option>
-                                <option value="05">May</option>
-                                <option value="06">June</option>
-                                <option value="07">July</option>
-                                <option value="08">August</option>
-                                <option value="09">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                            <select id="yearFilter" class="form-select" style="min-width: 100px;">
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                            </select>
+                            <div style="display: flex; gap: 0.5rem; position: relative;">
+                                <input type="text" id="monthYearPicker" class="form-input" placeholder="Select Month/Year" style="min-width: 150px;">
+                                <select id="monthFilter" class="form-select" style="min-width: 120px; display: none;">
+                                    <option value="">Current Month</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <select id="yearFilter" class="form-select" style="min-width: 100px; display: none;">
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                </select>
+                            </div>
                             <select id="statusFilter" class="form-select" style="min-width: 120px;">
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
@@ -399,10 +404,19 @@
                         <div class="form-group">
                             <label class="form-label">Year *</label>
                             <select id="payrollYear" name="year" class="form-select" required>
+                                <option value="2025">2025</option>
                                 <option value="2024">2024</option>
                                 <option value="2023">2023</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Specific Employee (Optional)</label>
+                        <select id="payrollEmployeeId" name="employee_id" class="form-select">
+                            <option value="">All Employees</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
                     </div>
                     
                     <div class="form-group">
@@ -533,6 +547,7 @@
     <div id="toast" class="toast"></div>
     
     <script src="/static/js/hr-utils.js?v=3"></script>
+    <script src="/static/js/date-picker.js"></script>
     <script>
         let payrollData = [];
         let filteredPayrollData = [];
@@ -727,7 +742,8 @@
                 year: formData.get('year'),
                 department: formData.get('department') || null,
                 include_bonuses: formData.get('include_bonuses') === 'true',
-                include_overtime: formData.get('include_overtime') === 'true'
+                include_overtime: formData.get('include_overtime') === 'true',
+                employee_id: formData.get('employee_id') || null  // For individual employee payroll generation
             };
             
             try {
@@ -886,6 +902,42 @@
             }
         }
         
+        // Load employees for the employee selector dropdown
+        async function loadEmployeesForSelector() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch('/api/hr/employees', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const employees = await response.json();
+                    const employeeSelect = document.getElementById('payrollEmployeeId');
+                    
+                    if (employeeSelect) {
+                        // Clear existing options except the first one
+                        while (employeeSelect.options.length > 1) {
+                            employeeSelect.remove(1);
+                        }
+                        
+                        // Add employee options
+                        employees.forEach(emp => {
+                            const option = document.createElement('option');
+                            option.value = emp.employee_id || emp.id;  // Use employee_id if available, otherwise fall back to id
+                            option.textContent = `${emp.first_name} ${emp.last_name} (${emp.employee_id || emp.id})`;
+                            employeeSelect.appendChild(option);
+                        });
+                    }
+                } else {
+                    console.error('Failed to load employees for selector');
+                }
+            } catch (error) {
+                console.error('Error loading employees for selector:', error);
+            }
+        }
+        
         // Initialize page
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -930,6 +982,20 @@
         
         // Setup event listeners
         function setupEventListeners() {
+            // Initialize the date picker for filter dates
+            createDatePicker('monthYearPicker', {
+                onSelect: function(date) {
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    document.getElementById('monthFilter').value = month;
+                    document.getElementById('yearFilter').value = year;
+                    filterPayrollData();
+                }
+            });
+            
+            // Load employees for the employee selector
+            loadEmployeesForSelector();
+            
             // Menu toggle
             const menuToggle = document.getElementById('menuToggle');
             const dashboardContainer = document.getElementById('dashboardContainer');
