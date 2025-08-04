@@ -19,7 +19,6 @@ from app.database.performance_reviews import DatabasePerformanceReviews
 from datetime import datetime, date, timedelta
 import os
 import uuid
-import io
 
 router = APIRouter(prefix="/api/hr", tags=["hr"])
 
@@ -1593,100 +1592,46 @@ async def generate_employee_report(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate employee report"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate employee reports"
+        )
+    
     try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
+        # Get all employees
+        from app.database.users import users_collection
+        query = {"is_active": True}
+        if report_config.get("department"):
+            query["department"] = report_config["department"]
         
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
+        employees = list(users_collection.find(query))
         
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate employee reports. Current role: {user_role}"
-            )
-        
-        department = report_config.get("department", "")
-        
-        # Get all employees using the database class method
-        print("Fetching all users...")
-        employees = await DatabaseUsers.get_all_users()
-        print(f"Found {len(employees)} employees")
-        
-        # Filter by department if specified
-        if department:
-            employees = [emp for emp in employees if getattr(emp, 'department', '') == department]
-            print(f"Filtered to {len(employees)} employees in department: {department}")
-        
-        # Convert employee objects to dictionaries for Excel generation
-        report_data = []
+        # Convert ObjectIds to strings for JSON serialization
         for emp in employees:
-            try:
-                # Safe attribute access for employee data
-                employee_data = {
-                    "_id": str(emp.id),
-                    "username": getattr(emp, 'username', ''),
-                    "full_name": getattr(emp, 'full_name', ''),
-                    "email": getattr(emp, 'email', ''),
-                    "department": getattr(emp, 'department', ''),
-                    "role": getattr(emp, 'role', ''),
-                    "is_active": getattr(emp, 'is_active', True),
-                    "created_at": getattr(emp, 'created_at', ''),
-                    "last_login": getattr(emp, 'last_login', '')
-                }
-                
-                # Convert datetime objects to strings
-                for key, value in employee_data.items():
-                    if hasattr(value, 'isoformat'):
-                        employee_data[key] = value.isoformat()
-                    elif value is None:
-                        employee_data[key] = ''
-                
-                report_data.append(employee_data)
-                
-            except Exception as e:
-                # Log the error but continue with other employees
-                print(f"Error processing employee data for {emp.id}: {e}")
-                report_data.append({
-                    "_id": str(emp.id),
-                    "username": getattr(emp, 'username', f"Employee {emp.id}"),
-                    "full_name": "Error processing data",
-                    "email": "",
-                    "department": "",
-                    "role": "",
-                    "is_active": False,
-                    "created_at": "",
-                    "last_login": "",
-                    "error": str(e)
-                })
-
-        # Generate Excel file
-        from app.utils.excel_generator import ExcelReportGenerator
-        import io
+            emp["_id"] = str(emp["_id"])
+            # Remove sensitive fields
+            emp.pop("password", None)
+            emp.pop("hashed_password", None)
         
-        format_type = report_config.get("format", "excel")
+        # Generate Excel file content (mock implementation)
+        from io import BytesIO
+        import json
         
-        if format_type == "excel":
-            excel_file = ExcelReportGenerator.generate_employee_report(report_data)
-            
-            from fastapi.responses import StreamingResponse
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename=employee_report_{datetime.now().strftime('%Y-%m-%d')}.xlsx"}
-            )
-        else:
-            # Return JSON for other formats
-            return {
-                "department": department or "All Departments",
-                "employees": report_data,
-                "generated_at": datetime.now().isoformat()
-            }
+        # For now, return JSON data as a file
+        # In a real implementation, you would use openpyxl or similar to generate Excel
+        output = BytesIO()
+        output.write(json.dumps(employees, indent=2, default=str).encode())
+        output.seek(0)
+        
+        # Return the file
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=employee_report.xlsx"}
+        )
     except Exception as e:
-        print(f"Error in employee report generation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating employee report: {str(e)}"
@@ -1822,126 +1767,36 @@ async def generate_payroll_report(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate payroll report"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate payroll reports"
+        )
+    
     try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
+        # Mock payroll report data
+        from io import BytesIO
+        import json
         
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
+        mock_data = {
+            "report_type": "payroll",
+            "generated_at": datetime.now().isoformat(),
+            "department": report_config.get("department", "All Departments"),
+            "period": f"{report_config.get('start_date', '')} to {report_config.get('end_date', '')}",
+            "message": "Payroll report generation is not yet fully implemented"
+        }
         
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate payroll reports. Current role: {user_role}"
-            )
+        output = BytesIO()
+        output.write(json.dumps(mock_data, indent=2).encode())
+        output.seek(0)
         
-        start_date = report_config.get("start_date", "")
-        end_date = report_config.get("end_date", "")
-        department = report_config.get("department", "")
-        
-        if not start_date or not end_date:
-            # Use current month if dates not provided
-            today = datetime.now()
-            start_date = f"{today.year}-{today.month:02d}-01"
-            # Last day of current month
-            if today.month == 12:
-                end_date = f"{today.year + 1}-01-01"
-            else:
-                end_date = f"{today.year}-{today.month + 1:02d}-01"
-        
-        print(f"Processing payroll report from {start_date} to {end_date}")
-        
-        # Get all employees using the database class method
-        print("Fetching all users...")
-        employees = await DatabaseUsers.get_all_users()
-        print(f"Found {len(employees)} employees")
-        
-        # Filter by department if specified
-        if department:
-            employees = [emp for emp in employees if getattr(emp, 'department', '') == department]
-            print(f"Filtered to {len(employees)} employees in department: {department}")
-        
-        # Generate mock payroll data for each employee
-        report_data = []
-        for emp in employees:
-            emp_id = str(emp.id)
-            
-            try:
-                # Safe attribute access for employee data
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                
-                # Mock payroll data (in real app, this would come from payroll/salary tables)
-                import random
-                basic_salary = random.randint(3000, 8000)
-                allowances = round(basic_salary * 0.1)  # 10% allowances
-                deductions = round(basic_salary * 0.05)  # 5% deductions
-                net_salary = basic_salary + allowances - deductions
-                
-                report_data.append({
-                    "Employee ID": emp_id,
-                    "Employee Name": employee_name,
-                    "Department": employee_dept,
-                    "Basic Salary": basic_salary,
-                    "Allowances": allowances,
-                    "Deductions": deductions,
-                    "Net Salary": net_salary,
-                    "Pay Period": f"{start_date} to {end_date}",
-                    "Payment Status": "Processed"
-                })
-                
-            except Exception as e:
-                # Log the error but continue with other employees
-                print(f"Error processing payroll data for employee {emp_id}: {e}")
-                
-                # Safe attribute access for error case
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                
-                report_data.append({
-                    "Employee ID": emp_id,
-                    "Employee Name": employee_name,
-                    "Department": employee_dept,
-                    "Basic Salary": 0,
-                    "Allowances": 0,
-                    "Deductions": 0,
-                    "Net Salary": 0,
-                    "Pay Period": f"{start_date} to {end_date}",
-                    "Payment Status": "Error",
-                    "Error": str(e)
-                })
-
-        # Generate Excel file
-        from app.utils.excel_generator import ExcelReportGenerator
-        import io
-        
-        format_type = report_config.get("format", "excel")
-        
-        if format_type == "excel":
-            excel_file = ExcelReportGenerator.generate_payroll_report(
-                report_data, start_date, end_date
-            )
-            
-            from fastapi.responses import StreamingResponse
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename=payroll_report_{start_date}_to_{end_date}.xlsx"}
-            )
-        else:
-            # Return JSON for other formats
-            return {
-                "start_date": start_date,
-                "end_date": end_date,
-                "department": department or "All Departments",
-                "employees": report_data,
-                "generated_at": datetime.now().isoformat()
-            }
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=payroll_report.xlsx"}
+        )
     except Exception as e:
-        print(f"Error in payroll report generation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating payroll report: {str(e)}"
@@ -1953,22 +1808,13 @@ async def generate_leave_report_post(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate leave report (POST version for file download)"""
-    try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
-        
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
-        
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate leave reports. Current role: {user_role}"
-            )
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate leave reports"
+        )
     
+    try:
         # Get year from config or use current year
         year = datetime.now().year
         start_date = report_config.get("start_date", "")
@@ -1979,20 +1825,15 @@ async def generate_leave_report_post(
                 # If date format is invalid, use current year
                 year = datetime.now().year
         
-        print(f"Processing leave report for year: {year}")
-        
         # Generate report data directly instead of calling GET endpoint
         department = report_config.get("department")
         
         # Get all employees using the database class method
-        print("Fetching all users...")
         employees = await DatabaseUsers.get_all_users()
-        print(f"Found {len(employees)} employees")
         
         # Filter by department if specified
         if department:
-            employees = [emp for emp in employees if getattr(emp, 'department', '') == department]
-            print(f"Filtered to {len(employees)} employees in department: {department}")
+            employees = [emp for emp in employees if emp.department == department]
         
         # Get leave data for each employee
         report_data = []
@@ -2002,97 +1843,34 @@ async def generate_leave_report_post(
             try:
                 # Get leave requests for the year
                 leave_requests = await DatabaseLeaveRequests.get_user_leave_requests(emp_id)
+                year_leaves = [
+                    lr for lr in leave_requests 
+                    if lr.start_date.year == year or lr.end_date.year == year
+                ]
                 
-                # Filter by year if start_date exists and is accessible
-                year_leaves = []
-                for lr in leave_requests:
-                    try:
-                        # Handle different date formats and attribute access
-                        lr_start_year = None
-                        lr_end_year = None
-                        
-                        if hasattr(lr, 'start_date') and lr.start_date:
-                            if isinstance(lr.start_date, str):
-                                lr_start_year = datetime.strptime(lr.start_date, "%Y-%m-%d").year
-                            else:
-                                lr_start_year = lr.start_date.year
-                        
-                        if hasattr(lr, 'end_date') and lr.end_date:
-                            if isinstance(lr.end_date, str):
-                                lr_end_year = datetime.strptime(lr.end_date, "%Y-%m-%d").year
-                            else:
-                                lr_end_year = lr.end_date.year
-                        
-                        # Include if either start or end year matches
-                        if lr_start_year == year or lr_end_year == year:
-                            year_leaves.append(lr)
-                            
-                    except Exception as date_error:
-                        print(f"Error processing dates for leave request: {date_error}")
-                        # Include the leave request anyway if we can't parse dates
-                        year_leaves.append(lr)
-                
-                approved_leaves = [lr for lr in year_leaves if getattr(lr, 'status', '') == "approved"]
-                total_leave_days = 0
-                
-                # Calculate total leave days more safely
-                for lr in approved_leaves:
-                    try:
-                        duration = getattr(lr, 'duration_days', None)
-                        if duration is not None:
-                            total_leave_days += duration
-                        else:
-                            # Fallback: calculate from dates if available
-                            if hasattr(lr, 'start_date') and hasattr(lr, 'end_date'):
-                                start_date = lr.start_date
-                                end_date = lr.end_date
-                                
-                                if isinstance(start_date, str):
-                                    start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-                                if isinstance(end_date, str):
-                                    end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-                                
-                                total_leave_days += (end_date - start_date).days + 1
-                            else:
-                                total_leave_days += 1  # Default to 1 day
-                    except Exception as duration_error:
-                        print(f"Error calculating duration for leave: {duration_error}")
-                        total_leave_days += 1  # Default fallback
+                approved_leaves = [lr for lr in year_leaves if lr.status == "approved"]
+                total_leave_days = sum(getattr(lr, 'duration_days', 1) for lr in approved_leaves)
                 
                 # Categorize by leave type
                 leave_types = {}
                 for lr in approved_leaves:
-                    try:
-                        leave_type = getattr(lr, 'leave_type', 'unknown')
-                        duration = getattr(lr, 'duration_days', 1)
-                        leave_types[leave_type] = leave_types.get(leave_type, 0) + duration
-                    except Exception as type_error:
-                        print(f"Error processing leave type: {type_error}")
-                
-                # Safe attribute access for employee data
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
+                    leave_types[lr.leave_type] = leave_types.get(lr.leave_type, 0) + getattr(lr, 'duration_days', 1)
                 
                 report_data.append({
                     "employee_id": emp_id,
-                    "employee_name": employee_name,
-                    "department": employee_dept,
+                    "employee_name": emp.full_name or emp.username,
+                    "department": emp.department or "",
                     "total_leave_days": total_leave_days,
                     "leave_types": leave_types,
-                    "pending_requests": len([lr for lr in year_leaves if getattr(lr, 'status', '') == "pending"])
+                    "pending_requests": len([lr for lr in year_leaves if lr.status == "pending"])
                 })
-                
             except Exception as e:
                 # Log the error but continue with other employees
                 print(f"Error processing leave data for employee {emp_id}: {e}")
-                # Safe attribute access for error case
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                
                 report_data.append({
                     "employee_id": emp_id,
-                    "employee_name": employee_name,
-                    "department": employee_dept,
+                    "employee_name": emp.full_name or emp.username,
+                    "department": emp.department or "",
                     "total_leave_days": 0,
                     "leave_types": {},
                     "pending_requests": 0,
@@ -2106,43 +1884,20 @@ async def generate_leave_report_post(
             "generated_at": datetime.now().isoformat()
         }
         
-        # Generate Excel file
-        from app.utils.excel_generator import ExcelReportGenerator
+        # Generate file
+        from io import BytesIO
+        import json
         
-        format_type = report_config.get("format", "excel")
-        start_date_str = f"{year}-01-01"
-        end_date_str = f"{year}-12-31"
+        output = BytesIO()
+        output.write(json.dumps(final_report, indent=2, default=str).encode())
+        output.seek(0)
         
-        if format_type == "excel":
-            # Transform data for Excel report
-            excel_data = []
-            for emp in report_data:
-                excel_data.append({
-                    "employee_id": emp["employee_id"],
-                    "name": emp["employee_name"],
-                    "department": emp["department"],
-                    "email": "",  # Add email if available
-                    "total_requests": emp.get("pending_requests", 0) + (1 if emp.get("total_leave_days", 0) > 0 else 0),
-                    "approved_requests": 1 if emp.get("total_leave_days", 0) > 0 else 0,
-                    "pending_requests": emp.get("pending_requests", 0),
-                    "rejected_requests": 0,  # Add if available
-                    "total_leave_days": emp.get("total_leave_days", 0),
-                    "leave_balance": max(0, 30 - emp.get("total_leave_days", 0))  # Assuming 30 days annual leave
-                })
-            
-            excel_file = ExcelReportGenerator.generate_leave_report(
-                excel_data, start_date_str, end_date_str
-            )
-            
-            from fastapi.responses import StreamingResponse
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename=leave_report_{year}.xlsx"}
-            )
-        else:
-            # Return JSON for other formats
-            return final_report
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=leave_report.xlsx"}
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2155,118 +1910,36 @@ async def generate_performance_report(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate performance report"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate performance reports"
+        )
+    
     try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
+        # Mock performance report data
+        from io import BytesIO
+        import json
         
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
+        mock_data = {
+            "report_type": "performance",
+            "generated_at": datetime.now().isoformat(),
+            "department": report_config.get("department", "All Departments"),
+            "period": f"{report_config.get('start_date', '')} to {report_config.get('end_date', '')}",
+            "message": "Performance report generation is not yet fully implemented"
+        }
         
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate performance reports. Current role: {user_role}"
-            )
+        output = BytesIO()
+        output.write(json.dumps(mock_data, indent=2).encode())
+        output.seek(0)
         
-        start_date = report_config.get("start_date", "")
-        end_date = report_config.get("end_date", "")
-        department = report_config.get("department", "")
-        
-        if not start_date or not end_date:
-            # Use current year if dates not provided
-            today = datetime.now()
-            start_date = f"{today.year}-01-01"
-            end_date = f"{today.year}-12-31"
-        
-        print(f"Processing performance report from {start_date} to {end_date}")
-        
-        # Get all employees using the database class method
-        print("Fetching all users...")
-        employees = await DatabaseUsers.get_all_users()
-        print(f"Found {len(employees)} employees")
-        
-        # Filter by department if specified
-        if department:
-            employees = [emp for emp in employees if getattr(emp, 'department', '') == department]
-            print(f"Filtered to {len(employees)} employees in department: {department}")
-        
-        # Generate mock performance data for each employee
-        report_data = []
-        for emp in employees:
-            emp_id = str(emp.id)
-            
-            try:
-                # Safe attribute access for employee data
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                employee_email = getattr(emp, 'email', '') or ''
-                
-                # Mock performance data (in real app, this would come from performance_reviews table)
-                import random
-                performance_score = round(random.uniform(3.0, 5.0), 1)  # Score out of 5
-                goals_met = random.randint(60, 100)  # Percentage
-                
-                report_data.append({
-                    "Employee ID": emp_id,
-                    "Employee Name": employee_name,
-                    "Department": employee_dept,
-                    "Email": employee_email,
-                    "Performance Score": performance_score,
-                    "Review Date": datetime.now().strftime("%Y-%m-%d"),
-                    "Goals Met": f"{goals_met}%",
-                    "Comments": f"Performance review for {employee_name} - Score: {performance_score}/5.0"
-                })
-                
-            except Exception as e:
-                # Log the error but continue with other employees
-                print(f"Error processing performance data for employee {emp_id}: {e}")
-                
-                # Safe attribute access for error case
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                
-                report_data.append({
-                    "Employee ID": emp_id,
-                    "Employee Name": employee_name,
-                    "Department": employee_dept,
-                    "Email": "",
-                    "Performance Score": 0,
-                    "Review Date": "",
-                    "Goals Met": "0%",
-                    "Comments": f"Error processing data: {str(e)}"
-                })
-
-        # Generate Excel file
-        from app.utils.excel_generator import ExcelReportGenerator
-        import io
-        
-        format_type = report_config.get("format", "excel")
-        
-        if format_type == "excel":
-            excel_file = ExcelReportGenerator.generate_performance_report(
-                report_data, start_date, end_date
-            )
-            
-            from fastapi.responses import StreamingResponse
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename=performance_report_{start_date}_to_{end_date}.xlsx"}
-            )
-        else:
-            # Return JSON for other formats
-            return {
-                "start_date": start_date,
-                "end_date": end_date,
-                "department": department or "All Departments",
-                "employees": report_data,
-                "generated_at": datetime.now().isoformat()
-            }
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=performance_report.xlsx"}
+        )
     except Exception as e:
-        print(f"Error in performance report generation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating performance report: {str(e)}"
@@ -2278,22 +1951,13 @@ async def generate_recruitment_report(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate recruitment report"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate recruitment reports"
+        )
+    
     try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
-        
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
-        
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate recruitment reports. Current role: {user_role}"
-            )
-        
         # Get recruitment data
         job_postings = await DatabaseJobPostings.get_all_job_postings()
         applications = await DatabaseJobApplications.get_all_applications()
@@ -2304,52 +1968,36 @@ async def generate_recruitment_report(
         except:
             interviews = []
         
-        # Convert Pydantic models to dictionaries for Excel generation
-        job_postings_data = [jp.model_dump() if hasattr(jp, 'model_dump') else jp for jp in job_postings]
-        applications_data = [app.model_dump() if hasattr(app, 'model_dump') else app for app in applications]
-        interviews_data = [iv.model_dump() if hasattr(iv, 'model_dump') else iv for iv in interviews]
+        report_data = {
+            "report_type": "recruitment",
+            "generated_at": datetime.now().isoformat(),
+            "department": report_config.get("department", "All Departments"),
+            "summary": {
+                "total_job_postings": len(job_postings),
+                "total_applications": len(applications),
+                "total_interviews": len(interviews),
+                "active_positions": len([jp for jp in job_postings if jp.status == "open"])
+            },
+            "job_postings": [jp.model_dump() for jp in job_postings],
+            "applications": [app.model_dump() for app in applications],
+            "interviews": [iv.model_dump() for iv in interviews]
+        }
         
-        # Get date range from config
-        start_date = report_config.get("start_date", "")
-        end_date = report_config.get("end_date", "")
-        format_type = report_config.get("format", "excel")
+        # Generate file
+        from io import BytesIO
+        import json
         
-        if format_type == "excel":
-            # Generate Excel file using the Excel generator
-            from app.utils.excel_generator import ExcelReportGenerator
-            
-            excel_file = ExcelReportGenerator.generate_recruitment_report(
-                job_postings_data, applications_data, interviews_data, start_date, end_date
-            )
-            
-            from fastapi.responses import StreamingResponse
-            import io
-            
-            filename = f"recruitment_report_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
-            
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename={filename}"}
-            )
-        else:
-            # Return JSON for other formats
-            return {
-                "report_type": "recruitment",
-                "generated_at": datetime.now().isoformat(),
-                "department": report_config.get("department", "All Departments"),
-                "summary": {
-                    "total_job_postings": len(job_postings_data),
-                    "total_applications": len(applications_data),
-                    "total_interviews": len(interviews_data),
-                    "active_positions": len([jp for jp in job_postings_data if jp.get("status") == "open"])
-                },
-                "job_postings": job_postings_data,
-                "applications": applications_data,
-                "interviews": interviews_data
-            }
+        output = BytesIO()
+        output.write(json.dumps(report_data, indent=2, default=str).encode())
+        output.seek(0)
+        
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=recruitment_report.xlsx"}
+        )
     except Exception as e:
-        print(f"Error in recruitment report generation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating recruitment report: {str(e)}"
@@ -2361,24 +2009,15 @@ async def generate_attendance_report_post(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate attendance report (POST version for file download)"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate attendance reports"
+        )
+    
     try:
-        # Debug: Print user info
-        print(f"Current user: {current_user.username}, Role: {current_user.role}")
-        print(f"Report config: {report_config}")
-        
-        # Check user authorization with more flexible role checking
-        user_role = getattr(current_user, 'role', '').lower()
-        authorized_roles = ["director", "hr", "manager", "admin", "team_lead"]
-        
-        if user_role not in authorized_roles:
-            print(f"User role '{user_role}' not in authorized roles: {authorized_roles}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized to generate attendance reports. Current role: {user_role}"
-            )
-        
-        start_date = report_config.get("start_date", "")
-        end_date = report_config.get("end_date", "")
+        start_date = report_config.get("start_date")
+        end_date = report_config.get("end_date")
         department = report_config.get("department")
         
         if not start_date or not end_date:
@@ -2387,21 +2026,17 @@ async def generate_attendance_report_post(
             start_date = f"{today.year}-{today.month:02d}-01"
             end_date = today.strftime("%Y-%m-%d")
         
-        print(f"Processing attendance report from {start_date} to {end_date}")
-        
+        # Generate report data directly instead of calling GET endpoint
         # Convert string dates to date objects
         start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
         
         # Get all employees using the database class method
-        print("Fetching all users...")
         employees = await DatabaseUsers.get_all_users()
-        print(f"Found {len(employees)} employees")
         
         # Filter by department if specified
         if department:
-            employees = [emp for emp in employees if getattr(emp, 'department', '') == department]
-            print(f"Filtered to {len(employees)} employees in department: {department}")
+            employees = [emp for emp in employees if emp.department == department]
         
         # Get attendance data for each employee
         report_data = []
@@ -2413,54 +2048,30 @@ async def generate_attendance_report_post(
                     emp_id, start_date_obj, end_date_obj
                 )
                 
-                present_days = len([a for a in attendance_records if getattr(a, 'status', '') == "present"])
-                absent_days = len([a for a in attendance_records if getattr(a, 'status', '') == "absent"])
-                late_days = len([a for a in attendance_records if getattr(a, 'is_late', False)])
+                present_days = len([a for a in attendance_records if a.status == "present"])
                 total_days = (end_date_obj - start_date_obj).days + 1
                 attendance_percentage = (present_days / total_days * 100) if total_days > 0 else 0
                 
-                # Calculate total work hours with safe attribute access
-                total_hours = 0
-                for a in attendance_records:
-                    hours = getattr(a, 'work_hours', None) or getattr(a, 'hours_worked', None) or 0
-                    if hours:
-                        total_hours += float(hours)
-                
-                # Safe attribute access for employee data
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                employee_email = getattr(emp, 'email', '') or ''
+                # Calculate total work hours
+                total_hours = sum(getattr(a, 'work_hours', 0) or 0 for a in attendance_records)
                 
                 report_data.append({
                     "employee_id": emp_id,
-                    "name": employee_name,
-                    "department": employee_dept,
-                    "email": employee_email,
+                    "employee_name": emp.full_name or emp.username,
+                    "department": emp.department or "",
                     "present_days": present_days,
-                    "absent_days": absent_days,
-                    "late_days": late_days,
                     "total_days": total_days,
                     "attendance_percentage": round(attendance_percentage, 2),
                     "total_work_hours": round(total_hours, 2)
                 })
-                
             except Exception as e:
                 # Log the error but continue with other employees
                 print(f"Error processing attendance data for employee {emp_id}: {e}")
-                
-                # Safe attribute access for error case
-                employee_name = getattr(emp, 'full_name', None) or getattr(emp, 'username', f"Employee {emp_id}")
-                employee_dept = getattr(emp, 'department', '') or ''
-                employee_email = getattr(emp, 'email', '') or ''
-                
                 report_data.append({
                     "employee_id": emp_id,
-                    "name": employee_name,
-                    "department": employee_dept,
-                    "email": employee_email,
+                    "employee_name": emp.full_name or emp.username,
+                    "department": emp.department or "",
                     "present_days": 0,
-                    "absent_days": 0,
-                    "late_days": 0,
                     "total_days": (end_date_obj - start_date_obj).days + 1,
                     "attendance_percentage": 0,
                     "total_work_hours": 0,
@@ -2475,28 +2086,21 @@ async def generate_attendance_report_post(
             "generated_at": datetime.now().isoformat()
         }
         
-        # Generate Excel file
-        from app.utils.excel_generator import ExcelReportGenerator
-        import io
+        # Generate file
+        from io import BytesIO
+        import json
         
-        format_type = report_config.get("format", "excel")
+        output = BytesIO()
+        output.write(json.dumps(final_report, indent=2, default=str).encode())
+        output.seek(0)
         
-        if format_type == "excel":
-            excel_file = ExcelReportGenerator.generate_attendance_report(
-                report_data, start_date, end_date
-            )
-            
-            from fastapi.responses import StreamingResponse
-            return StreamingResponse(
-                io.BytesIO(excel_file.getvalue()),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f"attachment; filename=attendance_report_{start_date}_to_{end_date}.xlsx"}
-            )
-        else:
-            # Return JSON for other formats
-            return final_report
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=attendance_report.xlsx"}
+        )
     except Exception as e:
-        print(f"Error in attendance report generation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating attendance report: {str(e)}"
@@ -2577,7 +2181,7 @@ async def get_payroll_data(
 
 @router.post("/payroll/generate")
 async def generate_payroll(
-    payroll_request: dict,
+    payroll_request: dict = Body(...),
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Generate payroll for specified month/year"""
@@ -2593,6 +2197,7 @@ async def generate_payroll(
         department = payroll_request.get("department")
         include_bonuses = payroll_request.get("include_bonuses", True)
         include_overtime = payroll_request.get("include_overtime", True)
+        employee_id = payroll_request.get("employee_id")  # Optional specific employee
         
         if not month or not year:
             raise HTTPException(
@@ -2604,6 +2209,16 @@ async def generate_payroll(
         employee_query = {"is_active": True}
         if department:
             employee_query["department"] = department
+        
+        # If specific employee_id is provided, filter by that
+        if employee_id:
+            if ObjectId.is_valid(employee_id):
+                employee_query["$or"] = [
+                    {"_id": ObjectId(employee_id)}, 
+                    {"employee_id": employee_id}
+                ]
+            else:
+                employee_query["employee_id"] = employee_id
         
         employees = list(users_collection.find(employee_query))
         
@@ -2646,7 +2261,7 @@ async def generate_payroll(
             
             # Create salary slip record
             salary_slip = {
-                "employee_id": emp_id,
+                "employee_id": employee.get("employee_id", emp_id),  # Use employee_id if available
                 "employee_name": f"{employee.get('first_name', '')} {employee.get('last_name', '')}".strip(),
                 "department": employee.get("department", ""),
                 "month": month,
@@ -2719,6 +2334,7 @@ async def download_salary_slip(
     try:
         from app.database.salary_slips import salary_slips_collection
         from fastapi.responses import Response
+        from app.utils.pdf_generator import generate_salary_slip_pdf
         
         # Find the salary slip
         salary_slip = salary_slips_collection.find_one({
@@ -2733,16 +2349,30 @@ async def download_salary_slip(
                 detail="Salary slip not found"
             )
         
-        # Generate PDF (placeholder - you would use a PDF library like reportlab)
-        pdf_content = f"""
-        SALARY SLIP
-        Employee: {salary_slip['employee_name']}
-        Month/Year: {month}/{year}
-        Base Salary: ₹{salary_slip['base_salary']:,.2f}
-        Total Allowances: ₹{salary_slip['total_allowances']:,.2f}
-        Total Deductions: ₹{salary_slip['total_deductions']:,.2f}
-        Net Salary: ₹{salary_slip['net_salary']:,.2f}
-        """.encode('utf-8')
+        # Convert MongoDB document to dictionary for PDF generation
+        slip_dict = {
+            "employee_name": salary_slip.get('employee_name', 'Unknown'),
+            "employee_id": salary_slip.get('employee_id', employee_id),  # Use proper employee_id from record
+            "month": int(month),
+            "year": year,
+            "issue_date": datetime.now().strftime("%d-%m-%Y"),
+            "base_salary": salary_slip.get('base_salary', 0),
+            "hra": salary_slip.get('base_salary', 0) * 0.2,
+            "allowances": salary_slip.get('total_allowances', 0) - (salary_slip.get('base_salary', 0) * 0.2),
+            "department": salary_slip.get('department', 'Unknown'),
+            "designation": salary_slip.get('designation', 'Employee'),
+            "absent_days": salary_slip.get('absent_days', 0),
+            "half_days": salary_slip.get('half_days', 0),
+            "incentives": salary_slip.get('incentives', 0),
+            "pf_deduction": salary_slip.get('base_salary', 0) * 0.12,
+            "tax_deduction": salary_slip.get('deductions', {}).get('tax', 0),
+            "penalty_deductions": salary_slip.get('deductions', {}).get('late_penalty', 0) + 
+                                 salary_slip.get('deductions', {}).get('others', 0),
+            "other_deductions": salary_slip.get('deductions', {}).get('professional_tax', 200)
+        }
+        
+        # Generate proper PDF using the utility
+        pdf_content = await generate_salary_slip_pdf(slip_dict)
         
         return Response(
             content=pdf_content,
@@ -2845,16 +2475,34 @@ async def download_bulk_salary_slips(
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             for slip in salary_slips:
-                # Generate PDF content for each slip (placeholder)
-                pdf_content = f"""
-                SALARY SLIP
-                Employee: {slip['employee_name']}
-                Month/Year: {month}/{year}
-                Base Salary: ₹{slip['base_salary']:,.2f}
-                Total Allowances: ₹{slip['total_allowances']:,.2f}
-                Total Deductions: ₹{slip['total_deductions']:,.2f}
-                Net Salary: ₹{slip['net_salary']:,.2f}
-                """.encode('utf-8')
+                # Generate a proper PDF using reportlab
+                from app.utils.pdf_generator import generate_salary_slip_pdf
+                
+                employee_id = str(slip.get('employee_id'))
+                
+                # Convert MongoDB document to dictionary for PDF generation
+                slip_dict = {
+                    "employee_name": slip.get('employee_name', 'Unknown'),
+                    "employee_id": employee_id,
+                    "month": int(month),
+                    "year": year,
+                    "issue_date": datetime.now().strftime("%d-%m-%Y"),
+                    "base_salary": slip.get('base_salary', 0),
+                    "hra": slip.get('base_salary', 0) * 0.2,
+                    "allowances": slip.get('total_allowances', 0) - (slip.get('base_salary', 0) * 0.2),
+                    "department": slip.get('department', 'Unknown'),
+                    "designation": slip.get('designation', 'Employee'),
+                    "absent_days": slip.get('absent_days', 0),
+                    "half_days": slip.get('half_days', 0),
+                    "incentives": slip.get('incentives', 0),
+                    "pf_deduction": slip.get('base_salary', 0) * 0.12,
+                    "tax_deduction": slip.get('deductions', {}).get('tax', 0),
+                    "penalty_deductions": slip.get('deductions', {}).get('late_penalty', 0) + 
+                                         slip.get('deductions', {}).get('others', 0),
+                    "other_deductions": slip.get('deductions', {}).get('professional_tax', 200)
+                }
+                
+                pdf_content = await generate_salary_slip_pdf(slip_dict)
                 
                 filename = f"salary_slip_{slip['employee_id']}_{month}_{year}.pdf"
                 zip_file.writestr(filename, pdf_content)

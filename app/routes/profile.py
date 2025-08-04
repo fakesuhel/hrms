@@ -435,31 +435,38 @@ async def download_salary_slip(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/salary-slips/current")
-async def download_current_salary_slip(
-    request: Request,
+async def get_current_salary_slip(
     current_user: UserInDB = Depends(get_current_user)
 ):
-    """Download current month's salary slip"""
+    """Get current month's salary slip information"""
     try:
         now = get_ist_now()
-        slip = await DatabaseSalarySlips.get_salary_slip_by_month_year(
-            str(current_user.id), now.month, now.year
+        # Convert month number to month name if needed
+        month_name = now.strftime("%B")  # e.g., "August"
+        
+        slip = await DatabaseSalarySlips.get_salary_slip(
+            str(current_user.id), month_name, now.year
         )
+        
+        if not slip:
+            # Try with month number instead
+            slip = await DatabaseSalarySlips.get_salary_slip(
+                str(current_user.id), str(now.month), now.year
+            )
         
         if not slip:
             raise HTTPException(status_code=404, detail="Current month's salary slip not found")
         
-        pdf_content = await generate_salary_slip_pdf(slip)
+        # Convert ObjectId to string for response
+        if "_id" in slip:
+            slip["_id"] = str(slip["_id"])
         
-        return StreamingResponse(
-            io.BytesIO(pdf_content),
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename=salary_slip_{now.month}_{now.year}_{current_user.employee_id}.pdf"
-            }
-        )
+        return {
+            "salary_slip": SalarySlipResponse(**slip)
+        }
     
     except Exception as e:
+        print(f"Error in get_current_salary_slip: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # PDF Generation function
