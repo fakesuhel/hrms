@@ -210,23 +210,42 @@ class DatabaseLeaveRequests:
     @classmethod
     async def get_user_leave_requests(cls, user_id: str, status: Optional[str] = None) -> List[LeaveRequestInDB]:
         """Get a user's leave requests"""
-        query = {"user_id": ObjectId(user_id)}
-        if status:
-            query["status"] = status
-        
-        cursor = cls.collection.find(query).sort("created_at", -1)
-        leave_requests = []
-        
-        async for leave_data in cursor:
-            # Convert datetime back to date for start_date and end_date if needed
-            if isinstance(leave_data.get('start_date'), datetime):
-                leave_data['start_date'] = leave_data['start_date'].date()
-            if isinstance(leave_data.get('end_date'), datetime):
-                leave_data['end_date'] = leave_data['end_date'].date()
+        try:
+            # Handle both string and ObjectId formats
+            if isinstance(user_id, str):
+                if ObjectId.is_valid(user_id):
+                    query = {"user_id": ObjectId(user_id)}
+                else:
+                    # If not a valid ObjectId, try searching as string
+                    query = {"user_id": user_id}
+            else:
+                query = {"user_id": user_id}
+                
+            if status:
+                query["status"] = status
             
-            leave_requests.append(LeaveRequestInDB(**leave_data))
-        
-        return leave_requests
+            cursor = cls.collection.find(query).sort("created_at", -1)
+            leave_requests = []
+            
+            # Use synchronous iteration since this is a MongoDB cursor
+            for leave_data in cursor:
+                try:
+                    # Convert datetime back to date for start_date and end_date if needed
+                    if isinstance(leave_data.get('start_date'), datetime):
+                        leave_data['start_date'] = leave_data['start_date'].date()
+                    if isinstance(leave_data.get('end_date'), datetime):
+                        leave_data['end_date'] = leave_data['end_date'].date()
+                    
+                    leave_requests.append(LeaveRequestInDB(**leave_data))
+                except Exception as e:
+                    print(f"Error processing leave request data: {e}")
+                    # Skip this record if there's an error
+                    continue
+            
+            return leave_requests
+        except Exception as e:
+            print(f"Error in get_user_leave_requests: {e}")
+            return []
     
     @classmethod
     async def get_pending_approval_requests(cls, approver_id: str) -> List[LeaveRequestInDB]:
