@@ -1099,6 +1099,7 @@
                 }
                 
                 // Setup event listeners
+                setupEventListeners();
                 
                 console.log(`Attendance page loaded at 2025-06-12 07:29:30 by ${currentUser}`);
             } catch (error) {
@@ -1897,6 +1898,17 @@
             }
         }
         
+        function setupEventListeners() {
+            try {
+                // Menu toggle
+                const menuToggle = document.getElementById('menuToggle');
+                const sidebar = document.querySelector('.sidebar');
+                
+                if (menuToggle && sidebar) {
+                    menuToggle.addEventListener('click', function() {
+                        sidebar.classList.toggle('active');
+                    });
+                }
                 
                 // User menu toggle
                 const userMenu = document.getElementById('userMenu');
@@ -1905,6 +1917,7 @@
                 if (userMenu && userDropdown) {
                     userMenu.addEventListener('click', function(e) {
                         e.stopPropagation();
+                        userDropdown.classList.toggle('active');
                     });
                     
                     // Close user dropdown when clicking outside

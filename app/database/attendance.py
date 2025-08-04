@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta, timezone
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any, Union
+from pydantic import BaseModel, Field, field_validator
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
@@ -34,6 +34,33 @@ def ensure_timezone_aware(dt):
         # Convert to IST if it's in a different timezone
         return dt.astimezone(IST)
     return dt
+
+def parse_datetime_field(value):
+    """Custom parser for datetime fields that might contain invalid data"""
+    if value is None:
+        return None
+    
+    if isinstance(value, datetime):
+        return ensure_timezone_aware(value)
+    
+    if isinstance(value, str):
+        # Handle simple time strings like '09:00' by returning None (invalid data)
+        if len(value) <= 5 and ':' in value:
+            print(f"Warning: Invalid datetime format '{value}' - skipping this field")
+            return None
+        
+        try:
+            # Try to parse as ISO datetime
+            return ensure_timezone_aware(datetime.fromisoformat(value.replace('Z', '+00:00')))
+        except ValueError:
+            try:
+                # Try alternative parsing
+                return ensure_timezone_aware(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
+            except ValueError:
+                print(f"Warning: Could not parse datetime '{value}' - setting to None")
+                return None
+    
+    return None
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -82,6 +109,18 @@ class Attendance(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(IST))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(IST))
     
+    @field_validator('check_in', 'check_out', mode='before')
+    @classmethod
+    def validate_datetime_fields(cls, v):
+        return parse_datetime_field(v)
+    
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def validate_timestamp_fields(cls, v):
+        if v is None:
+            return datetime.now(IST)
+        return parse_datetime_field(v) or datetime.now(IST)
+    
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
@@ -109,6 +148,18 @@ class AttendanceResponse(BaseModel):
     status: str = "present"
     created_at: datetime
     updated_at: datetime
+    
+    @field_validator('check_in', 'check_out', mode='before')
+    @classmethod
+    def validate_datetime_fields(cls, v):
+        return parse_datetime_field(v)
+    
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def validate_timestamp_fields(cls, v):
+        if v is None:
+            return datetime.now(IST)
+        return parse_datetime_field(v) or datetime.now(IST)
     
     model_config = {
         "populate_by_name": True,
@@ -267,15 +318,30 @@ class DatabaseAttendance:
         
         print(f"Getting attendance for user {user_id} from {start_date_str} to {end_date_str}")
         
-        # Find attendance records in date range
-        cursor = attendance_collection.find({
-            "user_id": user_id,
-            "date": {"$gte": start_date_str, "$lte": end_date_str}
-        }).sort("date", -1)
-        
-        # Use list() instead of to_list() for synchronous PyMongo
-        attendance_records = list(cursor)
-        return [Attendance(**record) for record in attendance_records]
+        try:
+            # Find attendance records in date range
+            cursor = attendance_collection.find({
+                "user_id": user_id,
+                "date": {"$gte": start_date_str, "$lte": end_date_str}
+            }).sort("date", -1)
+            
+            # Use list() instead of to_list() for synchronous PyMongo
+            attendance_records = list(cursor)
+            
+            # Parse records with error handling
+            parsed_records = []
+            for record in attendance_records:
+                try:
+                    parsed_records.append(Attendance(**record))
+                except Exception as parse_error:
+                    print(f"Warning: Skipping invalid attendance record {record.get('_id')}: {parse_error}")
+                    continue
+            
+            return parsed_records
+            
+        except Exception as e:
+            print(f"Error in get_user_attendance: {e}")
+            return []
     
     @staticmethod
     async def get_team_attendance(team_ids: List[str], for_date: date) -> List[Attendance]:
@@ -395,3 +461,64 @@ class DatabaseAttendance:
         except Exception as e:
             print(f"Error getting attendance by date: {str(e)}")
             return []
+
+    @staticmethod
+    def get_attendance_by_id(attendance_id: str) -> Optional[Attendance]:
+        """Get attendance record by ID"""
+        try:
+            if not ObjectId.is_valid(attendance_id):
+                return None
+                
+            record = attendance_collection.find_one({"_id": ObjectId(attendance_id)})
+            if record:
+                return Attendance(**record)
+            return None
+            
+        except Exception as e:
+            print(f"Error getting attendance by ID: {str(e)}")
+            return None
+
+    @staticmethod
+    def update_attendance(attendance_id: str, update_data: dict) -> Optional[Attendance]:
+        """Update attendance record"""
+        try:
+            if not ObjectId.is_valid(attendance_id):
+                return None
+                
+            # Filter out None values and prepare update data
+            update_fields = {}
+            for key, value in update_data.items():
+                if value is not None:
+                    if key in ['check_in', 'check_out'] and value:
+                        # Ensure time fields are properly formatted
+                        if isinstance(value, str) and ':' in value:
+                            update_fields[key] = value
+                    elif key == 'date' and value:
+                        # Ensure date is in proper format
+                        if isinstance(value, str):
+                            update_fields[key] = value
+                    else:
+                        update_fields[key] = value
+            
+            # Add updated timestamp
+            update_fields['updated_at'] = datetime.now(IST)
+            
+            print(f"Updating attendance {attendance_id} with: {update_fields}")
+            
+            # Update the record
+            result = attendance_collection.update_one(
+                {"_id": ObjectId(attendance_id)},
+                {"$set": update_fields}
+            )
+            
+            if result.modified_count > 0:
+                # Return the updated record
+                updated_record = attendance_collection.find_one({"_id": ObjectId(attendance_id)})
+                if updated_record:
+                    return Attendance(**updated_record)
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error updating attendance: {str(e)}")
+            return None

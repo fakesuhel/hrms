@@ -1269,9 +1269,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadUserData();
+            setupEventListeners();
             loadProfileData();
         });
         
+        function setupEventListeners() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
             
             // User menu toggle
             const userMenu = document.getElementById('userMenu');
@@ -1280,6 +1291,7 @@
             if (userMenu && userDropdown) {
                 userMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
+                    userDropdown.classList.toggle('active');
                 });
                 
                 document.addEventListener('click', function() {

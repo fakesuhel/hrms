@@ -568,6 +568,45 @@
             <nav class="sidebar-nav">
                 <ul class="nav-list">
                     <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link active">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>👥</i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>�</i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav><nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
                         <a href="/app/sales/dashboard" class="nav-link">
                             <i>📊</i>
                             Dashboard
@@ -900,6 +939,7 @@
     
     <!-- Include API client and helper scripts -->
     <script src="/static/js/api.js"></script>
+    <script src="/static/js/role-aware.js"></script>
     
     <script>
         // Global variables - currentUser is declared in api.js
@@ -926,12 +966,69 @@
             }
             
             // Setup event listeners
+            setupEventListeners();
             
             // Load user data and dashboard
             await loadCurrentUser();
             await loadDashboardData();
+            
+            // Initialize navigation manually
+            initializeNavigation();
         });
         
+        function setupEventListeners() {
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/app/login';
+            });
+        }
+        
+        function initializeNavigation() {
+            // Initialize sidebar navigation manually
+            const navList = document.querySelector('.nav-list');
+            if (!navList) return;
+            
+            // Basic navigation items for sales dashboard
+            const navItems = [
+                { title: 'Dashboard', url: '/app/sales/dashboard', icon: '📊', active: true },
+                { title: 'Attendance', url: '/app/sales/attendance', icon: '⏰' },
+                { title: 'Leads', url: '/app/sales/leads', icon: '🎯' },
+                { title: 'Customers', url: '/app/sales/customers', icon: '�' },
+                { title: 'Reports', url: '/app/sales/reports', icon: '�' },
+                { title: 'Profile', url: '/app/sales/profile', icon: '👤' }
+            ];
+            
+            navList.innerHTML = navItems.map(item => `
+                <li class="nav-item">
+                    <a href="${item.url}" class="nav-link ${item.active ? 'active' : ''}">
+                        <i>${item.icon}</i>
+                        ${item.title}
+                    </a>
+                </li>
+            `).join('');
+            
+            console.log('Navigation initialized manually');
+        }
         
         async function loadCurrentUser() {
             try {

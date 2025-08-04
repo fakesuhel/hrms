@@ -1380,7 +1380,7 @@
             </div>
             
             <nav class="sidebar-nav">
-                <ul class="nav-list" id="navList">
+                <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/app/sales/dashboard" class="nav-link">
                             <i>📊</i>
@@ -1449,6 +1449,9 @@
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/app/sales/profile" class="dropdown-item">
                             <i>👤</i> Your Profile
+                        </a>
+                        <a href="/app/settings" class="dropdown-item">
+                            <i>⚙️</i> Settings
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
@@ -1742,6 +1745,7 @@
             await initializePage();
             
             // Setup event listeners
+            setupEventListeners();
             
             // Load leads
             await loadLeads();
@@ -1751,6 +1755,9 @@
             try {
                 // Load current user
                 await loadCurrentUser();
+                
+                // Initialize navigation
+                initializeNavigation();
                 
                 console.log('Page initialized successfully');
             } catch (error) {
@@ -1778,6 +1785,77 @@
             }
         }
         
+        function initializeNavigation() {
+            // Simple navigation for sales department
+            const navList = document.getElementById('navList');
+            const navigationItems = [
+                { href: '/static/departments/sales/dashboard.html', text: '📊 Dashboard', active: false },
+                { href: '/static/departments/sales/leads.html', text: '🎯 Leads', active: true },
+                { href: '/static/departments/sales/customers.html', text: '👥 Customers', active: false },
+                { href: '/static/departments/sales/reports.html', text: '📈 Reports', active: false }
+            ];
+            
+            navList.innerHTML = navigationItems.map(item => `
+                <li class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        ${item.text}
+                    </a>
+                </li>
+            `).join('');
+        }
+        
+        function setupEventListeners() {
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+            
+            // Filters and search
+            document.getElementById('statusFilter').addEventListener('change', filterLeads);
+            document.getElementById('assignedFilter').addEventListener('change', filterLeads);
+            document.getElementById('searchInput').addEventListener('input', filterLeads);
+            
+            // Buttons
+            document.getElementById('addLeadBtn').addEventListener('click', () => openAddLeadModal());
+            document.getElementById('refreshBtn').addEventListener('click', () => loadLeads());
+            
+            // Modal controls
+            document.getElementById('closeModalBtn').addEventListener('click', () => closeModal('leadModal'));
+            document.getElementById('closeDetailsModalBtn').addEventListener('click', () => closeModal('leadDetailsModal'));
+            document.getElementById('cancelBtn').addEventListener('click', () => closeModal('leadModal'));
+            
+            // Form submission
+            document.getElementById('leadForm').addEventListener('submit', handleFormSubmit);
+            
+            // Close modals on outside click
+            document.getElementById('leadModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('leadModal');
+            });
+            
+            document.getElementById('leadDetailsModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('leadDetailsModal');
+            });
+        }
         
         async function loadLeads() {
             if (isLoading) return;

@@ -492,7 +492,7 @@
             </div>
             
             <nav class="sidebar-nav">
-                <ul class="nav-list" id="navList">
+                <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/app/sales/dashboard" class="nav-link">
                             <i>📊</i>
@@ -639,6 +639,7 @@
             await initializePage();
             
             // Setup event listeners
+            setupEventListeners();
             
             // Load customers
             await loadCustomers();
@@ -649,7 +650,9 @@
                 // Load current user
                 await loadCurrentUser();
                 
-                // Initialize navigation                
+                // Initialize navigation
+                initializeNavigation();
+                
                 console.log('Page initialized successfully');
             } catch (error) {
                 console.error('Error initializing page:', error);
@@ -676,8 +679,62 @@
             }
         }
         
-
+        function initializeNavigation() {
+            // Simple navigation for sales department
+            const navList = document.getElementById('navList');
+            const navigationItems = [
+                { href: '/static/departments/sales/dashboard.html', text: '📊 Dashboard', active: false },
+                { href: '/static/departments/sales/leads.html', text: '🎯 Leads', active: false },
+                { href: '/static/departments/sales/customers.html', text: '👥 Customers', active: true },
+                { href: '/static/departments/sales/reports.html', text: '📈 Reports', active: false }
+            ];
+            
+            navList.innerHTML = navigationItems.map(item => `
+                <li class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        ${item.text}
+                    </a>
+                </li>
+            `).join('');
+        }
         
+        function setupEventListeners() {
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/static/login.html';
+            });
+            
+            // Filters and search
+            document.getElementById('statusFilter').addEventListener('change', filterCustomers);
+            document.getElementById('searchInput').addEventListener('input', filterCustomers);
+            
+            // Buttons
+            document.getElementById('refreshBtn').addEventListener('click', () => loadCustomers());
+            document.getElementById('addCustomerBtn').addEventListener('click', openAddCustomerModal);
+            
+            // Add customer form
+            document.getElementById('addCustomerForm').addEventListener('submit', handleAddCustomer);
+        }
         
         async function loadCustomers() {
             if (isLoading) return;

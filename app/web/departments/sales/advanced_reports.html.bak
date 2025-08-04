@@ -731,6 +731,7 @@
                 await initializePage();
                 
                 // Setup event listeners
+                setupEventListeners();
                 
                 // Set default date range
                 setDefaultDateRange();
@@ -791,6 +792,39 @@
             }
         }
         
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/app/login';
+            });
+            
+            // Filter controls
+            document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+            document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
+            document.getElementById('exportReports')?.addEventListener('click', exportReports);
+        }
         
         function setDefaultDateRange() {
             const today = new Date();

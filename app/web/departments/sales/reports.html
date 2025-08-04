@@ -664,32 +664,37 @@
                             Dashboard
                         </a>
                     </li>
+                    
                     <li class="nav-item">
                         <a href="/app/sales/attendance" class="nav-link">
                             <i>🕒</i>
                             Attendance
                         </a>
                     </li>
+                    
                     <li class="nav-item">
                         <a href="/app/sales/leads" class="nav-link">
                             <i>🎯</i>
                             Leads
                         </a>
                     </li>
+                    
                     <li class="nav-item">
                         <a href="/app/sales/customers" class="nav-link">
-                            <i>👥</i>
+                            <i>🧑🏼‍🤝‍🧑🏻</i>
                             Customers
                         </a>
                     </li>
+                    
                     <li class="nav-item">
-                        <a href="/app/sales/reports" class="nav-link active">
-                            <i>📊</i>
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>🚨</i>
                             Reports
                         </a>
                     </li>
+                    
                     <li class="nav-item">
-                        <a href="/app/sales/profile" class="nav-link">
+                        <a href="/app/sales/profile" class="nav-link active">
                             <i>👤</i>
                             Profile
                         </a>
@@ -874,7 +879,6 @@
                 await initializePage();
                 
                 // Setup event listeners
-                setupEventListeners();
                 
                 // Set default date range
                 setDefaultDateRange();
@@ -933,39 +937,6 @@
             }
         }
         
-        function setupEventListeners() {
-            console.log('Setting up event listeners...');
-            
-            // Menu toggle
-            document.getElementById('menuToggle')?.addEventListener('click', function() {
-                document.querySelector('.sidebar')?.classList.toggle('active');
-            });
-            
-            // User menu
-            const userMenu = document.getElementById('userMenu');
-            const userDropdown = document.getElementById('userDropdown');
-            
-            userMenu?.addEventListener('click', function(e) {
-                e.stopPropagation();
-                userDropdown?.classList.toggle('active');
-            });
-            
-            document.addEventListener('click', function() {
-                userDropdown?.classList.remove('active');
-            });
-            
-            // Logout
-            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                localStorage.removeItem('bhoomitechzone_token');
-                window.location.href = '/app/login';
-            });
-            
-            // Filter controls (keep existing if they exist)
-            document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
-            document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
-            document.getElementById('exportReports')?.addEventListener('click', exportReports);
-        }
         
         function setDefaultDateRange() {
             const today = new Date();

@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Executive Sales Reports - Bhoomi TechZone HRMS</title>
+    <title>Sales Reports - Bhoomi TechZone HRMS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Root Variables */
         :root {
             --primary: #2563eb;
             --secondary: #10b981;
@@ -40,6 +41,7 @@
             line-height: 1.5;
         }
         
+        /* Layout Styles */
         .dashboard-container {
             display: flex;
             min-height: 100vh;
@@ -61,6 +63,11 @@
             transition: all 0.3s ease;
         }
         
+        .sidebar-hidden .main-content {
+            margin-left: 0;
+        }
+        
+        /* Header & Navigation Styles */
         .sidebar-header {
             padding: 1.5rem;
             display: flex;
@@ -134,6 +141,13 @@
             border-bottom: 1px solid var(--border-color);
         }
         
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+        
         .user-menu {
             display: flex;
             align-items: center;
@@ -184,6 +198,17 @@
             background-color: var(--bg-light);
         }
         
+        .dropdown-item i {
+            margin-right: 0.5rem;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        /* Page Styles */
         .page-main {
             padding: 2rem;
         }
@@ -204,78 +229,7 @@
             font-size: 1.125rem;
         }
         
-        .filters-section {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filter-label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .filter-input {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 0.875rem;
-        }
-        
-        .filter-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .btn:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .btn-secondary {
-            background-color: var(--text-secondary);
-        }
-        
-        .btn-success {
-            background-color: var(--success);
-        }
-        
-        .btn-warning {
-            background-color: var(--warning);
-        }
-        
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -332,108 +286,35 @@
             gap: 0.25rem;
         }
         
-        .positive { color: var(--success); }
-        .negative { color: var(--danger); }
-        .neutral { color: var(--text-muted); }
-        
-        .reports-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
+        .positive {
+            color: var(--success);
         }
         
-        .report-section {
-            background: white;
-            border: 1px solid var(--border-color);
+        .negative {
+            color: var(--danger);
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
             border-radius: var(--border-radius);
-            padding: 1.5rem;
-        }
-        
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-            display: flex;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-        }
-        
-        .performer-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            background: var(--bg-light);
-            border-radius: var(--border-radius);
-            border: 1px solid var(--border-color);
-        }
-        
-        .performer-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .performer-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
             font-size: 0.875rem;
         }
         
-        .performer-details h4 {
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
+        .btn:hover {
+            background-color: #1d4ed8;
         }
         
-        .performer-details p {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-        
-        .performer-stats {
-            text-align: right;
-        }
-        
-        .performer-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .performer-metric {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-        
-        .late-member {
-            background: rgba(239, 68, 68, 0.05);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        
-        .late-member .performer-avatar {
-            background: var(--danger);
-        }
-        
-        .chart-container {
-            height: 300px;
-            margin-top: 1rem;
-        }
-        
-        .full-width {
-            grid-column: 1 / -1;
-        }
-        
+        /* Loading States */
         .loading {
             display: flex;
             align-items: center;
@@ -457,6 +338,7 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Toast */
         .toast {
             position: fixed;
             top: 20px;
@@ -476,16 +358,19 @@
             transform: translateY(0);
         }
         
-        .toast.success { background-color: var(--success); }
-        .toast.error { background-color: var(--danger); }
-        .toast.info { background-color: var(--info); }
-        
-        @media (max-width: 1024px) {
-            .reports-grid {
-                grid-template-columns: 1fr;
-            }
+        .toast.success {
+            background-color: var(--success);
         }
         
+        .toast.error {
+            background-color: var(--danger);
+        }
+        
+        .toast.info {
+            background-color: var(--info);
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -495,15 +380,15 @@
                 margin-left: 0;
             }
             
+            .menu-toggle {
+                display: block;
+            }
+            
             .sidebar.active {
                 transform: translateX(0);
             }
             
             .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .filters-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -580,10 +465,10 @@
         <div class="main-content">
             <header class="top-header">
                 <div class="left-section">
-                    <button class="menu-toggle" id="menuToggle" style="background: none; border: none; cursor: pointer; display: none;">
+                    <button class="menu-toggle" id="menuToggle">
                         <span>☰</span>
                     </button>
-                    <h1 class="page-title">Executive Sales Reports</h1>
+                    <h1 class="page-title">Sales Reports</h1>
                 </div>
                 
                 <div class="user-menu" id="userMenu">
@@ -597,7 +482,7 @@
                         <a href="/app/settings" class="dropdown-item">
                             <i>⚙️</i> Settings
                         </a>
-                        <div style="height: 1px; background-color: var(--border-color); margin: 0.5rem 0;"></div>
+                        <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
                         </a>
@@ -607,52 +492,20 @@
             
             <main class="page-main">
                 <div class="page-header">
-                    <h1 class="page-title">Executive Sales Analytics</h1>
-                    <p class="page-subtitle">Comprehensive performance insights and team analytics</p>
+                    <h1 class="page-title">Sales Performance Reports</h1>
+                    <p class="page-subtitle">Comprehensive analytics and team performance insights</p>
                 </div>
                 
-                <!-- Filters Section -->
-                <div class="filters-section">
-                    <div class="filters-grid">
-                        <div class="filter-group">
-                            <label class="filter-label">Start Date</label>
-                            <input type="date" class="filter-input" id="startDate">
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">End Date</label>
-                            <input type="date" class="filter-input" id="endDate">
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Team Member</label>
-                            <select class="filter-input" id="teamMemberFilter">
-                                <option value="">All Team Members</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Amount Range</label>
-                            <select class="filter-input" id="amountFilter">
-                                <option value="">All Amounts</option>
-                                <option value="0-25000">₹0 - ₹25,000</option>
-                                <option value="25000-50000">₹25,000 - ₹50,000</option>
-                                <option value="50000-100000">₹50,000 - ₹1,00,000</option>
-                                <option value="100000+">₹1,00,000+</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="filter-actions">
-                        <button class="btn" id="applyFilters">
-                            <span>🔍</span>
-                            Apply Filters
-                        </button>
-                        <button class="btn btn-secondary" id="resetFilters">
-                            <span>🔄</span>
-                            Reset
-                        </button>
-                        <button class="btn btn-success" id="exportReports">
-                            <span>📊</span>
-                            Export Report
-                        </button>
-                    </div>
+                <div style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; background: white; padding: 1.5rem; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                    <button class="btn" id="refreshReports">
+                        <span>🔄</span>
+                        Refresh Data
+                    </button>
+                    
+                    <button class="btn" id="exportReports" style="background-color: var(--text-secondary);">
+                        <span>📊</span>
+                        Export Report
+                    </button>
                 </div>
                 
                 <!-- Stats Overview -->
@@ -663,46 +516,13 @@
                     </div>
                 </div>
                 
-                <!-- Reports Grid -->
-                <div class="reports-grid">
-                    <!-- Top Performers -->
-                    <div class="report-section">
-                        <h3 class="section-title">
-                            <span>🏆</span>
-                            Top Performers
-                        </h3>
-                        <div id="topPerformers">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                                Loading top performers...
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Late Members -->
-                    <div class="report-section">
-                        <h3 class="section-title">
-                            <span>⏰</span>
-                            Late Members Today
-                        </h3>
-                        <div id="lateMembers">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                                Loading attendance data...
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Performance Chart -->
-                    <div class="report-section full-width">
-                        <h3 class="section-title">
-                            <span>📈</span>
-                            Performance Trends
-                        </h3>
-                        <div class="chart-container">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
-                    </div>
+                <!-- Additional Info -->
+                <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1.5rem; margin-top: 2rem;">
+                    <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Sales Reports Overview</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        This reports dashboard provides comprehensive insights into sales performance, including lead conversion rates,
+                        revenue tracking, and team performance metrics. Data is updated in real-time and reflects the current sales pipeline status.
+                    </p>
                 </div>
             </main>
         </div>
@@ -712,11 +532,9 @@
         // Global variables
         let currentUser = null;
         let reportData = {};
-        let performanceChart = null;
-        let teamMembers = [];
         
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Executive Reports page loading...');
+            console.log('Reports page loading...');
             
             // Check authentication
             const token = localStorage.getItem('bhoomitechzone_token');
@@ -731,21 +549,14 @@
                 await initializePage();
                 
                 // Setup event listeners
+                setupEventListeners();
                 
-                // Set default date range
-                setDefaultDateRange();
+                // Load reports
+                await loadReports();
                 
-                // Load data
-                await Promise.all([
-                    loadReports(),
-                    loadTeamMembers(),
-                    loadTopPerformers(),
-                    loadLateMembers()
-                ]);
-                
-                console.log('Executive Reports page loaded successfully');
+                console.log('Reports page loaded successfully');
             } catch (error) {
-                console.error('Error initializing executive reports page:', error);
+                console.error('Error initializing reports page:', error);
                 showToast('Error loading reports page', 'error');
             }
         });
@@ -782,6 +593,7 @@
                 }
             } catch (error) {
                 console.error('Error loading user:', error);
+                // Clear invalid token and redirect
                 localStorage.removeItem('bhoomitechzone_token');
                 showToast('Session expired. Please login again.', 'error');
                 setTimeout(() => {
@@ -791,45 +603,37 @@
             }
         }
         
-        
-        function setDefaultDateRange() {
-            const today = new Date();
-            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
             
-            document.getElementById('endDate').value = today.toISOString().split('T')[0];
-            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-        }
-        
-        async function loadTeamMembers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                
-                // Only managers can see team member filter
-                if (!isManager()) {
-                    document.getElementById('teamMemberFilter').style.display = 'none';
-                    return;
-                }
-                
-                const response = await fetch('/api/sales/team-members', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    teamMembers = await response.json();
-                    
-                    const select = document.getElementById('teamMemberFilter');
-                    select.innerHTML = '<option value="">All Team Members</option>';
-                    
-                    teamMembers.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member.id || member.username;
-                        option.textContent = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.username;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading team members:', error);
-            }
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/app/login';
+            });
+            
+            // Report controls
+            document.getElementById('refreshReports')?.addEventListener('click', loadReports);
+            document.getElementById('exportReports')?.addEventListener('click', exportReports);
         }
         
         async function loadReports() {
@@ -837,18 +641,16 @@
             
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                const teamMember = document.getElementById('teamMemberFilter').value;
+                
+                // Set default date range (last 30 days)
+                const today = new Date();
+                const endDate = today.toISOString().split('T')[0];
+                const startDate = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
                 
                 const params = new URLSearchParams({
                     start_date: startDate,
                     end_date: endDate
                 });
-                
-                if (teamMember && isManager()) {
-                    params.append('team_member', teamMember);
-                }
                 
                 console.log('Fetching reports data...');
                 const response = await fetch(`/api/sales/reports?${params}`, {
@@ -859,7 +661,7 @@
                     reportData = await response.json();
                     console.log('Reports data loaded:', reportData);
                     renderStats();
-                    renderPerformanceChart();
+                    showToast('Reports loaded successfully', 'success');
                 } else {
                     console.error('Failed to load reports:', response.status, response.statusText);
                     throw new Error('Failed to load reports');
@@ -867,56 +669,9 @@
             } catch (error) {
                 console.error('Error loading reports:', error);
                 showToast('Error loading reports', 'error');
+                
+                // Show default empty stats
                 renderEmptyStats();
-            }
-        }
-        
-        async function loadTopPerformers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                
-                const params = new URLSearchParams({
-                    start_date: startDate,
-                    end_date: endDate,
-                    limit: '5'
-                });
-                
-                const response = await fetch(`/api/sales/top-performers?${params}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const performers = await response.json();
-                    renderTopPerformers(performers);
-                } else {
-                    renderEmptyPerformers();
-                }
-            } catch (error) {
-                console.error('Error loading top performers:', error);
-                renderEmptyPerformers();
-            }
-        }
-        
-        async function loadLateMembers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const today = new Date().toISOString().split('T')[0];
-                
-                const response = await fetch(`/api/sales/attendance/late?date=${today}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const lateMembers = await response.json();
-                    renderLateMembers(lateMembers);
-                } else {
-                    renderEmptyLateMembers();
-                }
-            } catch (error) {
-                console.error('Error loading late members:', error);
-                renderEmptyLateMembers();
             }
         }
         
@@ -963,10 +718,10 @@
                     color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;'
                 },
                 {
-                    title: 'Team Performance',
-                    value: `${(stats.team_performance || 0).toFixed(1)}%`,
-                    change: stats.team_performance_change || 0,
-                    icon: '👥',
+                    title: 'Payment Collected',
+                    value: formatCurrency(stats.payment_collected || 0),
+                    change: stats.payment_change || 0,
+                    icon: '💳',
                     color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;'
                 }
             ];
@@ -997,7 +752,7 @@
                 { title: 'Revenue Generated', value: '₹0', icon: '💰', color: 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' },
                 { title: 'Win Rate', value: '0.0%', icon: '📈', color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;' },
                 { title: 'Avg Deal Size', value: '₹0', icon: '💎', color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;' },
-                { title: 'Team Performance', value: '0.0%', icon: '👥', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' }
+                { title: 'Payment Collected', value: '₹0', icon: '💳', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' }
             ];
             
             statsGrid.innerHTML = emptyCards.map(stat => `
@@ -1017,237 +772,41 @@
             `).join('');
         }
         
-        function renderTopPerformers(performers) {
-            const container = document.getElementById('topPerformers');
-            
-            if (!performers || performers.length === 0) {
-                renderEmptyPerformers();
-                return;
-            }
-            
-            container.innerHTML = performers.map((performer, index) => `
-                <div class="performer-item">
-                    <div class="performer-info">
-                        <div class="performer-avatar">
-                            ${getInitials(performer.name || performer.first_name, performer.last_name)}
-                        </div>
-                        <div class="performer-details">
-                            <h4>${performer.name || `${performer.first_name || ''} ${performer.last_name || ''}`.trim() || 'Unknown'}</h4>
-                            <p>${performer.department || 'Sales'} • Rank #${index + 1}</p>
-                        </div>
-                    </div>
-                    <div class="performer-stats">
-                        <div class="performer-value">${formatCurrency(performer.total_revenue || performer.revenue || 0)}</div>
-                        <div class="performer-metric">${performer.deals_closed || 0} deals closed</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function renderEmptyPerformers() {
-            document.getElementById('topPerformers').innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    <div style="font-size: 2rem; margin-bottom: 1rem;">🏆</div>
-                    <p>No performance data available for the selected period.</p>
-                </div>
-            `;
-        }
-        
-        function renderLateMembers(lateMembers) {
-            const container = document.getElementById('lateMembers');
-            
-            if (!lateMembers || lateMembers.length === 0) {
-                renderEmptyLateMembers();
-                return;
-            }
-            
-            container.innerHTML = lateMembers.map(member => `
-                <div class="performer-item late-member">
-                    <div class="performer-info">
-                        <div class="performer-avatar">
-                            ${getInitials(member.name || member.first_name, member.last_name)}
-                        </div>
-                        <div class="performer-details">
-                            <h4>${member.name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}</h4>
-                            <p>Late by ${member.late_minutes || 0} minutes</p>
-                        </div>
-                    </div>
-                    <div class="performer-stats">
-                        <div class="performer-value" style="color: var(--danger);">
-                            ${member.check_in_time || 'Not checked in'}
-                        </div>
-                        <div class="performer-metric">Expected: ${member.expected_time || '09:00'}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function renderEmptyLateMembers() {
-            document.getElementById('lateMembers').innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    <div style="font-size: 2rem; margin-bottom: 1rem;">✅</div>
-                    <p>All team members are on time today!</p>
-                </div>
-            `;
-        }
-        
-        function renderPerformanceChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            
-            // Destroy existing chart
-            if (performanceChart) {
-                performanceChart.destroy();
-            }
-            
-            const chartData = reportData.trends || {};
-            const labels = chartData.labels || [];
-            const revenueData = chartData.revenue || [];
-            const leadsData = chartData.leads || [];
-            
-            performanceChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Revenue (₹)',
-                            data: revenueData,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Leads Count',
-                            data: leadsData,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            tension: 0.4,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Revenue (₹)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Leads Count'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        }
-                    }
-                }
-            });
-        }
-        
-        async function applyFilters() {
-            showToast('Applying filters...', 'info');
-            
-            await Promise.all([
-                loadReports(),
-                loadTopPerformers(),
-                loadLateMembers()
-            ]);
-            
-            showToast('Filters applied successfully', 'success');
-        }
-        
-        function resetFilters() {
-            setDefaultDateRange();
-            document.getElementById('teamMemberFilter').value = '';
-            document.getElementById('amountFilter').value = '';
-            
-            applyFilters();
-        }
-        
         function exportReports() {
             try {
-                const csvContent = generateAdvancedCSVReport();
+                // Create CSV content
+                const csvContent = generateCSVReport();
                 
+                // Create download link
                 const blob = new Blob([csvContent], { type: 'text/csv' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `executive_sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+                a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 
-                showToast('Executive report exported successfully', 'success');
+                showToast('Report exported successfully', 'success');
             } catch (error) {
                 console.error('Error exporting report:', error);
                 showToast('Error exporting report', 'error');
             }
         }
         
-        function generateAdvancedCSVReport() {
-            const headers = [
-                'Report Type', 'Metric', 'Value', 'Change (%)', 'Period'
-            ];
-            
-            const stats = reportData.overview || {};
-            const period = `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`;
-            
+        function generateCSVReport() {
+            const headers = ['Metric', 'Value'];
             const rows = [
-                ['Overview', 'Total Leads', stats.total_leads || 0, stats.leads_change || 0, period],
-                ['Overview', 'Converted Leads', stats.converted_leads || 0, stats.conversion_change || 0, period],
-                ['Overview', 'Total Revenue', stats.total_revenue || 0, stats.revenue_change || 0, period],
-                ['Overview', 'Win Rate (%)', (stats.win_rate || 0).toFixed(1), stats.win_rate_change || 0, period],
-                ['Overview', 'Average Deal Size', stats.avg_deal_size || 0, stats.deal_size_change || 0, period],
-                ['Overview', 'Team Performance (%)', (stats.team_performance || 0).toFixed(1), stats.team_performance_change || 0, period]
+                ['Total Leads', reportData.overview?.total_leads || 0],
+                ['Converted Leads', reportData.overview?.converted_leads || 0],
+                ['Win Rate (%)', (reportData.overview?.win_rate || 0).toFixed(1)],
+                ['Total Revenue', reportData.overview?.total_revenue || 0],
+                ['Average Deal Size', reportData.overview?.avg_deal_size || 0],
+                ['Payment Collected', reportData.overview?.payment_collected || 0]
             ];
             
             return [headers, ...rows].map(row => row.join(',')).join('\n');
-        }
-        
-        function isManager() {
-            if (!currentUser) return false;
-            
-            // Check role
-            if (currentUser.role && ['admin', 'director', 'manager'].includes(currentUser.role)) {
-                return true;
-            }
-            
-            // Check position
-            if (currentUser.position === 'sales_manager') {
-                return true;
-            }
-            
-            return false;
-        }
-        
-        function getInitials(firstName, lastName) {
-            if (firstName && lastName) {
-                return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-            } else if (firstName) {
-                return firstName.charAt(0).toUpperCase();
-            } else if (lastName) {
-                return lastName.charAt(0).toUpperCase();
-            }
-            return 'U';
         }
         
         function formatCurrency(amount) {
@@ -1298,7 +857,14 @@
                 const department = user.department || 'Sales';
                 
                 // Generate initials safely
-                let initials = getInitials(firstName, lastName) || username.charAt(0).toUpperCase() || 'U';
+                let initials = 'U';
+                if (firstName && lastName) {
+                    initials = firstName.charAt(0).toUpperCase() + lastName.charAt(0).toUpperCase();
+                } else if (firstName) {
+                    initials = firstName.charAt(0).toUpperCase();
+                } else if (username) {
+                    initials = username.charAt(0).toUpperCase();
+                }
                 
                 // Update elements safely
                 if (userInitials) userInitials.textContent = initials;
@@ -1326,6 +892,7 @@
                 console.log('User info updated successfully');
             } catch (error) {
                 console.error('Error updating user info:', error);
+                // Don't throw error - just log it
             }
         }
     </script>

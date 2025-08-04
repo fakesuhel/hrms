@@ -165,25 +165,29 @@ async def get_attendance_history(
         # Convert to AttendanceResponse objects
         result = []
         for attendance in attendances:
-            response_dict = {
-                "_id": str(attendance.id),
-                "user_id": str(attendance.user_id),
-                "date": attendance.date,
-                "check_in": attendance.check_in,
-                "check_out": attendance.check_out,
-                "check_in_location": attendance.check_in_location,
-                "check_out_location": attendance.check_out_location,
-                "check_in_note": attendance.check_in_note,
-                "check_out_note": attendance.check_out_note,
-                "work_summary": attendance.work_summary,
-                "is_late": attendance.is_late,
-                "is_complete": attendance.is_complete,
-                "work_hours": attendance.work_hours,
-                "status": attendance.status,
-                "created_at": attendance.created_at,
-                "updated_at": attendance.updated_at
-            }
-            result.append(AttendanceResponse(**response_dict))
+            try:
+                response_dict = {
+                    "_id": str(attendance.id),
+                    "user_id": str(attendance.user_id),
+                    "date": attendance.date,
+                    "check_in": attendance.check_in,
+                    "check_out": attendance.check_out,
+                    "check_in_location": attendance.check_in_location,
+                    "check_out_location": attendance.check_out_location,
+                    "check_in_note": attendance.check_in_note,
+                    "check_out_note": attendance.check_out_note,
+                    "work_summary": attendance.work_summary,
+                    "is_late": attendance.is_late,
+                    "is_complete": attendance.is_complete,
+                    "work_hours": attendance.work_hours,
+                    "status": attendance.status,
+                    "created_at": attendance.created_at,
+                    "updated_at": attendance.updated_at
+                }
+                result.append(AttendanceResponse(**response_dict))
+            except Exception as parse_error:
+                print(f"Warning: Skipping invalid attendance record for response: {parse_error}")
+                continue
         
         return result
         
@@ -407,6 +411,101 @@ async def get_attendance_by_date(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get attendance: {str(e)}"
+        )
+
+@router.put("/{attendance_id}", response_model=AttendanceResponse)
+async def update_attendance(
+    attendance_id: str,
+    update_data: dict,
+    current_user = Depends(get_current_user)
+):
+    """Update an attendance record (managers only)"""
+    try:
+        print(f"Starting update_attendance for ID: {attendance_id}")
+        print(f"Update data received: {update_data}")
+        
+        # Check if user has permission to update attendance
+        if current_user.role not in ['manager', 'admin', 'director', 'team_lead', 'sales_manager', 'dev_manager', 'hr']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to update attendance records"
+            )
+        
+        print(f"User {current_user.username} has permission to update attendance")
+        
+        print(f"Updating attendance record: {attendance_id} by user: {current_user.username}")
+        print(f"Update data: {update_data}")
+        
+        # Get the existing attendance record first
+        print("Getting existing record...")
+        existing_record = DatabaseAttendance.get_attendance_by_id(attendance_id)
+        if not existing_record:
+            print(f"No record found for ID: {attendance_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Attendance record not found"
+            )
+        
+        print(f"Found existing record: {existing_record.id}")
+        
+        # Update the attendance record
+        print("Calling update_attendance...")
+        updated_record = DatabaseAttendance.update_attendance(attendance_id, update_data)
+        
+        if not updated_record:
+            print("Update returned None")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Failed to update attendance record"
+            )
+        
+        print(f"Update successful, creating response...")
+        
+        # Convert to AttendanceResponse format
+        try:
+            print("Response created successfully")
+            
+            # Create response with safe field access
+            response_data = {
+                "id": str(updated_record.id),
+                "user_id": str(updated_record.user_id),
+                "date": str(updated_record.date),
+                "check_in": updated_record.check_in,
+                "check_out": updated_record.check_out,
+                "check_in_location": updated_record.check_in_location or None,
+                "check_out_location": updated_record.check_out_location or None,
+                "check_in_note": updated_record.check_in_note or None,
+                "check_out_note": updated_record.check_out_note or None,
+                "work_summary": updated_record.work_summary or None,
+                "is_late": bool(updated_record.is_late),
+                "is_complete": bool(updated_record.is_complete),
+                "work_hours": float(updated_record.work_hours) if updated_record.work_hours else None,
+                "status": str(updated_record.status),
+                "created_at": updated_record.created_at,
+                "updated_at": updated_record.updated_at
+            }
+            
+            print(f"Response data prepared: {response_data}")
+            
+            response = AttendanceResponse(**response_data)
+            print("AttendanceResponse created successfully")
+            return response
+        except Exception as resp_error:
+            print(f"Error creating response: {resp_error}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create response: {str(resp_error)}"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in update_attendance: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update attendance: {str(e)}"
         )
 
 @router.delete("/{attendance_id}")

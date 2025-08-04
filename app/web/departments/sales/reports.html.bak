@@ -416,6 +416,138 @@
             color: var(--text-secondary);
         }
         
+        .executive-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .executive-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .executive-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .executive-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .executive-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+        
+        .executive-details h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .executive-details p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .attendance-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .attendance-badge.present {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .attendance-badge.late {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .attendance-badge.absent {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .executive-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .attendance-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .status-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
         .late-member {
             background: rgba(239, 68, 68, 0.05);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -424,6 +556,7 @@
         .late-member .performer-avatar {
             background: var(--danger);
         }
+        
         
         .chart-container {
             height: 300px;
@@ -655,7 +788,7 @@
                     </div>
                 </div>
                 
-                <!-- Stats Overview -->
+                <!-- Statistics Overview -->
                 <div class="stats-grid" id="statsGrid">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -663,29 +796,44 @@
                     </div>
                 </div>
                 
+                <!-- Executive Reports Section -->
+                <div class="report-section" style="margin-bottom: 2rem;">
+                    <h3 class="section-title">
+                        <span>👤</span>
+                        Executive Reports
+                        <span id="executiveReportsSubtitle" style="font-size: 0.875rem; color: var(--text-secondary); font-weight: normal;"></span>
+                    </h3>
+                    <div id="executiveReports">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading executive reports...
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Reports Grid -->
                 <div class="reports-grid">
-                    <!-- Top Performers -->
+                    <!-- Today's Performance -->
                     <div class="report-section">
                         <h3 class="section-title">
-                            <span>🏆</span>
-                            Top Performers
+                            <span>📊</span>
+                            Today's Performance
                         </h3>
-                        <div id="topPerformers">
+                        <div id="todaysPerformance">
                             <div class="loading">
                                 <div class="spinner"></div>
-                                Loading top performers...
+                                Loading today's data...
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Late Members -->
+                    <!-- Late/Absent Members -->
                     <div class="report-section">
                         <h3 class="section-title">
                             <span>⏰</span>
-                            Late Members Today
+                            Attendance Issues
                         </h3>
-                        <div id="lateMembers">
+                        <div id="attendanceIssues">
                             <div class="loading">
                                 <div class="spinner"></div>
                                 Loading attendance data...
@@ -697,7 +845,7 @@
                     <div class="report-section full-width">
                         <h3 class="section-title">
                             <span>📈</span>
-                            Performance Trends
+                            Executive Performance Trends
                         </h3>
                         <div class="chart-container">
                             <canvas id="performanceChart"></canvas>
@@ -731,6 +879,7 @@
                 await initializePage();
                 
                 // Setup event listeners
+                setupEventListeners();
                 
                 // Set default date range
                 setDefaultDateRange();
@@ -738,12 +887,10 @@
                 // Load data
                 await Promise.all([
                     loadReports(),
-                    loadTeamMembers(),
-                    loadTopPerformers(),
-                    loadLateMembers()
-                ]);
-                
-                console.log('Executive Reports page loaded successfully');
+                    loadExecutiveReports(),
+                    loadTodaysPerformance(),
+                    loadAttendanceIssues()
+                ]);                console.log('Executive Reports page loaded successfully');
             } catch (error) {
                 console.error('Error initializing executive reports page:', error);
                 showToast('Error loading reports page', 'error');
@@ -791,6 +938,39 @@
             }
         }
         
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Menu toggle
+            document.getElementById('menuToggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar')?.classList.toggle('active');
+            });
+            
+            // User menu
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenu?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                userDropdown?.classList.remove('active');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('bhoomitechzone_token');
+                window.location.href = '/app/login';
+            });
+            
+            // Filter controls (keep existing if they exist)
+            document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+            document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
+            document.getElementById('exportReports')?.addEventListener('click', exportReports);
+        }
         
         function setDefaultDateRange() {
             const today = new Date();
@@ -800,55 +980,21 @@
             document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
         }
         
-        async function loadTeamMembers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                
-                // Only managers can see team member filter
-                if (!isManager()) {
-                    document.getElementById('teamMemberFilter').style.display = 'none';
-                    return;
-                }
-                
-                const response = await fetch('/api/sales/team-members', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    teamMembers = await response.json();
-                    
-                    const select = document.getElementById('teamMemberFilter');
-                    select.innerHTML = '<option value="">All Team Members</option>';
-                    
-                    teamMembers.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member.id || member.username;
-                        option.textContent = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.username;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading team members:', error);
-            }
-        }
-        
         async function loadReports() {
             console.log('Loading reports...');
             
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                const teamMember = document.getElementById('teamMemberFilter').value;
+                
+                // Set default date range (last 30 days)
+                const today = new Date();
+                const endDate = today.toISOString().split('T')[0];
+                const startDate = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
                 
                 const params = new URLSearchParams({
                     start_date: startDate,
                     end_date: endDate
                 });
-                
-                if (teamMember && isManager()) {
-                    params.append('team_member', teamMember);
-                }
                 
                 console.log('Fetching reports data...');
                 const response = await fetch(`/api/sales/reports?${params}`, {
@@ -868,55 +1014,6 @@
                 console.error('Error loading reports:', error);
                 showToast('Error loading reports', 'error');
                 renderEmptyStats();
-            }
-        }
-        
-        async function loadTopPerformers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                
-                const params = new URLSearchParams({
-                    start_date: startDate,
-                    end_date: endDate,
-                    limit: '5'
-                });
-                
-                const response = await fetch(`/api/sales/top-performers?${params}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const performers = await response.json();
-                    renderTopPerformers(performers);
-                } else {
-                    renderEmptyPerformers();
-                }
-            } catch (error) {
-                console.error('Error loading top performers:', error);
-                renderEmptyPerformers();
-            }
-        }
-        
-        async function loadLateMembers() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const today = new Date().toISOString().split('T')[0];
-                
-                const response = await fetch(`/api/sales/attendance/late?date=${today}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const lateMembers = await response.json();
-                    renderLateMembers(lateMembers);
-                } else {
-                    renderEmptyLateMembers();
-                }
-            } catch (error) {
-                console.error('Error loading late members:', error);
-                renderEmptyLateMembers();
             }
         }
         
@@ -954,20 +1051,6 @@
                     change: stats.win_rate_change || 0,
                     icon: '📈',
                     color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;'
-                },
-                {
-                    title: 'Avg Deal Size',
-                    value: formatCurrency(stats.avg_deal_size || 0),
-                    change: stats.deal_size_change || 0,
-                    icon: '💎',
-                    color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;'
-                },
-                {
-                    title: 'Team Performance',
-                    value: `${(stats.team_performance || 0).toFixed(1)}%`,
-                    change: stats.team_performance_change || 0,
-                    icon: '👥',
-                    color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;'
                 }
             ];
             
@@ -995,9 +1078,7 @@
                 { title: 'Total Leads', value: '0', icon: '🎯', color: 'background: rgba(59, 130, 246, 0.1); color: #3b82f6;' },
                 { title: 'Converted Leads', value: '0', icon: '✅', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' },
                 { title: 'Revenue Generated', value: '₹0', icon: '💰', color: 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' },
-                { title: 'Win Rate', value: '0.0%', icon: '📈', color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;' },
-                { title: 'Avg Deal Size', value: '₹0', icon: '💎', color: 'background: rgba(239, 68, 68, 0.1); color: #ef4444;' },
-                { title: 'Team Performance', value: '0.0%', icon: '👥', color: 'background: rgba(16, 185, 129, 0.1); color: #10b981;' }
+                { title: 'Win Rate', value: '0.0%', icon: '📈', color: 'background: rgba(168, 85, 247, 0.1); color: #a855f7;' }
             ];
             
             statsGrid.innerHTML = emptyCards.map(stat => `
@@ -1017,73 +1098,305 @@
             `).join('');
         }
         
-        function renderTopPerformers(performers) {
-            const container = document.getElementById('topPerformers');
-            
-            if (!performers || performers.length === 0) {
-                renderEmptyPerformers();
-                return;
-            }
-            
-            container.innerHTML = performers.map((performer, index) => `
-                <div class="performer-item">
-                    <div class="performer-info">
-                        <div class="performer-avatar">
-                            ${getInitials(performer.name || performer.first_name, performer.last_name)}
-                        </div>
-                        <div class="performer-details">
-                            <h4>${performer.name || `${performer.first_name || ''} ${performer.last_name || ''}`.trim() || 'Unknown'}</h4>
-                            <p>${performer.department || 'Sales'} • Rank #${index + 1}</p>
-                        </div>
-                    </div>
-                    <div class="performer-stats">
-                        <div class="performer-value">${formatCurrency(performer.total_revenue || performer.revenue || 0)}</div>
-                        <div class="performer-metric">${performer.deals_closed || 0} deals closed</div>
-                    </div>
-                </div>
-            `).join('');
+        function renderPerformanceChart() {
+            // Skip chart rendering for now since we don't have chart container in this structure
+            console.log('Performance chart rendering skipped - no chart container found');
         }
         
-        function renderEmptyPerformers() {
-            document.getElementById('topPerformers').innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    <div style="font-size: 2rem; margin-bottom: 1rem;">🏆</div>
-                    <p>No performance data available for the selected period.</p>
+        async function loadAttendanceStatus() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Get IST date (UTC+5:30)
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+                const istDate = new Date(now.getTime() + istOffset);
+                const today = istDate.toISOString().split('T')[0];
+                
+                const response = await fetch(`/api/sales/attendance/status?date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const attendanceData = await response.json();
+                    renderAttendanceStatus(attendanceData);
+                } else {
+                    renderEmptyAttendanceStatus();
+                }
+            } catch (error) {
+                console.error('Error loading attendance status:', error);
+                renderEmptyAttendanceStatus();
+            }
+        }
+        
+        async function loadExecutiveReports() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Get IST date (UTC+5:30)
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+                const istDate = new Date(now.getTime() + istOffset);
+                const today = istDate.toISOString().split('T')[0];
+                
+                const response = await fetch(`/api/sales/executive-reports?date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const executiveData = await response.json();
+                    renderExecutiveReports(executiveData);
+                } else {
+                    renderEmptyExecutiveReports();
+                }
+            } catch (error) {
+                console.error('Error loading executive reports:', error);
+                renderEmptyExecutiveReports();
+            }
+        }
+        
+        async function loadTodaysPerformance() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Get IST date (UTC+5:30)
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+                const istDate = new Date(now.getTime() + istOffset);
+                const today = istDate.toISOString().split('T')[0];
+                
+                const params = new URLSearchParams({
+                    start_date: today,
+                    end_date: today,
+                    limit: '5'
+                });
+                
+                const response = await fetch(`/api/sales/top-performers?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const performers = await response.json();
+                    renderTodaysPerformance(performers);
+                } else {
+                    renderEmptyTodaysPerformance();
+                }
+            } catch (error) {
+                console.error('Error loading today\'s performance:', error);
+                renderEmptyTodaysPerformance();
+            }
+        }
+        
+        async function loadAttendanceIssues() {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                // Get IST date (UTC+5:30)
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+                const istDate = new Date(now.getTime() + istOffset);
+                const today = istDate.toISOString().split('T')[0];
+                
+                const response = await fetch(`/api/sales/attendance/late?date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const lateMembers = await response.json();
+                    renderAttendanceIssues({ issues: lateMembers });
+                } else {
+                    renderEmptyAttendanceIssues();
+                }
+            } catch (error) {
+                console.error('Error loading attendance issues:', error);
+                renderEmptyAttendanceIssues();
+            }
+        }
+        
+        function renderAttendanceStatus(data) {
+            const container = document.getElementById('attendanceStatus');
+            const stats = data.summary || {};
+            
+            container.innerHTML = `
+                <div class="status-card">
+                    <div class="status-icon">👥</div>
+                    <div class="status-count">${stats.total || 0}</div>
+                    <div class="status-label">Total Executives</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">✅</div>
+                    <div class="status-count" style="color: var(--success);">${stats.present || 0}</div>
+                    <div class="status-label">Present</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">⏰</div>
+                    <div class="status-count" style="color: var(--warning);">${stats.late || 0}</div>
+                    <div class="status-label">Late (After 10:15 AM)</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">❌</div>
+                    <div class="status-count" style="color: var(--danger);">${stats.absent || 0}</div>
+                    <div class="status-label">Absent</div>
                 </div>
             `;
         }
         
-        function renderLateMembers(lateMembers) {
-            const container = document.getElementById('lateMembers');
+        function renderEmptyAttendanceStatus() {
+            document.getElementById('attendanceStatus').innerHTML = `
+                <div class="status-card">
+                    <div class="status-icon">👥</div>
+                    <div class="status-count">0</div>
+                    <div class="status-label">Total Executives</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">✅</div>
+                    <div class="status-count">0</div>
+                    <div class="status-label">Present</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">⏰</div>
+                    <div class="status-count">0</div>
+                    <div class="status-label">Late</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">❌</div>
+                    <div class="status-count">0</div>
+                    <div class="status-label">Absent</div>
+                </div>
+            `;
+        }
+        
+        function renderExecutiveReports(data) {
+            const container = document.getElementById('executiveReports');
+            const subtitle = document.getElementById('executiveReportsSubtitle');
+            const executives = data.executives || [];
             
-            if (!lateMembers || lateMembers.length === 0) {
-                renderEmptyLateMembers();
+            if (!isManager()) {
+                subtitle.textContent = '(Your Personal Report)';
+            } else {
+                subtitle.textContent = `(${executives.length} Executives)`;
+            }
+            
+            if (executives.length === 0) {
+                renderEmptyExecutiveReports();
                 return;
             }
             
-            container.innerHTML = lateMembers.map(member => `
-                <div class="performer-item late-member">
-                    <div class="performer-info">
-                        <div class="performer-avatar">
-                            ${getInitials(member.name || member.first_name, member.last_name)}
+            container.innerHTML = executives.map(executive => `
+                <div class="executive-card">
+                    <div class="executive-header">
+                        <div class="executive-info">
+                            <div class="executive-avatar">
+                                ${getInitials(executive.first_name, executive.last_name)}
+                            </div>
+                            <div class="executive-details">
+                                <h3>${executive.name || `${executive.first_name || ''} ${executive.last_name || ''}`.trim() || 'Unknown'}</h3>
+                                <p>${executive.position || 'Sales Executive'} • ${executive.department || 'Sales'}</p>
+                            </div>
                         </div>
-                        <div class="performer-details">
-                            <h4>${member.name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}</h4>
-                            <p>Late by ${member.late_minutes || 0} minutes</p>
+                        <div class="attendance-badge ${executive.attendance_status || 'absent'}">
+                            ${getAttendanceStatusText(executive.attendance_status, executive.check_in_time)}
                         </div>
                     </div>
-                    <div class="performer-stats">
-                        <div class="performer-value" style="color: var(--danger);">
-                            ${member.check_in_time || 'Not checked in'}
+                    <div class="executive-metrics">
+                        <div class="metric-item">
+                            <div class="metric-value">${executive.leads_worked_today || 0}</div>
+                            <div class="metric-label">Leads Worked Today</div>
                         </div>
-                        <div class="performer-metric">Expected: ${member.expected_time || '09:00'}</div>
+                        <div class="metric-item">
+                            <div class="metric-value">${executive.leads_won || 0}</div>
+                            <div class="metric-label">Leads Won</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${formatCurrency(executive.amount_collected || 0)}</div>
+                            <div class="metric-label">Amount Collected</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${(executive.conversion_rate || 0).toFixed(1)}%</div>
+                            <div class="metric-label">Conversion Rate</div>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
         
-        function renderEmptyLateMembers() {
-            document.getElementById('lateMembers').innerHTML = `
+        function renderEmptyExecutiveReports() {
+            document.getElementById('executiveReports').innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+                    <h3 style="margin-bottom: 0.5rem;">No Executive Data Available</h3>
+                    <p>Executive reports will appear here once data is available.</p>
+                </div>
+            `;
+        }
+        
+        function renderTodaysPerformance(performers) {
+            const container = document.getElementById('todaysPerformance');
+            
+            if (!performers || performers.length === 0) {
+                renderEmptyTodaysPerformance();
+                return;
+            }
+            
+            container.innerHTML = performers.map(performer => `
+                <div class="performer-item">
+                    <div class="performer-info">
+                        <div class="performer-avatar">
+                            ${getInitials(performer.first_name, performer.last_name)}
+                        </div>
+                        <div class="performer-details">
+                            <h4>${performer.name || 'Unknown'}</h4>
+                            <p>${performer.deals_closed || 0} deals closed • ${(performer.conversion_rate || 0).toFixed(1)}% conversion</p>
+                        </div>
+                    </div>
+                    <div class="performer-stats">
+                        <div class="performer-value">
+                            ${formatCurrency(performer.total_revenue || 0)}
+                        </div>
+                        <div class="performer-metric">Today's Revenue</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderEmptyTodaysPerformance() {
+            document.getElementById('todaysPerformance').innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+                    <p>No performance data for today yet.</p>
+                    <small>Top performers will appear here once deals are closed.</small>
+                </div>
+            `;
+        }
+        
+        function renderAttendanceIssues(data) {
+            const container = document.getElementById('attendanceIssues');
+            const issues = data.issues || [];
+            
+            if (issues.length === 0) {
+                renderEmptyAttendanceIssues();
+                return;
+            }
+            
+            container.innerHTML = issues.map(issue => `
+                <div class="performer-item late-member">
+                    <div class="performer-info">
+                        <div class="performer-avatar">
+                            ${getInitials(issue.first_name, issue.last_name)}
+                        </div>
+                        <div class="performer-details">
+                            <h4>${issue.name || `${issue.first_name || ''} ${issue.last_name || ''}`.trim() || 'Unknown'}</h4>
+                            <p>Late by ${issue.late_minutes || 0} minutes</p>
+                        </div>
+                    </div>
+                    <div class="performer-stats">
+                        <div class="performer-value" style="color: var(--warning);">
+                            ${issue.check_in_time || 'Unknown'}
+                        </div>
+                        <div class="performer-metric">Expected: 10:00 AM (Late after 10:15 AM)</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderEmptyAttendanceIssues() {
+            document.getElementById('attendanceIssues').innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                     <div style="font-size: 2rem; margin-bottom: 1rem;">✅</div>
                     <p>All team members are on time today!</p>
@@ -1091,27 +1404,51 @@
             `;
         }
         
+        function getAttendanceStatusText(status, checkInTime) {
+            switch (status) {
+                case 'present':
+                    return `Present (${checkInTime || 'On time'})`;
+                case 'late':
+                    return `Late (${checkInTime || 'Unknown'})`;
+                case 'absent':
+                default:
+                    return 'Absent';
+            }
+        }
+        
         function renderPerformanceChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
             
             // Destroy existing chart
             if (performanceChart) {
                 performanceChart.destroy();
             }
             
-            const chartData = reportData.trends || {};
-            const labels = chartData.labels || [];
-            const revenueData = chartData.revenue || [];
-            const leadsData = chartData.leads || [];
+            // Use data from reportData if available
+            let chartData = {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                revenue: [50000, 75000, 60000, 85000],
+                leads: [12, 18, 15, 22]
+            };
+            
+            // If we have real data from the API, use it
+            if (reportData && reportData.performance_trend) {
+                chartData.labels = reportData.performance_trend.map(item => item.month);
+                chartData.leads = reportData.performance_trend.map(item => item.leads);
+                chartData.revenue = reportData.payment_trend ? 
+                    reportData.payment_trend.map(item => item.collected) :
+                    chartData.revenue.slice(0, chartData.labels.length);
+            }
             
             performanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: chartData.labels,
                     datasets: [
                         {
                             label: 'Revenue (₹)',
-                            data: revenueData,
+                            data: chartData.revenue,
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             tension: 0.4,
@@ -1119,7 +1456,7 @@
                         },
                         {
                             label: 'Leads Count',
-                            data: leadsData,
+                            data: chartData.leads,
                             borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             tension: 0.4,
@@ -1167,8 +1504,9 @@
             
             await Promise.all([
                 loadReports(),
-                loadTopPerformers(),
-                loadLateMembers()
+                loadExecutiveReports(),
+                loadTodaysPerformance(),
+                loadAttendanceIssues()
             ]);
             
             showToast('Filters applied successfully', 'success');
@@ -1205,20 +1543,23 @@
         
         function generateAdvancedCSVReport() {
             const headers = [
-                'Report Type', 'Metric', 'Value', 'Change (%)', 'Period'
+                'Report Type', 'Executive Name', 'Metric', 'Value', 'Date'
             ];
             
-            const stats = reportData.overview || {};
-            const period = `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`;
+            const today = new Date().toISOString().split('T')[0];
+            const rows = [];
             
-            const rows = [
-                ['Overview', 'Total Leads', stats.total_leads || 0, stats.leads_change || 0, period],
-                ['Overview', 'Converted Leads', stats.converted_leads || 0, stats.conversion_change || 0, period],
-                ['Overview', 'Total Revenue', stats.total_revenue || 0, stats.revenue_change || 0, period],
-                ['Overview', 'Win Rate (%)', (stats.win_rate || 0).toFixed(1), stats.win_rate_change || 0, period],
-                ['Overview', 'Average Deal Size', stats.avg_deal_size || 0, stats.deal_size_change || 0, period],
-                ['Overview', 'Team Performance (%)', (stats.team_performance || 0).toFixed(1), stats.team_performance_change || 0, period]
-            ];
+            // Add attendance summary
+            rows.push(['Attendance', 'All', 'Total Executives', '0', today]);
+            rows.push(['Attendance', 'All', 'Present', '0', today]);
+            rows.push(['Attendance', 'All', 'Late', '0', today]);
+            rows.push(['Attendance', 'All', 'Absent', '0', today]);
+            
+            // Add performance summary
+            rows.push(['Performance', 'All', 'Total Leads Today', '0', today]);
+            rows.push(['Performance', 'All', 'Conversions Today', '0', today]);
+            rows.push(['Performance', 'All', 'Revenue Today', '0', today]);
+            rows.push(['Performance', 'All', 'Win Rate Today', '0%', today]);
             
             return [headers, ...rows].map(row => row.join(',')).join('\n');
         }
@@ -1327,6 +1668,49 @@
             } catch (error) {
                 console.error('Error updating user info:', error);
             }
+        }
+        
+        function formatCurrency(amount) {
+            try {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(amount || 0);
+            } catch (error) {
+                return '₹' + (amount || 0).toLocaleString();
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        function getInitials(firstName, lastName) {
+            if (firstName && lastName) {
+                return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+            } else if (firstName) {
+                return firstName.charAt(0).toUpperCase();
+            } else if (lastName) {
+                return lastName.charAt(0).toUpperCase();
+            }
+            return 'U';
         }
     </script>
 </body>
