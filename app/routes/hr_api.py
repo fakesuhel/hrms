@@ -512,6 +512,8 @@ async def create_bulk_attendance_records(
             detail=f"Error processing bulk attendance: {str(e)}"
         )
 
+import json
+import csv
 @router.get("/attendance/export")
 async def export_attendance_data(
     month: int = Query(..., description="Month (1-12)"),
