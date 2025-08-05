@@ -541,7 +541,6 @@
     <div id="toast" class="toast"></div>
     
     <script src="/static/js/hr-utils.js?v=3"></script>
-    <script src="/static/js/date-picker.js"></script>
     <script>
         let payrollData = [];
         let filteredPayrollData = [];
@@ -976,17 +975,6 @@
         
         // Setup event listeners
         function setupEventListeners() {
-            // Initialize the date picker for filter dates
-            createDatePicker('monthYearPicker', {
-                onSelect: function(date) {
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    document.getElementById('monthFilter').value = month;
-                    document.getElementById('yearFilter').value = year;
-                    filterPayrollData();
-                }
-            });
-            
             // Load employees for the employee selector
             loadEmployeesForSelector();
             
@@ -1091,6 +1079,18 @@
             document.getElementById('generatePayrollModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeGenerateModal();
+                }
+            });
+            
+            document.getElementById('salaryDetailsModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSalaryDetailsModal();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
                 }
             });
             

@@ -964,12 +964,13 @@
                 { icon: '📈', label: 'Reports', href: '/app/hr/reports' }
             ]
         };
+        // Hide Settings for HR role
+        navigationConfig.hr = navigationConfig.manager.filter(item => item.label !== 'Settings');
 
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
-            let menuItems = navigationConfig[userRole] || navigationConfig.employee;
-            // Always remove Settings for HR roles
-            menuItems = menuItems.filter(item => item.label !== "Settings");
+            // If HR, use filtered menu without Settings
+            let menuItems = userRole === 'hr' ? navigationConfig.hr : (navigationConfig[userRole] || navigationConfig.employee);
             const navigationMenu = document.getElementById('navigationMenu');
             
             if (!navigationMenu) return;

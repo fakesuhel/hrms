@@ -653,9 +653,43 @@
                 }
             } catch (error) {
                 console.error('Error loading job postings:', error);
-                // Create sample data on error
-                jobPostings = [];
+                // Fallback to sample data if API fails
+                jobPostings = [
+                    {
+                        _id: '1',
+                        title: 'Senior Frontend Developer',
+                        department: 'Development',
+                        experience_level: 'Senior Level',
+                        location: 'Pune, India',
+                        employment_type: 'Full-time',
+                        status: 'active',
+                        description: 'We are looking for a skilled Frontend Developer to join our team.',
+                        requirements: 'Experience with React, JavaScript, HTML, CSS',
+                        skills: 'React, JavaScript, HTML, CSS, TypeScript',
+                        salary_min: 800000,
+                        salary_max: 1200000,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        _id: '2',
+                        title: 'Sales Executive',
+                        department: 'Sales',
+                        experience_level: 'Mid Level',
+                        location: 'Pune, India',
+                        employment_type: 'Full-time',
+                        status: 'active',
+                        description: 'Join our sales team to drive business growth.',
+                        requirements: 'Experience in B2B sales, excellent communication skills',
+                        skills: 'Sales, Communication, CRM, Negotiation',
+                        salary_min: 400000,
+                        salary_max: 700000,
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                filteredJobs = [...jobPostings];
                 renderJobPostings();
+                populateJobSelect();
+                updateStats();
             }
         }
         
@@ -995,13 +1029,26 @@
         async function saveCandidate() {
             const form = document.getElementById('candidateForm');
             const formData = new FormData(form);
-            
+
+            // Validate job selection before sending to backend
+            const jobId = formData.get('job_id');
+            if (!jobId || jobId === 'undefined' || jobId === '') {
+                showToast('Please select a job position for the candidate');
+                return;
+            }
+
+            // Validate other required fields
+            if (!formData.get('first_name') || !formData.get('last_name') || !formData.get('email')) {
+                showToast('Please fill all required fields');
+                return;
+            }
+
             const candidateData = {
                 first_name: formData.get('first_name'),
                 last_name: formData.get('last_name'),
                 email: formData.get('email'),
                 phone: formData.get('phone'),
-                job_id: formData.get('job_id'),
+                job_id: jobId,
                 experience: parseFloat(formData.get('experience')) || 0,
                 current_salary: parseInt(formData.get('current_salary')) || 0,
                 skills: formData.get('skills'),
@@ -1009,7 +1056,7 @@
                 notes: formData.get('notes'),
                 stage: formData.get('stage')
             };
-            
+
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const response = await fetch('/api/hr/candidates', {
@@ -1020,14 +1067,18 @@
                     },
                     body: JSON.stringify(candidateData)
                 });
-                
+
                 if (response.ok) {
                     closeCandidateModal();
                     showToast('Candidate added successfully');
                     await loadCandidates();
                 } else {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to add candidate');
+                    let errorText = 'Failed to add candidate';
+                    try {
+                        const error = await response.json();
+                        errorText = error.detail || errorText;
+                    } catch (e) {}
+                    showToast(errorText);
                 }
             } catch (error) {
                 console.error('Error saving candidate:', error);

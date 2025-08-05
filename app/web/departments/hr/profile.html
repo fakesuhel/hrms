@@ -772,12 +772,7 @@
                             Penalties
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="/app/settings" class="nav-link">
-                            <i>⚙️</i>
-                            Settings
-                        </a>
-                    </li>
+                    <!-- Remove settings for HR login -->
                 </ul>
             </nav>
             
@@ -806,9 +801,7 @@
                         <a href="/app/profile" class="dropdown-item">
                             <i>👤</i> Your Profile
                         </a>
-                        <a href="/app/settings" class="dropdown-item">
-                            <i>⚙️</i> Settings
-                        </a>
+                        <!-- Remove settings for HR login -->
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
@@ -2127,7 +2120,17 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    displaySalarySlips(data.salary_slips);
+                    // Support both array and object response
+                    let slips = [];
+                    if (Array.isArray(data)) {
+                        slips = data;
+                    } else if (Array.isArray(data.salary_slips)) {
+                        slips = data.salary_slips;
+                    }
+                    displaySalarySlips(slips);
+                } else if (response.status === 500) {
+                    const slipsList = document.getElementById('salarySlipsList');
+                    slipsList.innerHTML = '<p>Server error: Unable to load salary slips. Please try again later or contact support.</p>';
                 } else {
                     const slipsList = document.getElementById('salarySlipsList');
                     slipsList.innerHTML = '<p>No salary slips found.</p>';
@@ -2138,38 +2141,40 @@
                 slipsList.innerHTML = '<p>Error loading salary slips. Please try again.</p>';
             }
         }
-        
+
         function displaySalarySlips(slips) {
             const slipsList = document.getElementById('salarySlipsList');
-            
-            if (slips.length === 0) {
+            // Support both array and single object
+            if (!slips || (Array.isArray(slips) && slips.length === 0)) {
                 slipsList.innerHTML = '<p>No salary slips available.</p>';
                 return;
             }
-            
             let html = '<div class="salary-slips-grid">';
-            
+            // If slips is not an array, treat as single slip object
+            if (!Array.isArray(slips)) {
+                slips = [slips];
+            }
             slips.forEach(slip => {
                 html += `
                     <div class="salary-slip-card">
                         <div class="slip-header">
-                            <h4>${slip.month_name} ${slip.year}</h4>
+                            <h4>${slip.month_name || slip.month} ${slip.year}</h4>
                             <span class="slip-status ${slip.is_finalized ? 'finalized' : 'draft'}">
                                 ${slip.is_finalized ? 'Finalized' : 'Draft'}
-                            </span>
+                                                       </span>
                         </div>
                         <div class="slip-details">
                             <div class="detail-row">
                                 <span>Net Salary:</span>
-                                <span class="amount">₹${slip.net_salary.toLocaleString()}</span>
+                                <span class="amount">₹${(slip.net_salary || 0).toLocaleString()}</span>
                             </div>
                             <div class="detail-row">
                                 <span>Payable Amount:</span>
-                                <span class="amount payable">₹${slip.payable_salary ? slip.payable_salary.toLocaleString() : slip.net_salary.toLocaleString()}</span>
+                                <span class="amount payable">₹${slip.payable_salary ? slip.payable_salary.toLocaleString() : (slip.net_salary || 0).toLocaleString()}</span>
                             </div>
                             <div class="detail-row">
                                 <span>Generated:</span>
-                                <span>${new Date(slip.generated_date).toLocaleDateString()}</span>
+                                <span>${slip.generated_date ? new Date(slip.generated_date).toLocaleDateString() : (slip.generated_at ? new Date(slip.generated_at).toLocaleDateString() : '')}</span>
                             </div>
                         </div>
                         <div class="slip-actions">
@@ -2180,21 +2185,10 @@
                     </div>
                 `;
             });
-            
             html += '</div>';
             slipsList.innerHTML = html;
         }
-        
-        async function downloadSalarySlip(slipId) {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/users/salary-slips/${slipId}/download?token=${token}`, '_blank');
-            } catch (error) {
-                console.error('Download error:', error);
-                showToast('Download failed', 'error');
-            }
-        }
-        
+
         async function downloadCurrentMonthSlip() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
@@ -2203,10 +2197,22 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
-                    await downloadSalarySlip(data.salary_slip.id);
+                    // Support both object and array response
+                    let slip = null;
+                    if (data.salary_slip) {
+                        slip = data.salary_slip;
+                    } else if (Array.isArray(data) && data.length > 0) {
+                        slip = data[0];
+                    } else if (data.id) {
+                        slip = data;
+                    }
+                    if (slip && slip.id) {
+                        await downloadSalarySlip(slip.id);
+                    } else {
+                        showToast('Current month salary slip not available', 'error');
+                    }
                 } else {
                     showToast('Current month salary slip not available', 'error');
                 }

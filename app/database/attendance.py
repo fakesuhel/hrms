@@ -1,25 +1,82 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, field_validator
 from bson import ObjectId
 from app.database import db
+from pydantic_core import core_schema
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # Get attendance collection
 attendance_collection = db["attendance"]
 
+def ensure_timezone_aware(dt):
+    """Ensure a datetime object is timezone-aware (assume IST if naive)"""
+    if dt is None:
+        return None
+        
+    # Convert string to datetime if needed
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        except ValueError:
+            try:
+                dt = datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S.%f")
+            except ValueError:
+                # Final fallback
+                dt = datetime.fromisoformat(dt)
+    
+    # If timezone-naive, assume it's in IST
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=IST)
+    elif dt.tzinfo != IST:
+        # Convert to IST if it's in a different timezone
+        return dt.astimezone(IST)
+    return dt
+
+def parse_datetime_field(value):
+    """Custom parser for datetime fields that might contain invalid data"""
+    if value is None:
+        return None
+    
+    if isinstance(value, datetime):
+        return ensure_timezone_aware(value)
+    
+    if isinstance(value, str):
+        # Handle simple time strings like '09:00' by returning None (invalid data)
+        if len(value) <= 5 and ':' in value:
+            print(f"Warning: Invalid datetime format '{value}' - skipping this field")
+            return None
+        
+        try:
+            # Try to parse as ISO datetime
+            return ensure_timezone_aware(datetime.fromisoformat(value.replace('Z', '+00:00')))
+        except ValueError:
+            try:
+                # Try alternative parsing
+                return ensure_timezone_aware(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
+            except ValueError:
+                print(f"Warning: Could not parse datetime '{value}' - setting to None")
+                return None
+    
+    return None
+
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        return core_schema.with_info_plain_validator_function(cls.validate)
         
     @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+    def validate(cls, v, info=None):
+        if isinstance(v, ObjectId):
+            return v
+        if isinstance(v, str) and ObjectId.is_valid(v):
+            return ObjectId(v)
+        raise ValueError("Invalid ObjectId")
     
     @classmethod
-    def __get_pydantic_json_schema__(cls, core_schema: Dict[str, Any], handler) -> Dict[str, Any]:
+    def __get_pydantic_json_schema__(cls, _schema, _handler):
         return {"type": "string"}
 
 class AttendanceCheckIn(BaseModel):
@@ -49,8 +106,8 @@ class Attendance(BaseModel):
     is_complete: bool = False
     work_hours: Optional[float] = None
     status: str = "present"  # "present", "absent", "leave"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(IST))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(IST))
     
     @field_validator('check_in', 'check_out', mode='before')
     @classmethod
@@ -64,14 +121,15 @@ class Attendance(BaseModel):
             return datetime.now(IST)
         return parse_datetime_field(v) or datetime.now(IST)
     
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {
             ObjectId: str,
             datetime: lambda v: v.isoformat(),
             date: lambda v: v.isoformat()
         }
+    }
 
 class AttendanceResponse(BaseModel):
     id: str = Field(alias="_id")
@@ -103,11 +161,12 @@ class AttendanceResponse(BaseModel):
             return datetime.now(IST)
         return parse_datetime_field(v) or datetime.now(IST)
     
-    class Config:
-        populate_by_name = True
-        json_encoders = {
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 class DatabaseAttendance:
     @staticmethod
@@ -145,7 +204,8 @@ class DatabaseAttendance:
         # Ensure date is properly formatted string
         attendance_date = check_in_data.date
         if not attendance_date:
-            attendance_date = datetime.utcnow().date().isoformat()
+            # Use IST timezone for date
+            attendance_date = datetime.now(IST).date().isoformat()
         
         # Check if already checked in
         existing_attendance = attendance_collection.find_one({
@@ -157,8 +217,8 @@ class DatabaseAttendance:
             if existing_attendance.get("check_in"):
                 raise ValueError("Already checked in for today")
             
-            # Update existing record
-            now = datetime.utcnow()
+            # Update existing record with IST timezone
+            now = datetime.now(IST)
             update_data = {
                 "check_in": now,
                 "check_in_location": check_in_data.check_in_location,
@@ -166,7 +226,7 @@ class DatabaseAttendance:
                 "updated_at": now
             }
             
-            # Check if late (after 10 AM)
+            # Check if late (after 10 AM IST)
             if now.hour > 10 or (now.hour == 10 and now.minute > 0):
                 update_data["is_late"] = True
             
@@ -178,8 +238,8 @@ class DatabaseAttendance:
             updated_attendance = attendance_collection.find_one({"_id": existing_attendance["_id"]})
             return Attendance(**updated_attendance)
         
-        # Create new attendance record
-        now = datetime.utcnow()
+        # Create new attendance record with IST timezone
+        now = datetime.now(IST)
         new_attendance = {
             "user_id": user_id,
             "date": attendance_date,
@@ -203,8 +263,8 @@ class DatabaseAttendance:
         # Ensure user_id is string
         user_id = str(user_id)
         
-        # Get today's date in ISO format
-        today = datetime.utcnow().date().isoformat()
+        # Get today's date in ISO format with IST timezone
+        today = datetime.now(IST).date().isoformat()
         
         # Find attendance record for today
         attendance = attendance_collection.find_one({
@@ -221,9 +281,10 @@ class DatabaseAttendance:
         if attendance.get("check_out"):
             raise ValueError("Already checked out for today")
         
-        # Calculate work hours
-        now = datetime.utcnow()
-        check_in_time = attendance["check_in"]
+        # Calculate work hours - ensure check_in_time is timezone-aware
+        now = datetime.now(IST)
+        check_in_time = ensure_timezone_aware(attendance["check_in"])
+        # Ensure both times are in the same timezone for calculation
         work_hours = (now - check_in_time).total_seconds() / 3600
         work_hours = round(work_hours, 2)
         
@@ -305,7 +366,8 @@ class DatabaseAttendance:
         existing_user_ids = [record["user_id"] for record in attendance_records]
         missing_user_ids = [id for id in team_ids if id not in existing_user_ids]
         
-        now = datetime.utcnow()
+        # Use IST timezone for current time
+        now = datetime.now(IST)
         for user_id in missing_user_ids:
             absent_record = {
                 "_id": ObjectId(),
@@ -314,7 +376,7 @@ class DatabaseAttendance:
                 "status": "absent",
                 "is_complete": False,
                 "created_at": now,
-                "updated_at": now
+                "updated_at": now 
             }
             attendance_records.append(absent_record)
         
@@ -345,8 +407,8 @@ class DatabaseAttendance:
         work_hours = [r.work_hours for r in attendance_records if r.work_hours is not None]
         avg_work_hours = sum(work_hours) / len(work_hours) if work_hours else 0
         
-        # Current date and user
-        current_date = "2025-06-12 06:56:11"
+        # Current date and user with IST timezone
+        current_date = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
         current_user = "soherunot"
         
         return {
@@ -364,3 +426,99 @@ class DatabaseAttendance:
             "current_time": current_date,
             "current_user": current_user
         }
+    
+    @staticmethod
+    async def delete_attendance(attendance_id: str) -> bool:
+        """Delete an attendance record by ID"""
+        try:
+            # Convert string to ObjectId
+            attendance_obj_id = ObjectId(attendance_id)
+            
+            # Delete the attendance record
+            result = attendance_collection.delete_one({"_id": attendance_obj_id})
+            
+            return result.deleted_count > 0
+            
+        except Exception as e:
+            print(f"Error deleting attendance: {str(e)}")
+            return False
+    
+    @staticmethod
+    async def get_attendance_by_date(date_str: str) -> List[Attendance]:
+        """Get all attendance records for a specific date"""
+        try:
+            print(f"Getting attendance for date: {date_str}")
+            
+            # Find all attendance records for the date
+            cursor = attendance_collection.find({
+                "date": date_str
+            }).sort("user_id", 1)
+            
+            # Convert to list and create Attendance objects
+            attendance_records = list(cursor)
+            return [Attendance(**record) for record in attendance_records]
+            
+        except Exception as e:
+            print(f"Error getting attendance by date: {str(e)}")
+            return []
+
+    @staticmethod
+    def get_attendance_by_id(attendance_id: str) -> Optional[Attendance]:
+        """Get attendance record by ID"""
+        try:
+            if not ObjectId.is_valid(attendance_id):
+                return None
+                
+            record = attendance_collection.find_one({"_id": ObjectId(attendance_id)})
+            if record:
+                return Attendance(**record)
+            return None
+            
+        except Exception as e:
+            print(f"Error getting attendance by ID: {str(e)}")
+            return None
+
+    @staticmethod
+    def update_attendance(attendance_id: str, update_data: dict) -> Optional[Attendance]:
+        """Update attendance record"""
+        try:
+            if not ObjectId.is_valid(attendance_id):
+                return None
+                
+            # Filter out None values and prepare update data
+            update_fields = {}
+            for key, value in update_data.items():
+                if value is not None:
+                    if key in ['check_in', 'check_out'] and value:
+                        # Ensure time fields are properly formatted
+                        if isinstance(value, str) and ':' in value:
+                            update_fields[key] = value
+                    elif key == 'date' and value:
+                        # Ensure date is in proper format
+                        if isinstance(value, str):
+                            update_fields[key] = value
+                    else:
+                        update_fields[key] = value
+            
+            # Add updated timestamp
+            update_fields['updated_at'] = datetime.now(IST)
+            
+            print(f"Updating attendance {attendance_id} with: {update_fields}")
+            
+            # Update the record
+            result = attendance_collection.update_one(
+                {"_id": ObjectId(attendance_id)},
+                {"$set": update_fields}
+            )
+            
+            if result.modified_count > 0:
+                # Return the updated record
+                updated_record = attendance_collection.find_one({"_id": ObjectId(attendance_id)})
+                if updated_record:
+                    return Attendance(**updated_record)
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error updating attendance: {str(e)}")
+            return None

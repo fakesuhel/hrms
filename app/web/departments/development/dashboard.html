@@ -3058,17 +3058,26 @@
                 const location = 'Office';
                 
                 const isoTodayDate = new Date().toISOString().split('T')[0];
+                // Get user_id from window.currentUser or localStorage
+                let userId = null;
+                if (window.currentUser && (window.currentUser.id || window.currentUser._id)) {
+                    userId = window.currentUser.id || window.currentUser._id;
+                } else {
+                    userId = localStorage.getItem('user_id');
+                }
+                const payload = {
+                    user_id: userId,
+                    check_in_location: location,
+                    check_in_note: 'Checked in via dashboard',
+                    date: isoTodayDate
+                };
                 const response = await fetch('/attendance/check-in', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        check_in_location: location,
-                        check_in_note: 'Checked in via dashboard',
-                        date: isoTodayDate
-                    })
+                    body: JSON.stringify(payload)
                 });
                 
                 if (!response.ok) {

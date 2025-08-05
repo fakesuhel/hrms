@@ -1,5 +1,7 @@
 from datetime import datetime
 from bson import ObjectId
+from typing import Optional
+from pydantic import BaseModel, Field
 from app.database import db
 
 # Create the salary_slips collection
@@ -12,6 +14,32 @@ try:
     salary_slips_collection.create_index([("status", 1)])
 except Exception as e:
     print(f"Warning: Error creating indexes on salary_slips: {e}")
+
+class SalarySlipResponse(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    employee_id: str
+    month: str
+    year: int
+    department: Optional[str] = None
+    status: Optional[str] = None
+    pay_date: Optional[datetime] = None
+    paid_by: Optional[str] = None
+    base_salary: Optional[float] = None
+    net_salary: Optional[float] = None
+    allowances: Optional[float] = None
+    hra: Optional[float] = None
+    pf_deduction: Optional[float] = None
+    tax_deduction: Optional[float] = None
+    penalty_deductions: Optional[float] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        populate_by_name = True
+        json_encoders = {
+            ObjectId: str,
+            datetime: lambda v: v.isoformat() if v else None
+        }
 
 # Methods for interacting with salary slips
 class DatabaseSalarySlips:
