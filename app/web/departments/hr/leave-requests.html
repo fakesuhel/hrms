@@ -961,14 +961,15 @@
                 { icon: '🎯', label: 'Recruitment', href: '/app/hr/recruitment' },
                 { icon: '👤', label: 'Profile', href: '/app/hr/profile' },
                 { icon: '💰', label: 'Payroll', href: '/app/hr/payroll' },
-                { icon: '📈', label: 'Reports', href: '/app/hr/reports' },
-                { icon: '⚙️', label: 'Settings', href: '/app/hr/settings' }
+                { icon: '📈', label: 'Reports', href: '/app/hr/reports' }
             ]
         };
 
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
-            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            let menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            // Always remove Settings for HR roles
+            menuItems = menuItems.filter(item => item.label !== "Settings");
             const navigationMenu = document.getElementById('navigationMenu');
             
             if (!navigationMenu) return;

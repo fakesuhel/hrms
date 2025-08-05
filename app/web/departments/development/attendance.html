@@ -1075,7 +1075,7 @@
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
             let menuItems = navigationConfig[userRole] || navigationConfig.employee;
-            // Remove Settings for HR, Sales, IT
+            // Always remove Settings for HR, Sales, IT roles
             if (["hr", "sales", "it"].includes(userRole)) {
                 menuItems = menuItems.filter(item => item.label !== "Settings");
             }
