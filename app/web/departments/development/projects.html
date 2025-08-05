@@ -1559,7 +1559,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadProjects();
     
     // Set up user search for task assignment
-    setupUserSearchFields();
+    if (currentUser) {
+        setupUserSearchFields(currentUser);
+    }
     
     console.log(`Projects page loaded at ${getCurrentTimeFormatted()} by ${currentUser?.username || 'soheruwite'}`);
 });
@@ -2794,7 +2796,7 @@ function initializeUserSearch(inputElement, resultsContainer) {
 // Setup user search fields on the page
 function setupUserSearchFields() {
     // Fetch all users at startup to populate our cache
-    fetchAllUsers();
+    fetchAllUsers(currentUser);
     
     // For backward compatibility, keep the old search functionality
     // Create results containers
@@ -3254,15 +3256,34 @@ let userListCache = [];
 
 async function fetchAllUsers() {
     const token = localStorage.getItem('bhoomitechzone_token');
+    // Use currentUser to determine endpoint
+    if (!window.currentUserRole) {
+        // fallback: get current user
+        const currentUser = await getCurrentUser();
+        window.currentUserRole = currentUser.role;
+        window.currentUserId = currentUser._id;
+    }
+    const privilegedRoles = ['admin', 'director', 'manager', 'team_lead', 'dev_manager', 'hr'];
     try {
-        const response = await fetch('/users', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
+        if (privilegedRoles.includes(window.currentUserRole)) {
+            const response = await fetch('/api/development/team-members', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed to fetch team members');
+            userListCache = await response.json();
+            return userListCache;
+        } else {
+            // Regular users: only themselves
+            const currentUser = await getCurrentUser();
+            userListCache = [{
+                _id: currentUser._id,
+                username: currentUser.username,
+                full_name: currentUser.full_name || currentUser.username,
+                role: currentUser.role,
+                position: currentUser.position || 'Member'
+            }];
+            return userListCache;
         }
-        userListCache = await response.json();
-        return userListCache;
     } catch (err) {
         console.error('Error loading users:', err);
         showToast('Error loading users');

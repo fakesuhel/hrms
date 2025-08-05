@@ -524,64 +524,6 @@
         </div>
     </div>
     
-    <!-- Edit Attendance Modal -->
-    <div id="editAttendanceModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Attendance</h3>
-                <button class="modal-close" id="closeEditModal">&times;</button>
-            </div>
-            
-            <div class="modal-body">
-                <form id="editAttendanceForm">
-                    <div class="form-group">
-                        <label class="form-label">Employee *</label>
-                        <select id="editEmployeeSelect" name="employee_id" class="form-select" required>
-                            <option value="">Select Employee</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" id="editAttendanceDate" name="date" class="form-input" required>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Check In Time</label>
-                            <input type="time" id="editCheckInTime" name="check_in" class="form-input">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Check Out Time</label>
-                            <input type="time" id="editCheckOutTime" name="check_out" class="form-input">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Status *</label>
-                        <select id="editAttendanceStatus" name="status" class="form-select" required>
-                            <option value="present">Present</option>
-                            <option value="absent">Absent</option>
-                            <option value="half_day">Half Day</option>
-                            <option value="late">Late</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Notes</label>
-                        <textarea id="editAttendanceNotes" name="notes" class="form-textarea" placeholder="Add any notes..."></textarea>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="cancelEditBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveEditBtn">Update Attendance</button>
-            </div>
-        </div>
-    </div>
-    
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
     
@@ -617,21 +559,13 @@
         // Populate employee select
         function populateEmployeeSelect() {
             const select = document.getElementById('employeeSelect');
-            const editSelect = document.getElementById('editEmployeeSelect');
-            
             select.innerHTML = '<option value="">Select Employee</option>';
-            editSelect.innerHTML = '<option value="">Select Employee</option>';
             
             employees.forEach(emp => {
                 const option = document.createElement('option');
                 option.value = emp._id || emp.id;
                 option.textContent = `${emp.first_name} ${emp.last_name} (${emp.department})`;
                 select.appendChild(option);
-                
-                const editOption = document.createElement('option');
-                editOption.value = emp._id || emp.id;
-                editOption.textContent = `${emp.first_name} ${emp.last_name} (${emp.department})`;
-                editSelect.appendChild(editOption);
             });
         }
         
@@ -952,77 +886,9 @@
         }
         
         // Edit attendance
-        async function editAttendance(attendanceId) {
-            try {
-                // Find the attendance record
-                const record = attendanceData.find(r => (r._id || r.id) === attendanceId);
-                if (!record) {
-                    showToast('Attendance record not found');
-                    return;
-                }
-                
-                // Populate the edit modal with existing data
-                document.getElementById('editEmployeeSelect').value = record.employee_id || '';
-                document.getElementById('editAttendanceDate').value = record.date;
-                document.getElementById('editCheckInTime').value = record.check_in || '';
-                document.getElementById('editCheckOutTime').value = record.check_out || '';
-                document.getElementById('editAttendanceStatus').value = record.status;
-                document.getElementById('editAttendanceNotes').value = record.notes || '';
-                
-                // Store the attendance ID for saving
-                document.getElementById('editAttendanceForm').dataset.attendanceId = attendanceId;
-                
-                // Show the edit modal
-                document.getElementById('editAttendanceModal').style.display = 'flex';
-            } catch (error) {
-                console.error('Error loading attendance for edit:', error);
-                showToast('Error loading attendance data');
-            }
-        }
-        
-        // Save edited attendance
-        async function saveEditedAttendance() {
-            const form = document.getElementById('editAttendanceForm');
-            const formData = new FormData(form);
-            const attendanceId = form.dataset.attendanceId;
-            
-            if (!attendanceId) {
-                showToast('Error: No attendance ID found');
-                return;
-            }
-            
-            const updateData = {
-                employee_id: formData.get('employee_id'),
-                date: formData.get('date'),
-                check_in: formData.get('check_in') || null,
-                check_out: formData.get('check_out') || null,
-                status: formData.get('status'),
-                notes: formData.get('notes') || ''
-            };
-            
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch(`/api/hr/attendance/${attendanceId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-                
-                if (response.ok) {
-                    closeEditModal();
-                    showToast('Attendance updated successfully');
-                    await loadAttendanceData();
-                } else {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to update attendance');
-                }
-            } catch (error) {
-                console.error('Error updating attendance:', error);
-                showToast('Error updating attendance: ' + error.message);
-            }
+        function editAttendance(attendanceId) {
+            // Implementation for editing attendance
+            showToast('Edit functionality coming soon');
         }
         
         // Delete attendance
@@ -1093,10 +959,6 @@
         
         function closeBulkModal() {
             document.getElementById('bulkMarkModal').style.display = 'none';
-        }
-        
-        function closeEditModal() {
-            document.getElementById('editAttendanceModal').style.display = 'none';
         }
         
         // Show toast
@@ -1243,10 +1105,6 @@
             document.getElementById('cancelBulkBtn').addEventListener('click', closeBulkModal);
             document.getElementById('saveBulkBtn').addEventListener('click', saveBulkAttendance);
             
-            document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
-            document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
-            document.getElementById('saveEditBtn').addEventListener('click', saveEditedAttendance);
-            
             // Close modals on outside click
             document.getElementById('markAttendanceModal').addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -1257,12 +1115,6 @@
             document.getElementById('bulkMarkModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeBulkModal();
-                }
-            });
-            
-            document.getElementById('editAttendanceModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeEditModal();
                 }
             });
         }

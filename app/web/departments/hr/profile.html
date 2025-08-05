@@ -965,11 +965,11 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Department</label>
-                                <input type="text" class="form-input" id="department" name="department" readonly>
+                                <input type="text" class="form-input" id="department" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Designation</label>
-                                <input type="text" class="form-input" id="designation" name="designation" readonly>
+                                <input type="text" class="form-input" id="designation" readonly>
                             </div>
                         </div>
                         
@@ -980,20 +980,14 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Employment Type</label>
-                                <select class="form-input" id="employmentType" name="employmentType" disabled>
-                                    <option value="">Select Type</option>
-                                    <option value="Full-time">Full-time</option>
-                                    <option value="Part-time">Part-time</option>
-                                    <option value="Contract">Contract</option>
-                                    <option value="Intern">Intern</option>
-                                </select>
+                                <input type="text" class="form-input" id="employmentType" name="employmentType" readonly>
                             </div>
                         </div>
                         
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Date of Joining</label>
-                                <input type="date" class="form-input" id="joinDate" name="joinDate" readonly>
+                                <input type="date" class="form-input" id="joinDate" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Manager/Reporting To</label>
@@ -1013,7 +1007,7 @@
                     </div>
                     
                     <div id="editActions" style="display: none; margin-top: 1rem;">
-                        <button type="button" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                         <button type="button" class="btn btn-outline" id="cancelEditBtn">Cancel</button>
                     </div>
                 </div>
@@ -1352,7 +1346,6 @@
             // Edit profile
             const editProfileBtn = document.getElementById('editProfileBtn');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
-            const saveProfileBtn = document.getElementById('saveProfileBtn');
             
             if (editProfileBtn) {
                 editProfileBtn.addEventListener('click', function() {
@@ -1364,12 +1357,6 @@
                 cancelEditBtn.addEventListener('click', function() {
                     enableProfileEdit(false);
                     loadProfileData(); // Reload original data
-                });
-            }
-            
-            if (saveProfileBtn) {
-                saveProfileBtn.addEventListener('click', function() {
-                    saveProfileData();
                 });
             }
             
@@ -1516,14 +1503,7 @@
         }
         
         function enableProfileEdit(enable) {
-            // Target all form inputs and selects except readonly ones like employeeId
-            const inputs = document.querySelectorAll(`
-                #fullName, #email, #phoneNumber, #dateOfBirth, #gender,
-                #address, #pincode, #city, #state, #country,
-                #bankName, #accountNumber, #ifscCode, #panNumber, #aadharNumber, #uanNumber,
-                #department, #designation, #position, #employmentType, #joinDate, #reportingTo, #performanceIncentives
-            `);
-            
+            const inputs = document.querySelectorAll('#profileForm input:not(#employeeId), #profileForm select:not(#employeeId)');
             const editBtn = document.getElementById('editProfileBtn');
             const editActions = document.getElementById('editActions');
             
@@ -1533,24 +1513,10 @@
                 } else {
                     input.readOnly = !enable;
                 }
-                
-                // Add visual feedback
-                if (enable) {
-                    input.style.borderColor = 'var(--primary)';
-                    input.style.backgroundColor = '#fff';
-                } else {
-                    input.style.borderColor = '';
-                    input.style.backgroundColor = '';
-                }
             });
             
             editBtn.style.display = enable ? 'none' : 'block';
             editActions.style.display = enable ? 'block' : 'none';
-            
-            // Show feedback message
-            if (enable) {
-                showToast('Edit mode enabled. You can now modify your profile.', 'info');
-            }
         }
         
         // Postal Code API Integration
@@ -1823,60 +1789,36 @@
         
         async function saveProfileData() {
             try {
-                // Show loading state
-                showToast('Saving profile...', 'info');
-                
                 const token = localStorage.getItem('bhoomitechzone_token');
                 
-                // Validate required fields
-                const requiredFields = ['fullName', 'email'];
-                for (const fieldId of requiredFields) {
-                    const field = document.getElementById(fieldId);
-                    if (!field || !field.value.trim()) {
-                        showToast(`Please fill in ${fieldId === 'fullName' ? 'Full Name' : 'Email'}`, 'error');
-                        field?.focus();
-                        return;
-                    }
-                }
-                
-                // Collect form data with safe value extraction
-                const getValue = (id) => {
-                    const element = document.getElementById(id);
-                    return element ? element.value.trim() : '';
-                };
-                
+                // Collect form data
                 const profileData = {
-                    full_name: getValue('fullName'),
-                    email: getValue('email'),
-                    phone_number: getValue('phoneNumber'),
-                    date_of_birth: getValue('dateOfBirth'),
-                    gender: getValue('gender'),
-                    address: getValue('address'),
-                    pincode: getValue('pincode'),
-                    city: getValue('city'),
-                    state: getValue('state'),
-                    country: getValue('country') || 'India',
-                    bank_name: getValue('bankName'),
-                    account_number: getValue('accountNumber'),
-                    ifsc_code: getValue('ifscCode'),
-                    pan_number: getValue('panNumber'),
-                    aadhar_number: getValue('aadharNumber'),
-                    uan_number: getValue('uanNumber'),
-                    department: getValue('department'),
-                    designation: getValue('designation'),
-                    position: getValue('position'),
-                    employment_type: getValue('employmentType'),
-                    join_date: getValue('joinDate'),
-                    reporting_to: getValue('reportingTo'),
-                    performance_incentives: getValue('performanceIncentives')
+                    full_name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone_number: document.getElementById('phoneNumber').value,
+                    date_of_birth: document.getElementById('dateOfBirth').value,
+                    gender: document.getElementById('gender').value,
+                    address: document.getElementById('address').value,
+                    pincode: document.getElementById('pincode').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    country: document.getElementById('country').value,
+                    bank_name: document.getElementById('bankName').value,
+                    account_number: document.getElementById('accountNumber').value,
+                    ifsc_code: document.getElementById('ifscCode').value,
+                    pan_number: document.getElementById('panNumber').value,
+                    aadhar_number: document.getElementById('aadharNumber').value,
+                    uan_number: document.getElementById('uanNumber').value,
+                    department: document.getElementById('department').value,
+                    designation: document.getElementById('designation').value,
+                    position: document.getElementById('position').value,
+                    employment_type: document.getElementById('employmentType').value,
+                    join_date: document.getElementById('joinDate').value,
+                    reporting_to: document.getElementById('reportingTo').value,
+                    performance_incentives: document.getElementById('performanceIncentives').value,
+                    base_salary: document.getElementById('baseSalary').value.replace('₹', '').replace(/,/g, ''),
+                    net_salary: document.getElementById('netSalary').value.replace('₹', '').replace(/,/g, '')
                 };
-                
-                // Remove empty values to avoid overwriting existing data
-                Object.keys(profileData).forEach(key => {
-                    if (profileData[key] === '') {
-                        delete profileData[key];
-                    }
-                });
                 
                 const response = await fetch('/users/profile', {
                     method: 'PUT',
@@ -1888,18 +1830,17 @@
                 });
                 
                 if (response.ok) {
-                    showToast('✅ Profile updated successfully', 'success');
+                    showToast('Profile updated successfully');
                     enableProfileEdit(false);
                     // Reload user data to update sidebar
-                    await loadUserData();
-                    await loadProfileData(); // Refresh the form with updated data
+                    loadUserData();
                 } else {
                     const errorData = await response.json();
-                    showToast(`❌ Failed to update profile: ${errorData.detail || 'Unknown error'}`, 'error');
+                    showToast(`Failed to update profile: ${errorData.detail || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error saving profile:', error);
-                showToast('❌ Error saving profile. Please try again.', 'error');
+                showToast('Error saving profile');
             }
         }
         
@@ -2286,8 +2227,6 @@
                     toast.style.background = 'var(--danger)';
                 } else if (type === 'warning') {
                     toast.style.background = 'var(--warning)';
-                } else if (type === 'info') {
-                    toast.style.background = 'var(--primary)';
                 } else {
                     toast.style.background = 'var(--success)';
                 }

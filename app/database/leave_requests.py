@@ -41,12 +41,6 @@ class LeaveRequestInDB(LeaveRequestBase):
     duration_days: int = 1
     
     class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str,
-            date: lambda d: d.isoformat(),
-            datetime: lambda dt: dt.isoformat()
-        }
         json_schema_extra = {
             "example": {
                 "_id": "60d21b4967d0d8820c43e666",
@@ -102,14 +96,6 @@ class LeaveRequestResponse(BaseModel):
     updated_at: datetime
     approved_at: Optional[datetime] = None
     duration_days: int
-    
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str,
-            date: lambda d: d.isoformat(),
-            datetime: lambda dt: dt.isoformat()
-        }
 
 class DatabaseLeaveRequests:
     collection: Collection = leave_requests_collection
@@ -127,16 +113,7 @@ class DatabaseLeaveRequests:
             updated_at=datetime.now()
         )
         
-        # Convert to dict with proper date serialization
-        leave_dict = leave_in_db.dict(by_alias=True)
-        
-        # Ensure dates are stored as datetime objects in MongoDB
-        if isinstance(leave_dict.get('start_date'), date):
-            leave_dict['start_date'] = datetime.combine(leave_dict['start_date'], datetime.min.time())
-        if isinstance(leave_dict.get('end_date'), date):
-            leave_dict['end_date'] = datetime.combine(leave_dict['end_date'], datetime.min.time())
-        
-        result = cls.collection.insert_one(leave_dict)
+        result = cls.collection.insert_one(leave_in_db.dict(by_alias=True))
         leave_in_db.id = result.inserted_id
         return leave_in_db
     
@@ -207,45 +184,14 @@ class DatabaseLeaveRequests:
         return result.modified_count > 0
     
     @classmethod
-    @classmethod
     async def get_user_leave_requests(cls, user_id: str, status: Optional[str] = None) -> List[LeaveRequestInDB]:
         """Get a user's leave requests"""
-        try:
-            # Handle both string and ObjectId formats
-            if isinstance(user_id, str):
-                if ObjectId.is_valid(user_id):
-                    query = {"user_id": ObjectId(user_id)}
-                else:
-                    # If not a valid ObjectId, try searching as string
-                    query = {"user_id": user_id}
-            else:
-                query = {"user_id": user_id}
-                
-            if status:
-                query["status"] = status
-            
-            cursor = cls.collection.find(query).sort("created_at", -1)
-            leave_requests = []
-            
-            # Use synchronous iteration since this is a MongoDB cursor
-            for leave_data in cursor:
-                try:
-                    # Convert datetime back to date for start_date and end_date if needed
-                    if isinstance(leave_data.get('start_date'), datetime):
-                        leave_data['start_date'] = leave_data['start_date'].date()
-                    if isinstance(leave_data.get('end_date'), datetime):
-                        leave_data['end_date'] = leave_data['end_date'].date()
-                    
-                    leave_requests.append(LeaveRequestInDB(**leave_data))
-                except Exception as e:
-                    print(f"Error processing leave request data: {e}")
-                    # Skip this record if there's an error
-                    continue
-            
-            return leave_requests
-        except Exception as e:
-            print(f"Error in get_user_leave_requests: {e}")
-            return []
+        query = {"user_id": ObjectId(user_id)}
+        if status:
+            query["status"] = status
+        
+        cursor = cls.collection.find(query).sort("created_at", -1)
+        return [LeaveRequestInDB(**leave) for leave in cursor]
     
     @classmethod
     async def get_pending_approval_requests(cls, approver_id: str) -> List[LeaveRequestInDB]:

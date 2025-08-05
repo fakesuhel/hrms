@@ -1074,22 +1074,21 @@
 
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
-            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            let menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            // Remove Settings for HR, Sales, IT
+            if (["hr", "sales", "it"].includes(userRole)) {
+                menuItems = menuItems.filter(item => item.label !== "Settings");
+            }
             const navigationMenu = document.getElementById('navigationMenu');
-            
             if (!navigationMenu) return;
-            
             navigationMenu.innerHTML = '';
-            
             menuItems.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'nav-item';
-                
                 const a = document.createElement('a');
                 a.href = item.href;
                 a.className = item.active ? 'nav-link active' : 'nav-link';
                 a.innerHTML = `<i>${item.icon}</i>${item.label}`;
-                
                 li.appendChild(a);
                 navigationMenu.appendChild(li);
             });
@@ -1099,7 +1098,17 @@
         function setupRoleBasedUI(user) {
             const userRole = user.role || 'employee';
             generateNavigationMenu(userRole);
-            
+            // Remove Settings from user dropdown for HR, Sales, IT
+            if (["hr", "sales", "it"].includes(userRole)) {
+                const userDropdown = document.getElementById('userDropdown');
+                if (userDropdown) {
+                    Array.from(userDropdown.querySelectorAll('a')).forEach(a => {
+                        if (a.textContent.includes('Settings')) {
+                            a.remove();
+                        }
+                    });
+                }
+            }
             // Log user role for debugging
             console.log('User role detected:', userRole);
         }
@@ -1110,7 +1119,7 @@
                 const token = localStorage.getItem('bhoomitechzone_token');
                 if (!token) return null;
                 
-                const response = await fetch('/api/user/me', {
+                const response = await fetch('/users/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
