@@ -1,52 +1,114 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Query, UploadFile, File, Body
+from app.database.performance_reviews import DatabasePerformanceReviews
+from fastapi import APIRouter, Body, Depends, HTTPException, status, Query, UploadFile, File
 from typing import List, Optional
-from app.utils.auth import get_current_user
-from app.database.users import UserInDB, DatabaseUsers, UserCreate
+
+from app.utils.auth import get_current_user, UserInDB
 from app.database.recruitment import (
-    DatabaseJobPostings, DatabaseJobApplications, DatabaseInterviews,
-    JobPostingCreate, JobPostingUpdate, JobPostingInDB,
-    JobApplicationCreate, JobApplicationUpdate, JobApplicationInDB,
-    InterviewCreate, InterviewUpdate, InterviewInDB
-)
-from app.database.hr_policies import (
-    DatabaseHRPolicies, DatabasePolicyAcknowledgments,
-    HRPolicyCreate, HRPolicyUpdate, HRPolicyInDB,
-    PolicyAcknowledgmentCreate
+    JobPostingCreate, JobPostingUpdate, DatabaseJobPostings, DatabaseJobApplications,
+    InterviewCreate, InterviewUpdate, JobApplicationUpdate, DatabaseInterviews, JobApplicationCreate
 )
 from app.database.attendance import DatabaseAttendance
+from app.database.users import DatabaseUsers
+from app.database.hr_policies import (
+    DatabaseHRPolicies, HRPolicyCreate, HRPolicyUpdate, DatabasePolicyAcknowledgments, PolicyAcknowledgmentCreate
+)
 from app.database.leave_requests import DatabaseLeaveRequests
-from app.database.performance_reviews import DatabasePerformanceReviews
-from datetime import datetime, date, timedelta
-import os
-import uuid
+from datetime import datetime, timedelta
 
-router = APIRouter(prefix="/api/hr", tags=["hr"])
+# Define the router instance for this module
+router = APIRouter()
 
-# Dashboard Endpoints
-@router.get("/dashboard/stats")
-async def get_dashboard_stats(current_user: UserInDB = Depends(get_current_user)):
-    """Get HR dashboard statistics"""
+@router.post("/reports/recruitment")
+async def generate_recruitment_report(
+    report_config: dict = Body(...),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Generate recruitment report (Excel file)"""
     if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view HR dashboard stats"
+            detail="Not authorized to generate recruitment reports"
         )
-    
-    # Removed stray 'try:' that caused SyntaxError
-        from app.database.users import users_collection
-        from app.database.attendance import attendance_collection
-        from app.database.recruitment import job_postings_collection
-        
-        # Total employees
-        total_employees = users_collection.count_documents({"is_active": True})
-        
-        # Today's attendance rate
-        today = datetime.now().date()
-        today_attendance = attendance_collection.count_documents({
-            "date": today.isoformat(),
-            "check_in": {"$exists": True}
-        })
-        attendance_rate = (today_attendance / total_employees * 100) if total_employees > 0 else 0
+    try:
+        department = report_config.get("department")
+        start_date = report_config.get("start_date")
+        end_date = report_config.get("end_date")
+        format_type = report_config.get("format", "excel")
+        from app.database.recruitment import job_postings_collection, applications_collection
+        job_query = {}
+        if department:
+            job_query["department"] = department
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                date_filter["$gte"] = start_date
+            if end_date:
+                date_filter["$lte"] = end_date
+            job_query["created_at"] = date_filter
+        jobs = list(job_postings_collection.find(job_query))
+        report_data = []
+        for job in jobs:
+            job_id = str(job.get("_id", ""))
+            title = job.get("title", "")
+            dept = job.get("department", "")
+            status = job.get("status", "")
+            created_at = job.get("created_at", "")
+            position_type = job.get("position_type", "")
+            posted_by = job.get("posted_by", "")
+            requirements = job.get("requirements", "")
+            if isinstance(requirements, list):
+                requirements_str = ", ".join([str(r) for r in requirements])
+            else:
+                requirements_str = str(requirements)
+            app_count = applications_collection.count_documents({"job_posting_id": job_id})
+            report_data.append({
+                "job_id": job_id,
+                "title": title,
+                "department": dept,
+                "status": status,
+                "created_at": created_at,
+                "position_type": position_type,
+                "posted_by": posted_by,
+                "requirements": requirements_str,
+                "applications": app_count
+            })
+        if format_type == "excel":
+            from io import BytesIO
+            import xlsxwriter
+            output = BytesIO()
+            workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+            worksheet = workbook.add_worksheet("Recruitment Report")
+            headers = [
+                "Job ID", "Title", "Department", "Status", "Created At",
+                "Position Type", "Posted By", "Requirements", "Applications"
+            ]
+            for col, field in enumerate(headers):
+                worksheet.write(0, col, field)
+            for row, data in enumerate(report_data, start=1):
+                worksheet.write(row, 0, data["job_id"])
+                worksheet.write(row, 1, data["title"])
+                worksheet.write(row, 2, data["department"])
+                worksheet.write(row, 3, data["status"])
+                worksheet.write(row, 4, str(data["created_at"]))
+                worksheet.write(row, 5, data["position_type"])
+                worksheet.write(row, 6, data["posted_by"])
+                worksheet.write(row, 7, data["requirements"])
+                worksheet.write(row, 8, data["applications"])
+            workbook.close()
+            output.seek(0)
+            from fastapi.responses import StreamingResponse
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": "attachment; filename=recruitment_report.xlsx"}
+            )
+        else:
+            return {"report": report_data}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating recruitment report: {str(e)}"
+        )
         
         # Monthly payroll (placeholder - would need payroll collection)
         monthly_payroll = 0  # This would be calculated from actual payroll data
@@ -2829,6 +2891,101 @@ async def get_user_salary_slips(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching salary slips: {str(e)}"
         )
+@router.post("/reports/recruitment")
+async def generate_recruitment_report(
+    report_config: dict = Body(...),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Generate recruitment report (Excel format)"""
+    if current_user.role not in ["director", "hr", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate recruitment reports"
+        )
+    try:
+        # Extract filters if provided
+        department = report_config.get("department")
+        start_date = report_config.get("start_date")
+        end_date = report_config.get("end_date")
+        # Fetch job postings and applications
+        jobs = await DatabaseJobPostings.get_all_job_postings()
+        applications = await DatabaseJobApplications.get_all_applications()
+        # Filter jobs by department if provided
+        if department:
+            jobs = [job for job in jobs if getattr(job, "department", None) == department]
+        # Build job_id to job mapping
+        job_id_map = {str(getattr(job, "id", getattr(job, "_id", ""))): job for job in jobs}
+        # Filter applications by job and date if provided
+        filtered_applications = []
+        for app in applications:
+            job_posting_id = str(getattr(app, "job_posting_id", getattr(app, "job_id", "")))
+            if department and job_posting_id not in job_id_map:
+                continue
+            # Filter by date if provided
+            created_at = getattr(app, "created_at", None)
+            if created_at and (start_date or end_date):
+                try:
+                    from datetime import datetime
+                    app_date = datetime.fromisoformat(str(created_at)[:19])
+                    if start_date:
+                        if app_date < datetime.fromisoformat(start_date):
+                            continue
+                    if end_date:
+                        if app_date > datetime.fromisoformat(end_date):
+                            continue
+                except Exception:
+                    pass
+            filtered_applications.append(app)
+        # Prepare report data
+        report_data = []
+        for job in jobs:
+            job_id = str(getattr(job, "id", getattr(job, "_id", "")))
+            job_apps = [app for app in filtered_applications if str(getattr(app, "job_posting_id", getattr(app, "job_id", ""))) == job_id]
+            report_data.append({
+                "Job Title": getattr(job, "title", ""),
+                "Department": getattr(job, "department", ""),
+                "Location": getattr(job, "location", ""),
+                "Status": getattr(job, "status", ""),
+                "Total Applications": len(job_apps),
+                "Hired": len([a for a in job_apps if getattr(a, "status", "") == "hired"]),
+                "Rejected": len([a for a in job_apps if getattr(a, "status", "") == "rejected"]),
+                "Open": len([a for a in job_apps if getattr(a, "status", "") not in ["hired", "rejected"]]),
+            })
+        # Generate Excel file using xlsxwriter
+        from io import BytesIO
+        import xlsxwriter
+        output = BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet("Recruitment Report")
+        headers = [
+            "Job Title", "Department", "Location", "Status",
+            "Total Applications", "Hired", "Rejected", "Open"
+        ]
+        for col, field in enumerate(headers):
+            worksheet.write(0, col, field)
+        for row, data in enumerate(report_data, start=1):
+            worksheet.write(row, 0, data["Job Title"])
+            worksheet.write(row, 1, data["Department"])
+            worksheet.write(row, 2, data["Location"])
+            worksheet.write(row, 3, data["Status"])
+            worksheet.write(row, 4, data["Total Applications"])
+            worksheet.write(row, 5, data["Hired"])
+            worksheet.write(row, 6, data["Rejected"])
+            worksheet.write(row, 7, data["Open"])
+        workbook.close()
+        output.seek(0)
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=recruitment_report.xlsx"}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating recruitment report: {str(e)}"
+        )
+
 @router.post("/reports/performance")
 async def generate_performance_report(
     report_config: dict = Body(...),

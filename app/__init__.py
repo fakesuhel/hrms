@@ -37,7 +37,7 @@ app.include_router(settings.router)
 app.include_router(dashboard.router)
 app.include_router(profile.router, prefix="/users")
 app.include_router(sales_api.router)
-app.include_router(hr_api.router)
+app.include_router(hr_api.router, prefix="/api/hr")
 
 @app.get("/")
 async def root():
