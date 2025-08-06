@@ -1,0 +1,13 @@
+/* Date Picker Styles - Symlinked for static serving */
+.date-picker {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 1rem;
+}
+.date-picker input {
+  border: none;
+  outline: none;
+  font-size: 1rem;
+}

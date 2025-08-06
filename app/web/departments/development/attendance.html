@@ -1043,8 +1043,8 @@
                 { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+                // { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
             ],
             team_lead: [
                 { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
@@ -1075,9 +1075,9 @@
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
             let menuItems = navigationConfig[userRole] || navigationConfig.employee;
-            // Always remove Settings for HR, Sales, IT roles
+            // Always remove Settings, Performance, and Leave Requests for HR, Sales, IT roles
             if (["hr", "sales", "it"].includes(userRole)) {
-                menuItems = menuItems.filter(item => item.label !== "Settings");
+                menuItems = menuItems.filter(item => item.label !== "Settings" && item.label !== "Performance" && item.label !== "Leave Requests");
             }
             const navigationMenu = document.getElementById('navigationMenu');
             if (!navigationMenu) return;
@@ -1089,9 +1089,51 @@
                 a.href = item.href;
                 a.className = item.active ? 'nav-link active' : 'nav-link';
                 a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                // Add click handler for Projects and Attendance
+                if (item.label === 'Projects') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showProjectManagementPage();
+                        // Ensure sidebar is visible
+                        const sidebar = document.querySelector('.sidebar');
+                        if (sidebar) sidebar.style.display = '';
+                    });
+                } else if (item.label === 'Attendance') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        // Show attendance main section and ensure sidebar is visible
+                        document.querySelectorAll('.main-section').forEach(el => el.style.display = 'none');
+                        const mainContent = document.querySelector('.main-content');
+                        if (mainContent) mainContent.style.display = '';
+                        const attendanceSection = document.querySelector('.dashboard-main');
+                        if (attendanceSection) attendanceSection.style.display = '';
+                        const sidebar = document.querySelector('.sidebar');
+                        if (sidebar) sidebar.style.display = '';
+                    });
+                }
                 li.appendChild(a);
                 navigationMenu.appendChild(li);
             });
+// Show Project Management page and sidebar
+function showProjectManagementPage() {
+    // Hide all main content sections except project management
+    document.querySelectorAll('.main-section').forEach(el => el.style.display = 'none');
+    let projectSection = document.getElementById('projectManagementSection');
+    if (!projectSection) {
+        projectSection = document.createElement('div');
+        projectSection.id = 'projectManagementSection';
+        projectSection.className = 'main-section';
+        projectSection.innerHTML = `
+            <h2>Project Management</h2>
+            <p>Welcome to the Project Management page. Here you can manage your projects.</p>
+        `;
+        document.body.appendChild(projectSection);
+    }
+    projectSection.style.display = 'block';
+    // Ensure sidebar is visible
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.style.display = '';
+}
         }
 
         // Setup role-based UI elements

@@ -154,6 +154,10 @@ class UserResponse(UserBase):
 
 class DatabaseUsers:
     @staticmethod
+    async def count_employees() -> int:
+        """Return the total number of active employees (not admin)"""
+        return users_collection.count_documents({"is_active": True, "role": {"$ne": "admin"}})
+    @staticmethod
     async def get_user_by_id(user_id: str) -> Optional[UserInDB]:
         try:
             # Ensure user_id is properly converted to ObjectId

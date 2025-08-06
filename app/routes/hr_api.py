@@ -15,7 +15,7 @@ from app.database.hr_policies import (
 from app.database.leave_requests import DatabaseLeaveRequests
 from datetime import datetime, timedelta
 
-# Define the router instance for this module
+# Define the router instance for this module (no prefix, prefix is set in app.include_router)
 router = APIRouter()
 
 @router.post("/reports/recruitment")
@@ -135,15 +135,12 @@ async def get_today_attendance(
             detail="Not authorized to view attendance data"
         )
     
-    # Removed orphaned 'try:'
+    try:
         from app.database.attendance import attendance_collection
         from app.database.users import users_collection
-        
         target_date = date if date else datetime.now().date().isoformat()
-        
         # Get attendance records for the date
         attendance_records = list(attendance_collection.find({"date": target_date}))
-        
         # Enrich with user data
         enriched_records = []
         for record in attendance_records:
@@ -156,9 +153,11 @@ async def get_today_attendance(
                     "is_late": record.get("is_late", False),
                     "status": "present" if record.get("check_in") else "absent"
                 })
-        
+        # Always return a list (empty if no records)
         return enriched_records
-    # Removed orphaned 'except Exception as e:' and its block
+    except Exception as e:
+        # On error, return empty list to avoid frontend TypeError
+        return []
 
 @router.delete("/attendance/{attendance_id}")
 async def delete_attendance_record(
@@ -825,7 +824,7 @@ async def update_employee(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Update employee information"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update employee information"
@@ -852,7 +851,7 @@ async def delete_employee(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Delete an employee"""
-    if current_user.role not in ["director", "hr"]:
+    if current_user.role not in ["director", "hr", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete employees"
@@ -881,7 +880,7 @@ async def delete_employee(
         # Delete employee (soft delete by setting is_active to False)
         result = users_collection.update_one(
             {"_id": id_obj},
-            {"$set": {"is_active": False, "deleted_at": datetime.now()}}
+            {"$set": {"is_active": False, "status": "inactive", "deleted_at": datetime.now()}}
         )
         
         if result.modified_count == 0:
@@ -2869,8 +2868,11 @@ async def get_user_salary_slips(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get all salary slips for a user (employee)"""
-    # Allow only HR, director, manager, admin, or the employee themselves
-    if current_user.role not in ["director", "hr", "manager", "admin"] and str(current_user.id) != employee_id:
+    # Allow HR, director, manager, admin to view any employee's slips
+    # Normal users can only view their own slips
+    is_hr = current_user.role in ["director", "hr", "manager", "admin"]
+    is_self = str(current_user.id) == employee_id or getattr(current_user, "employee_id", None) == employee_id
+    if not (is_hr or is_self):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view these salary slips"
@@ -2878,15 +2880,44 @@ async def get_user_salary_slips(
     try:
         from app.database.salary_slips import salary_slips_collection
         slips = list(salary_slips_collection.find({"employee_id": employee_id}))
+        result = []
         for slip in slips:
-            slip["id"] = str(slip.pop("_id"))
-        # Return empty list if no slips found, do not raise error
-        return slips
+            slip = dict(slip)
+            # Convert _id to string id
+            slip["id"] = str(slip.get("_id", ""))
+            slip.pop("_id", None)
+            # Fallback for base_salary if only basic_salary exists
+            if "base_salary" not in slip and "basic_salary" in slip:
+                slip["base_salary"] = slip["basic_salary"]
+            # Convert all ObjectId and datetime fields to serializable
+            for key, value in list(slip.items()):
+                # ObjectId
+                if str(type(value)).endswith("ObjectId'>"):
+                    slip[key] = str(value)
+                # datetime
+                elif hasattr(value, 'isoformat'):
+                    slip[key] = value.isoformat()
+                # Ensure all floats/ints are serializable
+                elif isinstance(value, (float, int)):
+                    slip[key] = float(value)
+                # Handle other non-serializable types
+                else:
+                    try:
+                        import json
+                        json.dumps(value)
+                    except Exception:
+                        slip[key] = str(value)
+            result.append(slip)
+        return result
     except Exception as e:
-        # Log the error for debugging
         import traceback
-        print(f"Error in get_user_salary_slips: {str(e)}")
-        traceback.print_exc()
+        import sys
+        print("\n--- ERROR in /users/salary-slips ---")
+        print(f"employee_id param: {employee_id}")
+        print(f"current_user: {{'id': {getattr(current_user, 'id', None)}, 'role': {getattr(current_user, 'role', None)}, 'employee_id': {getattr(current_user, 'employee_id', None)}}}")
+        print(f"Exception: {str(e)}")
+        traceback.print_exc(file=sys.stdout)
+        print("--- END ERROR ---\n")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching salary slips: {str(e)}"
@@ -2984,6 +3015,37 @@ async def generate_recruitment_report(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating recruitment report: {str(e)}"
+        )
+
+@router.get("/dashboard/stats")
+async def get_hr_dashboard_stats(current_user: UserInDB = Depends(get_current_user)):
+    """Get HR dashboard summary stats (employees, attendance, etc.)"""
+    if current_user.role not in ["director", "hr", "manager", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view HR dashboard stats"
+        )
+    try:
+        # Count total employees
+        from app.database.users import users_collection
+        total_employees = users_collection.count_documents({"is_active": True})
+        # Count present today
+        from app.database.attendance import attendance_collection
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        present_today = attendance_collection.count_documents({"date": today, "status": "present"})
+        # Count absent today
+        absent_today = attendance_collection.count_documents({"date": today, "status": "absent"})
+        # Optionally add more stats as needed
+        return {
+            "total_employees": total_employees,
+            "present_today": present_today,
+            "absent_today": absent_today
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching HR dashboard stats: {str(e)}"
         )
 
 @router.post("/reports/performance")

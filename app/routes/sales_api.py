@@ -2237,8 +2237,11 @@ async def get_late_members(
             detail=f"Failed to get late members: {str(e)}"
         )
 
+from fastapi import Body
+
 @router.post("/attendance/check-in")
 async def check_in(
+    attendance_data: Optional[Dict[str, Any]] = Body(None),
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Check in for the current user"""
@@ -2249,16 +2252,16 @@ async def check_in(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Sales access required."
             )
-        
+
         # Get current IST time
         now_ist = get_ist_now()
         today_str = now_ist.strftime("%Y-%m-%d")
         time_str = now_ist.strftime("%H:%M:%S")
-        
+
         # Office timings (IST)
         office_start = now_ist.replace(hour=10, minute=0, second=0, microsecond=0)  # 10:00 AM
         late_threshold = now_ist.replace(hour=10, minute=15, second=0, microsecond=0)  # 10:15 AM
-        
+
         # Determine status
         if now_ist <= office_start:
             status = "early"
@@ -2266,12 +2269,19 @@ async def check_in(
             status = "on_time"
         else:
             status = "late"
-            
+
         # Calculate late minutes if applicable
         late_minutes = 0
         if status == "late":
             late_minutes = int((now_ist - late_threshold).total_seconds() / 60)
-        
+
+        # Extract optional fields from request body
+        check_in_location = None
+        check_in_note = None
+        if attendance_data:
+            check_in_location = attendance_data.get("check_in_location")
+            check_in_note = attendance_data.get("check_in_note")
+
         # Create attendance record (in a real system, this would go to attendance collection)
         attendance_record = {
             "user_id": str(current_user.id),
@@ -2280,21 +2290,25 @@ async def check_in(
             "check_in_time": time_str,
             "status": status,
             "late_minutes": late_minutes,
-            "created_at": now_ist
+            "created_at": now_ist,
+            "check_in_location": check_in_location,
+            "check_in_note": check_in_note
         }
-        
+
         # Here you would save to attendance collection
         # attendance_collection.insert_one(attendance_record)
-        
+
         return {
             "message": f"Checked in successfully at {time_str}",
             "status": status,
             "check_in_time": time_str,
             "late_minutes": late_minutes,
             "office_start": "10:00",
-            "late_threshold": "10:15"
+            "late_threshold": "10:15",
+            "check_in_location": check_in_location,
+            "check_in_note": check_in_note
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

@@ -643,7 +643,6 @@
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
-            }
             
             .main-content {
                 margin-left: 0;
@@ -1027,11 +1026,11 @@
                 window.location.href = '/app/login';
                 return;
             }
-            
+
             // Current date and time - updated with latest values
             const currentDateTime = new Date('2025-06-12T07:29:30');
             const currentUser = 'soheruWRITE';
-            
+
             try {
                 // Display current date
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -1039,69 +1038,250 @@
                 if (currentDateElement) {
                     currentDateElement.textContent = currentDateTime.toLocaleDateString(undefined, options);
                 }
-                
+
                 const userTimeElement = document.getElementById('userTimeDisplay');
                 if (userTimeElement) {
                     userTimeElement.textContent = formatTime(currentDateTime) + ' - ' + currentUser;
                 }
-                
+
                 const userInitialsElement = document.getElementById('userInitials');
                 if (userInitialsElement) {
                     userInitialsElement.textContent = 'SW';
                 }
-                
+
                 const sidebarUsernameElement = document.getElementById('sidebar-username');
                 if (sidebarUsernameElement) {
                     sidebarUsernameElement.textContent = currentUser;
                 }
-                
+
                 // Initialize date pickers
                 const startDate = new Date(currentDateTime);
                 startDate.setDate(startDate.getDate() - 30); // Default to last 30 days
-                
+
                 const startDateElement = document.getElementById('startDate');
                 if (startDateElement) {
                     startDateElement.value = formatDateInput(startDate);
                 }
-                
+
                 const endDateElement = document.getElementById('endDate');
                 if (endDateElement) {
                     endDateElement.value = formatDateInput(currentDateTime);
                 }
-                
+
                 const teamDateElement = document.getElementById('teamDate');
                 if (teamDateElement) {
                     teamDateElement.value = formatDateInput(currentDateTime);
                 }
-                
+
                 // Load user data and check permissions
                 await loadUserData();
-                
+
                 // Load today's attendance status
                 await loadTodayStatus();
-                
+
                 // Load attendance records
                 await loadAttendanceRecords(startDate, currentDateTime);
-                
+
                 // Load attendance statistics
                 await loadAttendanceStats('month');
-                
+
                 // Generate calendar
                 generateCalendar(currentDateTime);
-                
+
                 // Load team attendance (if user has permission)
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
                 if (teamAttendanceSection && teamAttendanceSection.style.display === 'block') {
                     await loadTeamAttendance(currentDateTime);
                 }
-                
+
                 // Setup event listeners
-                
+                setupEventListeners();
+
                 console.log(`Attendance page loaded at 2025-06-12 07:29:30 by ${currentUser}`);
             } catch (error) {
                 console.error('Error during initialization:', error);
             }
         });
+
+        // All event listener setup code is now wrapped in this function
+        function setupEventListeners() {
+            try {
+                // User menu toggle
+                const userMenu = document.getElementById('userMenu');
+                const userDropdown = document.getElementById('userDropdown');
+                if (userMenu && userDropdown) {
+                    userMenu.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                    // Close user dropdown when clicking outside
+                    document.addEventListener('click', function() {
+                        userDropdown.classList.remove('active');
+                    });
+                }
+
+                // Logout button
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        localStorage.removeItem('bhoomitechzone_token');
+                        window.location.href = '/app/login';
+                    });
+                }
+
+                // View toggle (list vs calendar)
+                const listViewBtn = document.getElementById('listViewBtn');
+                const calendarViewBtn = document.getElementById('calendarViewBtn');
+                const listView = document.getElementById('listView');
+                const calendarView = document.getElementById('calendarView');
+                if (listViewBtn && calendarViewBtn && listView && calendarView) {
+                    listViewBtn.addEventListener('click', function() {
+                        listViewBtn.classList.add('active');
+                        calendarViewBtn.classList.remove('active');
+                        listView.style.display = 'block';
+                        calendarView.style.display = 'none';
+                    });
+                    calendarViewBtn.addEventListener('click', function() {
+                        calendarViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
+                        listView.style.display = 'none';
+                        calendarView.style.display = 'block';
+                    });
+                }
+
+                // Date filter
+                const filterBtn = document.getElementById('filterBtn');
+                const startDateInput = document.getElementById('startDate');
+                const endDateInput = document.getElementById('endDate');
+                if (filterBtn && startDateInput && endDateInput) {
+                    filterBtn.addEventListener('click', async function() {
+                        const startDate = new Date(startDateInput.value);
+                        const endDate = new Date(endDateInput.value);
+                        await loadAttendanceRecords(startDate, endDate);
+                    });
+                }
+
+                // Calendar navigation
+                const prevMonthBtn = document.getElementById('prevMonthBtn');
+                const nextMonthBtn = document.getElementById('nextMonthBtn');
+                const calendarMonthDisplay = document.getElementById('calendarMonthDisplay');
+                if (prevMonthBtn && nextMonthBtn && calendarMonthDisplay) {
+                    prevMonthBtn.addEventListener('click', function() {
+                        const [month, year] = calendarMonthDisplay.textContent.split(' ');
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                        const monthIndex = monthNames.indexOf(month);
+                        let newMonth = monthIndex - 1;
+                        let newYear = parseInt(year);
+                        if (newMonth < 0) {
+                            newMonth = 11;
+                            newYear--;
+                        }
+                        const newDate = new Date(newYear, newMonth, 1);
+                        generateCalendar(newDate);
+                        // Reload attendance records for new month
+                        const startDate = new Date(newYear, newMonth, 1);
+                        const endDate = new Date(newYear, newMonth + 1, 0); // Last day of month
+                        loadAttendanceRecords(startDate, endDate);
+                    });
+                    nextMonthBtn.addEventListener('click', function() {
+                        const [month, year] = calendarMonthDisplay.textContent.split(' ');
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                        const monthIndex = monthNames.indexOf(month);
+                        let newMonth = monthIndex + 1;
+                        let newYear = parseInt(year);
+                        if (newMonth > 11) {
+                            newMonth = 0;
+                            newYear++;
+                        }
+                        const newDate = new Date(newYear, newMonth, 1);
+                        generateCalendar(newDate);
+                        // Reload attendance records for new month
+                        const startDate = new Date(newYear, newMonth, 1);
+                        const endDate = new Date(newYear, newMonth + 1, 0); // Last day of month
+                        loadAttendanceRecords(startDate, endDate);
+                    });
+                }
+
+                // Check in/out button
+                const checkInOutBtn = document.getElementById('checkInOutBtn');
+                const attendanceActionText = document.getElementById('attendanceActionText');
+                const checkInModal = document.getElementById('checkInModal');
+                const checkOutModal = document.getElementById('checkOutModal');
+                if (checkInOutBtn && checkInModal && checkOutModal) {
+                    checkInOutBtn.addEventListener('click', function() {
+                        const actionText = attendanceActionText ? attendanceActionText.textContent : 'Check In';
+                        if (actionText === 'Check In') {
+                            checkInModal.style.display = 'flex';
+                        } else if (actionText === 'Check Out') {
+                            checkOutModal.style.display = 'flex';
+                        }
+                    });
+                }
+
+                // Check-in modal
+                const confirmCheckIn = document.getElementById('confirmCheckIn');
+                const cancelCheckIn = document.getElementById('cancelCheckIn');
+                const closeCheckInModal = document.getElementById('closeCheckInModal');
+                if (confirmCheckIn && cancelCheckIn && closeCheckInModal && checkInModal) {
+                    confirmCheckIn.addEventListener('click', performCheckIn);
+                    cancelCheckIn.addEventListener('click', function() {
+                        checkInModal.style.display = 'none';
+                    });
+                    closeCheckInModal.addEventListener('click', function() {
+                        checkInModal.style.display = 'none';
+                    });
+                }
+
+                // Check-out modal
+                const confirmCheckOut = document.getElementById('confirmCheckOut');
+                const cancelCheckOut = document.getElementById('cancelCheckOut');
+                const closeCheckOutModal = document.getElementById('closeCheckOutModal');
+                if (confirmCheckOut && cancelCheckOut && closeCheckOutModal && checkOutModal) {
+                    confirmCheckOut.addEventListener('click', performCheckOut);
+                    cancelCheckOut.addEventListener('click', function() {
+                        checkOutModal.style.display = 'none';
+                    });
+                    closeCheckOutModal.addEventListener('click', function() {
+                        checkOutModal.style.display = 'none';
+                    });
+                }
+
+                // Attendance details modal
+                const closeAttendanceDetails = document.getElementById('closeAttendanceDetails');
+                const closeAttendanceDetailsModal = document.getElementById('closeAttendanceDetailsModal');
+                const attendanceDetailsModal = document.getElementById('attendanceDetailsModal');
+                if (closeAttendanceDetails && closeAttendanceDetailsModal && attendanceDetailsModal) {
+                    closeAttendanceDetails.addEventListener('click', function() {
+                        attendanceDetailsModal.style.display = 'none';
+                    });
+                    closeAttendanceDetailsModal.addEventListener('click', function() {
+                        attendanceDetailsModal.style.display = 'none';
+                    });
+                }
+
+                // Stats period selector
+                const statsPeriod = document.getElementById('statsPeriod');
+                if (statsPeriod) {
+                    statsPeriod.addEventListener('change', function() {
+                        const period = this.value;
+                        loadAttendanceStats(period);
+                    });
+                }
+
+                // Team date selector
+                const teamDate = document.getElementById('teamDate');
+                if (teamDate) {
+                    teamDate.addEventListener('change', function() {
+                        const date = new Date(this.value);
+                        loadTeamAttendance(date);
+                    });
+                }
+
+                console.log('All event listeners set up successfully');
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+            }
+        }
         
         async function loadUserData() {
             try {
@@ -1111,7 +1291,6 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
                 if (!response.ok) {
                     if (response.status === 401) {
                         // Token expired or invalid
@@ -1119,84 +1298,56 @@
                         window.location.href = '/app/login';
                         return;
                     }
-                    throw new Error('Failed to fetch user data');
+                    throw new Error('Failed to load user data');
                 }
-                
                 const userData = await response.json();
-                
-                // Update UI with user info - with null checks
-                const usernameElement = document.getElementById('sidebar-username');
-                if (usernameElement) {
-                    usernameElement.textContent = 'soheruWRITE';
-                }
-                
-                const positionElement = document.getElementById('sidebar-position');
-                if (positionElement) {
-                    positionElement.textContent = userData.position || 'Team Lead';
-                }
-                
                 // Show team attendance section for team leads/managers/admins
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
                 if (teamAttendanceSection && ['team_lead', 'manager', 'admin'].includes(userData.role)) {
                     teamAttendanceSection.style.display = 'block';
                 }
-                
                 const userInitialsElement = document.getElementById('userInitials');
                 if (userInitialsElement) {
                     userInitialsElement.textContent = 'SW';
                 }
-                
             } catch (error) {
                 console.error('Error loading user data:', error);
                 showToast('Error loading user data. Please refresh the page.');
             }
         }
-        
+        // Cleaned up and deduplicated loadTodayStatus function
         async function loadTodayStatus() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const today = formatDateInput(new Date('2025-06-12'));
-                
                 const response = await fetch(`/attendance/history?start_date=${today}&end_date=${today}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
                 if (!response.ok) {
                     throw new Error('Failed to load today\'s attendance status');
                 }
-                
                 const records = await response.json();
-                
-                // Update UI based on today's attendance status - with null checks
                 const checkInOutBtn = document.getElementById('checkInOutBtn');
                 const checkInTimeElement = document.getElementById('checkInTime');
                 const checkOutTimeElement = document.getElementById('checkOutTime');
                 const workHoursElement = document.getElementById('workHours');
                 const attendanceStatusElement = document.getElementById('attendanceStatus');
                 const attendanceActionTextElement = document.getElementById('attendanceActionText');
-                
                 if (records.length > 0) {
                     const record = records[0];
-                    
-                    // Update status display
                     if (checkInTimeElement) {
                         checkInTimeElement.textContent = record.check_in ? formatDateTime(record.check_in) : 'Not checked in';
                     }
-                    
                     if (checkOutTimeElement) {
                         checkOutTimeElement.textContent = record.check_out ? formatDateTime(record.check_out) : 'Not checked out';
                     }
-                    
                     if (workHoursElement) {
                         workHoursElement.textContent = record.work_hours ? `${record.work_hours} hours` : 'N/A';
                     }
-                    
-                    // Status badge
                     let statusText = 'Present';
                     let statusClass = 'badge-present';
-                    
                     if (record.is_late) {
                         statusText = 'Late';
                         statusClass = 'badge-late';
@@ -1207,242 +1358,55 @@
                         statusText = 'On Leave';
                         statusClass = 'badge-leave';
                     }
-                    
                     if (attendanceStatusElement) {
-                        attendanceStatusElement.innerHTML = `
-                            <span class="attendance-badge ${statusClass}">${statusText}</span>
-                        `;
+                        attendanceStatusElement.innerHTML = `<span class="attendance-badge ${statusClass}">${statusText}</span>`;
                     }
-                    
-                    // Update check in/out button
                     if (checkInOutBtn) {
                         if (record.is_complete) {
-                            // Already checked out
                             checkInOutBtn.innerHTML = '<i>✓</i> Checked Out';
                             checkInOutBtn.classList.remove('btn-primary');
                             checkInOutBtn.classList.add('btn-success');
                             checkInOutBtn.disabled = true;
                         } else {
-                            // Checked in but not out
                             checkInOutBtn.innerHTML = '<i>🕒</i> Check Out';
-                            if (attendanceActionTextElement) {
-                                attendanceActionTextElement.textContent = 'Check Out';
-                            }
-                        }
-                    }
-                } else {
-                    // Not checked in yet
-                    if (checkInTimeElement) {
-                        checkInTimeElement.textContent = 'Not checked in';
-                    }
-                    
-                    if (checkOutTimeElement) {
-                        checkOutTimeElement.textContent = 'Not checked out';
-                    }
-                    
-                    if (workHoursElement) {
+// ...existing code...
                         workHoursElement.textContent = 'N/A';
                     }
-                    
                     if (attendanceStatusElement) {
                         attendanceStatusElement.textContent = 'Not recorded';
                     }
-                    
                     if (checkInOutBtn) {
                         checkInOutBtn.innerHTML = '<i>🕒</i> Check In';
+                        checkInOutBtn.classList.add('btn-primary');
+                        checkInOutBtn.classList.remove('btn-success');
+                        checkInOutBtn.disabled = false;
                         if (attendanceActionTextElement) {
                             attendanceActionTextElement.textContent = 'Check In';
                         }
                     }
                 }
-                
             } catch (error) {
                 console.error('Error loading today\'s status:', error);
                 showToast('Error loading today\'s attendance status');
-                
-                // Set default status values - with null checks
                 const checkInTimeElement = document.getElementById('checkInTime');
                 if (checkInTimeElement) {
                     checkInTimeElement.textContent = 'Error loading data';
                 }
-                
                 const checkOutTimeElement = document.getElementById('checkOutTime');
                 if (checkOutTimeElement) {
                     checkOutTimeElement.textContent = 'Error loading data';
                 }
-                
                 const workHoursElement = document.getElementById('workHours');
                 if (workHoursElement) {
                     workHoursElement.textContent = 'N/A';
                 }
-                
                 const attendanceStatusElement = document.getElementById('attendanceStatus');
                 if (attendanceStatusElement) {
                     attendanceStatusElement.textContent = 'Unknown';
                 }
             }
         }
-        
-        async function loadAttendanceRecords(startDate, endDate) {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const start = formatDateInput(startDate);
-                const end = formatDateInput(endDate);
-                
-                const response = await fetch(`/attendance/history?start_date=${start}&end_date=${end}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load attendance records');
-                }
-                
-                const records = await response.json();
-                const tableBody = document.getElementById('attendanceTableBody');
-                if (!tableBody) {
-                    console.error('Attendance table body element not found');
-                    return;
-                }
-                
-                tableBody.innerHTML = '';
-                
-                if (records.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No attendance records found for the selected period.</td></tr>';
-                    return;
-                }
-                
-                // Sort records by date (most recent first)
-                records.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                // Populate table
-                records.forEach(record => {
-                    // Format data
-                    const date = formatDate(record.date);
-                    const checkIn = record.check_in ? formatTime(record.check_in) : 'Not checked in';
-                    const checkOut = record.check_out ? formatTime(record.check_out) : 'Not checked out';
-                    const duration = record.work_hours ? `${record.work_hours} hours` : 'N/A';
-                    const location = record.check_in_location || 'N/A';
-                    
-                    // Status
-                    let status = 'Present';
-                    let statusClass = 'badge-present';
-                    
-                    if (record.is_late) {
-                        status = 'Late';
-                        statusClass = 'badge-late';
-                    } else if (record.status === 'absent') {
-                        status = 'Absent';
-                        statusClass = 'badge-absent';
-                    } else if (record.status === 'leave') {
-                        status = 'On Leave';
-                        statusClass = 'badge-leave';
-                    }
-                    
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td>${date}</td>
-                            <td>${checkIn}</td>
-                            <td>${checkOut}</td>
-                            <td>${duration}</td>
-                            <td>${location}</td>
-                            <td><span class="attendance-badge ${statusClass}">${status}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline view-details" data-id="${record._id || ''}">
-                                    View
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                // Add event listeners for view details buttons
-                document.querySelectorAll('.view-details').forEach(button => {
-                    button.addEventListener('click', async function() {
-                        const recordId = this.getAttribute('data-id');
-                        await showAttendanceDetails(recordId, records);
-                    });
-                });
-                
-                // Update calendar view with the same data
-                updateCalendarData(records);
-                
-            } catch (error) {
-                console.error('Error loading attendance records:', error);
-                const tableBody = document.getElementById('attendanceTableBody');
-                if (tableBody) {
-                    tableBody.innerHTML = 
-                        '<tr><td colspan="7" style="text-align: center;">Error loading attendance records. Please try again later.</td></tr>';
-                }
-                showToast('Error loading attendance records');
-            }
-        }
-        
-        async function loadAttendanceStats(period) {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const today = new Date('2025-06-12');
-                
-                // Calculate date range based on selected period
-                let startDate = new Date(today);
-                
-                switch(period) {
-                    case 'week':
-                        startDate.setDate(today.getDate() - 7);
-                        break;
-                    case 'month':
-                        startDate.setMonth(today.getMonth() - 1);
-                        break;
-                    case 'quarter':
-                        startDate.setMonth(today.getMonth() - 3);
-                        break;
-                    case 'year':
-                        startDate.setFullYear(today.getFullYear() - 1);
-                        break;
-                }
-                
-                const response = await fetch(`/attendance/stats?start_date=${formatDateInput(startDate)}&end_date=${formatDateInput(today)}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load attendance statistics');
-                }
-                
-                const stats = await response.json();
-                
-                // Update stats display with null checks
-                updateElement('totalPresent', stats.present_days || 0);
-                updateElement('totalLate', stats.late_days || 0);
-                updateElement('totalEarly', stats.early_checkouts || 0);
-                updateElement('avgWorkHours', stats.avg_work_hours ? stats.avg_work_hours.toFixed(1) : '0');
-                updateElement('attendanceRate', stats.attendance_rate ? `${Math.round(stats.attendance_rate)}%` : '0%');
-                
-                // In a real app, you would generate a chart here
-                const chartContainer = document.getElementById('attendanceChart');
-                if (chartContainer) {
-                    chartContainer.innerHTML = `
-                        <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                            Attendance trends chart would be displayed here.
-                        </div>
-                    `;
-                }
-                
-            } catch (error) {
-                console.error('Error loading attendance statistics:', error);
-                showToast('Error loading attendance statistics');
-                
-                // Set default values
-                updateElement('totalPresent', '0');
-                updateElement('totalLate', '0');
-                updateElement('totalEarly', '0');
-                updateElement('avgWorkHours', '0');
-                updateElement('attendanceRate', '0%');
-            }
-        }
+// ...existing code...
         
         // Helper function to safely update element content
         function updateElement(id, value) {
@@ -1456,31 +1420,25 @@
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const dateStr = formatDateInput(forDate);
-                
                 const response = await fetch(`/attendance/team?for_date=${dateStr}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
                 if (!response.ok) {
                     throw new Error('Failed to load team attendance');
                 }
-                
                 const records = await response.json();
                 const tableBody = document.getElementById('teamAttendanceTableBody');
                 if (!tableBody) {
                     console.error('Team attendance table body element not found');
                     return;
                 }
-                
                 tableBody.innerHTML = '';
-                
                 if (records.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No team attendance records found for the selected date.</td></tr>';
                     return;
                 }
-                
                 // Populate table
                 records.forEach(record => {
                     // Format data
@@ -1488,11 +1446,9 @@
                     const checkOut = record.check_out ? formatTime(record.check_out) : 'Not checked out';
                     const workHours = record.work_hours ? `${record.work_hours} hours` : 'N/A';
                     const location = record.check_in_location || 'N/A';
-                    
                     // Status
                     let status = 'Present';
                     let statusClass = 'badge-present';
-                    
                     if (record.is_late) {
                         status = 'Late';
                         statusClass = 'badge-late';
@@ -1503,7 +1459,6 @@
                         status = 'On Leave';
                         statusClass = 'badge-leave';
                     }
-                    
                     tableBody.innerHTML += `
                         <tr>
                             <td>${record.user_id}</td>
@@ -1515,7 +1470,6 @@
                         </tr>
                     `;
                 });
-                
             } catch (error) {
                 console.error('Error loading team attendance:', error);
                 const tableBody = document.getElementById('teamAttendanceTableBody');
@@ -1805,179 +1759,7 @@
                     checkInModal.style.display = 'none';
                 }
                 
-                // Show success message
-                showToast('Successfully checked in');
-                
-                // Update UI
-                await loadTodayStatus();
-                
-                const startDateElement = document.getElementById('startDate');
-                const endDateElement = document.getElementById('endDate');
-                
-                if (startDateElement && endDateElement) {
-                    await loadAttendanceRecords(
-                        new Date(startDateElement.value),
-                        new Date(endDateElement.value)
-                    );
-                }
-                
-            } catch (error) {
-                console.error('Error checking in:', error);
-                showToast('Check-in failed: ' + error.message);
-            }
-        }
-        
-        async function performCheckOut() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const locationInput = document.getElementById('checkOutLocation');
-                const summaryInput = document.getElementById('checkOutSummary');
-                const noteInput = document.getElementById('checkOutNote');
-                
-                const location = locationInput ? locationInput.value || 'Office' : 'Office';
-                const summary = summaryInput ? summaryInput.value || '' : '';
-                const note = noteInput ? noteInput.value || '' : '';
-                
-                console.log('Sending check-out request...');
-                console.log('User: soheruWRITE, Time: 2025-06-12 07:29:30');
-                
-                const response = await fetch('/attendance/check-out', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        check_out_location: location,
-                        work_summary: summary,
-                        check_out_note: note
-                    })
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.detail || 'Failed to check out');
-                }
-                
-                // Close modal
-                const checkOutModal = document.getElementById('checkOutModal');
-                if (checkOutModal) {
-                    checkOutModal.style.display = 'none';
-                }
-                
-                // Show success message
-                showToast('Successfully checked out');
-                
-                // Update UI
-                await loadTodayStatus();
-                
-                const startDateElement = document.getElementById('startDate');
-                const endDateElement = document.getElementById('endDate');
-                
-                if (startDateElement && endDateElement) {
-                    await loadAttendanceRecords(
-                        new Date(startDateElement.value),
-                        new Date(endDateElement.value)
-                    );
-                }
-                
-                // Ask if they want to create a daily report
-                setTimeout(() => {
-                    if (confirm('Would you like to create a daily report now?')) {
-                        window.location.href = '/static/daily-reports.html?new=true';
-                    }
-                }, 1000);
-                
-            } catch (error) {
-                console.error('Error checking out:', error);
-                showToast('Check-out failed: ' + error.message);
-            }
-        }
-        
-                
-                // User menu toggle
-                const userMenu = document.getElementById('userMenu');
-                const userDropdown = document.getElementById('userDropdown');
-                
-                if (userMenu && userDropdown) {
-                    userMenu.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                    });
-                    
-                    // Close user dropdown when clicking outside
-                    document.addEventListener('click', function() {
-                        userDropdown.classList.remove('active');
-                    });
-                }
-                
-                // Logout button
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        localStorage.removeItem('bhoomitechzone_token');
-                        window.location.href = '/app/login';
-                    });
-                }
-                
-                // View toggle (list vs calendar)
-                const listViewBtn = document.getElementById('listViewBtn');
-                const calendarViewBtn = document.getElementById('calendarViewBtn');
-                const listView = document.getElementById('listView');
-                const calendarView = document.getElementById('calendarView');
-                
-                if (listViewBtn && calendarViewBtn && listView && calendarView) {
-                    listViewBtn.addEventListener('click', function() {
-                        listViewBtn.classList.add('active');
-                        calendarViewBtn.classList.remove('active');
-                        listView.style.display = 'block';
-                        calendarView.style.display = 'none';
-                    });
-                    
-                    calendarViewBtn.addEventListener('click', function() {
-                        calendarViewBtn.classList.add('active');
-                        listViewBtn.classList.remove('active');
-                        listView.style.display = 'none';
-                        calendarView.style.display = 'block';
-                    });
-                }
-                
-                // Date filter
-                const filterBtn = document.getElementById('filterBtn');
-                const startDateInput = document.getElementById('startDate');
-                const endDateInput = document.getElementById('endDate');
-                
-                if (filterBtn && startDateInput && endDateInput) {
-                    filterBtn.addEventListener('click', async function() {
-                        const startDate = new Date(startDateInput.value);
-                        const endDate = new Date(endDateInput.value);
-                        await loadAttendanceRecords(startDate, endDate);
-                    });
-                }
-                
-                // Calendar navigation
-                const prevMonthBtn = document.getElementById('prevMonthBtn');
-                const nextMonthBtn = document.getElementById('nextMonthBtn');
-                const calendarMonthDisplay = document.getElementById('calendarMonthDisplay');
-                
-                if (prevMonthBtn && nextMonthBtn && calendarMonthDisplay) {
-                    prevMonthBtn.addEventListener('click', function() {
-                        const [month, year] = calendarMonthDisplay.textContent.split(' ');
-                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                        const monthIndex = monthNames.indexOf(month);
-                        
-                        let newMonth = monthIndex - 1;
-                        let newYear = parseInt(year);
-                        
-                        if (newMonth < 0) {
-                            newMonth = 11;
-                            newYear--;
-                        }
-                        
-                        const newDate = new Date(newYear, newMonth, 1);
-                        generateCalendar(newDate);
-                        
-                        // Reload attendance records for new month
+// ...existing code...
                         const startDate = new Date(newYear, newMonth, 1);
                         const endDate = new Date(newYear, newMonth + 1, 0); // Last day of month
                         loadAttendanceRecords(startDate, endDate);
@@ -2092,7 +1874,7 @@
                 console.error('Error setting up event listeners:', error);
             }
         }
-        
+// ...existing code...
         function showToast(message) {
             const toast = document.getElementById('toast');
             if (toast) {

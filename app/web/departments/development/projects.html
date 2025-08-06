@@ -1519,6 +1519,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     let currentUser;
     try {
         currentUser = await getCurrentUser();
+        window.currentUser = currentUser; // Make currentUser globally accessible
         console.log('Current user loaded:', currentUser.username);
         
         // Update UI with user info
@@ -1540,6 +1541,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             setInterval(() => {
                 document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
             }, 1000);
+
+            // Set up user search for task assignment (only if currentUser is defined)
+            if (typeof setupUserSearchFields === 'function') {
+                setupUserSearchFields(currentUser);
+            }
         }
     } catch (error) {
         console.error('Error getting current user:', error);
@@ -1548,22 +1554,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('userInitials').textContent = 'SW';
         document.getElementById('sidebar-username').textContent = 'soheruwite';
     }
-    
+
     // Add styles for user search
     addUserSearchStyles();
-    
+
     // Set up event listeners
     setupEventListeners();
-    
+
     // Load projects list and statistics
     loadProjectStats();
     loadProjects();
-    
-    // Set up user search for task assignment
-    if (currentUser) {
-        setupUserSearchFields(currentUser);
-    }
-    
+
     console.log(`Projects page loaded at ${getCurrentTimeFormatted()} by ${currentUser?.username || 'soheruwite'}`);
 });
 
