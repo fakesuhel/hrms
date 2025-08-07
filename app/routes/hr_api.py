@@ -582,8 +582,55 @@ async def export_attendance_data(
 ):
     """Export attendance data for a specific month and year"""
     if current_user.role not in ["director", "hr", "manager"]:
+        # Get attendance records for the month and department
+        from app.database.attendance import attendance_collection
+        from app.database.users import users_collection
+        from calendar import monthrange
+        from bson import ObjectId
+        # Get first and last day of the month
+        first_day = f"{year}-{month:02d}-01"
+        last_day_num = monthrange(year, month)[1]
+        last_day = f"{year}-{month:02d}-{last_day_num:02d}"
+        attendance_records = list(attendance_collection.find({
+            "date": {
+                "$gte": first_day,
+                "$lte": last_day
+            }
+        }))
+        # Filter by department if provided
+        enriched_records = []
+        for record in attendance_records:
+            record["_id"] = str(record["_id"])
+            user_id = record.get("user_id")
+            if isinstance(user_id, str):
+                user = users_collection.find_one({"_id": ObjectId(user_id)}) if ObjectId.is_valid(user_id) else None
+                if not user:
+                    user = users_collection.find_one({"user_id": user_id})
+            else:
+                user = users_collection.find_one({"_id": user_id})
+            if department and user and user.get("department") != department:
+                continue
+            if user:
+                enriched_records.append({
+                    **record,
+                    "employee_name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                    "department": user.get("department", "N/A"),
+                    "is_late": record.get("is_late", False),
+                    "status": "present" if record.get("check_in") else "absent",
+                    "work_hours": record.get("work_hours", 0)
+                })
+            else:
+                enriched_records.append({
+                    **record,
+                    "employee_name": f"Unknown User ({user_id})",
+                    "department": "N/A",
+                    "is_late": record.get("is_late", False),
+                    "status": "present" if record.get("check_in") else "absent",
+                    "work_hours": record.get("work_hours", 0)
+                })
         # Generate file content based on requested format
         if format.lower() == "csv":
+            import io
             output = io.StringIO()
             if enriched_records:
                 fieldnames = enriched_records[0].keys()
