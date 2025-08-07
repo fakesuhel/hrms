@@ -700,7 +700,61 @@
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <!-- Universal Sidebar will be populated here by JavaScript -->
+            <div class="sidebar-header">
+                <div class="company-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#2563eb" />
+                        <path d="M16 10L22 16L16 22L10 16L16 10Z" fill="#1d4ed8" />
+                    </svg>
+                    <div class="company-name">Bhoomi TechZone</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/app/sales/dashboard" class="nav-link">
+                            <i>📊</i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/attendance" class="nav-link">
+                            <i>🕒</i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/leads" class="nav-link">
+                            <i>🎯</i>
+                            Leads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/customers" class="nav-link">
+                            <i>🧑🏼‍🤝‍🧑🏻</i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/reports" class="nav-link">
+                            <i>🚨</i>
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/app/sales/profile" class="nav-link active">
+                            <i>👤</i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div id="sidebar-username" style="font-weight: 500;">Loading...</div>
+                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+                </div>
+            </div>
         </aside>
         
         <div class="main-content">
