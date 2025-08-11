@@ -357,16 +357,203 @@
         </div>
         
         <div class="time-display" id="timeDisplay">
-            2025-06-11 05:27:00 UTC
+            Loading IST time...
         </div>
     </div>
 
-    <script src="/static/js/user-manager.js"></script>
+    <script>
+        /**
+         * User Manager - Handles user authentication and management
+         */
+        class UserManager {
+            static TOKEN_KEY = 'bhoomitechzone_token';
+            static API_BASE = '';
+
+            /**
+             * Check if user is authenticated
+             */
+            static isAuthenticated() {
+                const token = localStorage.getItem(this.TOKEN_KEY);
+                return !!token;
+            }
+
+            /**
+             * Get the current authentication token
+             */
+            static getToken() {
+                return localStorage.getItem(this.TOKEN_KEY);
+            }
+
+            /**
+             * Login user
+             */
+            static async login(username, password) {
+                try {
+                    const response = await fetch('/users/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            username: username,
+                            password: password
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Store the token
+                        localStorage.setItem(this.TOKEN_KEY, data.access_token);
+                        
+                        return { success: true, data: data };
+                    } else {
+                        const errorData = await response.json();
+                        return { 
+                            success: false, 
+                            error: errorData.detail || 'Login failed' 
+                        };
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    return { 
+                        success: false, 
+                        error: 'Network error. Please try again.' 
+                    };
+                }
+            }
+
+            /**
+             * Register new user
+             */
+            static async registerUser(userData) {
+                try {
+                    const response = await fetch('/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(userData)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        return { success: true, data: data };
+                    } else {
+                        const errorData = await response.json();
+                        return { 
+                            success: false, 
+                            error: errorData.detail || 'Registration failed' 
+                        };
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    return { 
+                        success: false, 
+                        error: 'Network error. Please try again.' 
+                    };
+                }
+            }
+
+            /**
+             * Get current user data
+             */
+            static async getCurrentUser() {
+                try {
+                    const token = this.getToken();
+                    if (!token) {
+                        throw new Error('No authentication token found');
+                    }
+
+                    const response = await fetch('/current-user', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        
+                        // Store user data for quick access (same pattern as other files)
+                        localStorage.setItem('bhoomitechzone_user', JSON.stringify(userData));
+                        localStorage.setItem('bhoomitechzone_username', userData.username);
+                        
+                        return userData;
+                    } else {
+                        throw new Error('Failed to get user data');
+                    }
+                } catch (error) {
+                    console.error('Get current user error:', error);
+                    
+                    // Try to get user from localStorage as fallback (same pattern as teams.html)
+                    const cachedUser = localStorage.getItem('bhoomitechzone_user');
+                    if (cachedUser) {
+                        try {
+                            return JSON.parse(cachedUser);
+                        } catch (e) {
+                            console.error('Error parsing cached user data:', e);
+                        }
+                    }
+                    
+                    throw error;
+                }
+            }
+
+            /**
+             * Logout user
+             */
+            static logout() {
+                localStorage.removeItem(this.TOKEN_KEY);
+                localStorage.removeItem('bhoomitechzone_user');
+                localStorage.removeItem('bhoomitechzone_username');
+                window.location.href = '/app/login';
+            }
+
+            /**
+             * Get department-specific dashboard URL
+             */
+            static getDepartmentDashboardUrl(department) {
+                if (!department) return '/app/dashboard';
+                
+                const dept = department.toLowerCase();
+                
+                if (dept === 'sales') {
+                    return '/app/sales/dashboard';
+                } else if (dept === 'hr' || dept === 'management') {
+                    return '/app/hr/dashboard';
+                } else if (dept === 'it' || dept === 'development') {
+                    return '/app/it/dashboard';
+                }
+                
+                return '/app/dashboard'; // default fallback
+            }
+
+            /**
+             * Redirect to appropriate dashboard based on user department
+             */
+            static async redirectToDepartmentDashboard() {
+                try {
+                    const userData = await this.getCurrentUser();
+                    const dashboardUrl = this.getDepartmentDashboardUrl(userData.department);
+                    window.location.href = dashboardUrl;
+                } catch (error) {
+                    console.error('Error redirecting to department dashboard:', error);
+                    window.location.href = '/app/dashboard';
+                }
+            }
+        }
+
+        // Make UserManager available globally
+        window.UserManager = UserManager;
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Update time display
+            // Update time display with Indian Standard Time
             const timeDisplay = document.getElementById('timeDisplay');
-            timeDisplay.textContent = '2025-06-11 05:27:00 UTC';
+            const now = new Date();
+            const indianTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const formattedTime = indianTime.toISOString().replace('T', ' ').substring(0, 19) + ' IST';
+            timeDisplay.textContent = formattedTime;
             
             // Tab switching functionality
             const tabs = document.querySelectorAll('.auth-tab');
@@ -391,9 +578,9 @@
                 });
             });
             
-            // Redirect to dashboard if already authenticated
+            // Redirect to appropriate dashboard if already authenticated
             if (UserManager.isAuthenticated()) {
-                window.location.href = 'dashboard';
+                UserManager.redirectToDepartmentDashboard();
                 return;
             }
             
@@ -419,8 +606,8 @@
                     const result = await UserManager.login(username, password);
                     
                     if (result.success) {
-                        // Redirect to dashboard
-                        window.location.href = 'dashboard';
+                        // Use the UserManager method to redirect to department dashboard
+                        await UserManager.redirectToDepartmentDashboard();
                     } else {
                         // Show error message
                         loginAlert.textContent = result.error;
