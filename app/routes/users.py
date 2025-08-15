@@ -212,6 +212,79 @@ async def create_employee(user: UserCreate, current_user = Depends(get_current_u
             detail=f"Error creating employee: {str(e)}",
         )
 
+@router.post("/register")
+async def register_development_employee(user: UserCreate):
+    """
+    Public registration endpoint for Development department employees.
+    Allows public signup for specific development roles.
+    """
+    try:
+        # Validate that this is for development department with allowed roles
+        if user.department != "Development":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This registration is only for Development department",
+            )
+        
+        # Validate role is one of the allowed development roles
+        allowed_dev_roles = ["developer", "intern", "team_lead"]
+        if user.role not in allowed_dev_roles:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Role must be one of: {', '.join(allowed_dev_roles)}",
+            )
+        
+        # Check if email exists
+        existing_user = await DatabaseUsers.get_user_by_email(user.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+        
+        # Check if username exists
+        existing_user = await DatabaseUsers.get_user_by_username(user.username)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken",
+            )
+        
+        # Log the registration attempt
+        print(f"Development registration: {user.username} ({user.role}) at 2025-08-15")
+        
+        # Create the user
+        user_in_db = await DatabaseUsers.create_user(user)
+        if isinstance(user_in_db, dict):
+            _id = user_in_db.get("_id")
+            user_dict = user_in_db.copy()
+            user_dict["id"] = str(_id) if _id is not None else str(user_dict.get("id", ""))
+            user_dict.pop("_id", None)
+        else:
+            _id = getattr(user_in_db, "_id", None)
+            user_dict = {field: getattr(user_in_db, field) for field in getattr(user_in_db, "__fields__", [])}
+            user_dict["id"] = str(_id) if _id is not None else str(getattr(user_in_db, "id", ""))
+            if "_id" in user_dict:
+                user_dict.pop("_id")
+        if "id" in user_dict and not isinstance(user_dict["id"], str):
+            user_dict["id"] = str(user_dict["id"])
+        
+        return {
+            "message": "Registration successful! Please contact HR or your manager for account activation.",
+            "user": UserResponse(**user_dict)
+        }
+    
+    except HTTPException as e:
+        # Re-raise HTTP exceptions
+        raise e
+    except Exception as e:
+        # Log the error
+        print(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during registration: {str(e)}",
+        )
+
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user = Depends(get_current_user)):
     """Get current user profile"""

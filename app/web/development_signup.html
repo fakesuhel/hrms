@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Team Signup - Bhoomi Techzone</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-light: #f9fafb;
+            --border-color: #d1d5db;
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: var(--danger);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-input.error,
+        .form-select.error {
+            border-color: var(--danger);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .role-info {
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .role-info h3 {
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .role-info ul {
+            list-style: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .role-info li {
+            margin-bottom: 0.25rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .role-info li::before {
+            content: "•";
+            color: var(--primary);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .signup-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="header">
+            <div class="logo">BT</div>
+            <h1>Join Development Team</h1>
+            <p>Create your account to join Bhoomi Techzone Development Department</p>
+        </div>
+
+        <div class="role-info">
+            <h3>Available Positions:</h3>
+            <ul>
+                <li><strong>Developer:</strong> Full-stack development and coding</li>
+                <li><strong>Intern:</strong> Learning and training position</li>
+                <li><strong>Team Lead:</strong> Lead development teams and projects</li>
+            </ul>
+        </div>
+
+        <form id="signupForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required" for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" class="form-input" required>
+                    <div class="error-message" id="firstNameError">First name is required</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" class="form-input" required>
+                    <div class="error-message" id="lastNameError">Last name is required</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                    <div class="error-message" id="usernameError">Username is required</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                    <div class="error-message" id="emailError">Valid email is required</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                    <div class="error-message" id="passwordError">Password is required (min 6 characters)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required>
+                    <div class="error-message" id="confirmPasswordError">Passwords must match</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required" for="position">Position/Role</label>
+                    <select id="position" name="position" class="form-select" required>
+                        <option value="">Select Position</option>
+                        <option value="developer">Developer</option>
+                        <option value="intern">Intern</option>
+                        <option value="team_lead">Team Lead</option>
+                    </select>
+                    <div class="error-message" id="positionError">Please select a position</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" required>
+                    <div class="error-message" id="phoneNumberError">Phone number is required</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="employeeId">Employee ID (Optional)</label>
+                <input type="text" id="employeeId" name="employeeId" class="form-input" placeholder="Will be auto-generated if not provided">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="joiningDate">Joining Date</label>
+                    <input type="date" id="joiningDate" name="joiningDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="salary">Salary</label>
+                    <input type="number" id="salary" name="salary" class="form-input" placeholder="Monthly salary">
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                Create Account
+            </button>
+        </form>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function validateField(field) {
+            const value = field.value.trim();
+            const fieldName = field.name;
+            const errorElement = document.getElementById(fieldName + 'Error');
+            
+            let isValid = true;
+            let errorMessage = '';
+
+            switch (fieldName) {
+                case 'firstName':
+                case 'lastName':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')} is required`;
+                    } else if (value.length < 2) {
+                        isValid = false;
+                        errorMessage = 'Must be at least 2 characters';
+                    }
+                    break;
+
+                case 'username':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Username is required';
+                    } else if (value.length < 3) {
+                        isValid = false;
+                        errorMessage = 'Username must be at least 3 characters';
+                    } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                        isValid = false;
+                        errorMessage = 'Username can only contain letters, numbers, and underscores';
+                    }
+                    break;
+
+                case 'email':
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Email is required';
+                    } else if (!emailRegex.test(value)) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid email address';
+                    }
+                    break;
+
+                case 'password':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Password is required';
+                    } else if (value.length < 6) {
+                        isValid = false;
+                        errorMessage = 'Password must be at least 6 characters';
+                    }
+                    break;
+
+                case 'confirmPassword':
+                    const password = document.getElementById('password').value;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Please confirm your password';
+                    } else if (value !== password) {
+                        isValid = false;
+                        errorMessage = 'Passwords do not match';
+                    }
+                    break;
+
+                case 'position':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Please select a position';
+                    }
+                    break;
+
+                case 'phoneNumber':
+                    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Phone number is required';
+                    } else if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid phone number';
+                    }
+                    break;
+            }
+
+            if (isValid) {
+                field.classList.remove('error');
+                errorElement.style.display = 'none';
+            } else {
+                field.classList.add('error');
+                errorElement.textContent = errorMessage;
+                errorElement.style.display = 'block';
+            }
+
+            return isValid;
+        }
+
+        // Real-time validation
+        document.querySelectorAll('.form-input, .form-select').forEach(field => {
+            field.addEventListener('blur', () => validateField(field));
+            field.addEventListener('input', () => {
+                if (field.classList.contains('error')) {
+                    validateField(field);
+                }
+            });
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            // Validate all required fields
+            const requiredFields = form.querySelectorAll('[required]');
+            let isFormValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isFormValid = false;
+                }
+            });
+            
+            if (!isFormValid) {
+                showToast('Please fix the errors above', 'error');
+                return;
+            }
+
+            // Prepare employee data
+            const employeeData = {
+                first_name: formData.get('firstName'),
+                last_name: formData.get('lastName'),
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                role: formData.get('position'), // Map position to role
+                department: 'Development',
+                phone_number: formData.get('phoneNumber'),
+                employee_id: formData.get('employeeId') || null,
+                joining_date: formData.get('joiningDate') || null,
+                salary: formData.get('salary') ? parseFloat(formData.get('salary')) : null,
+                is_active: true
+            };
+
+            console.log('Submitting employee data:', employeeData);
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating Account...';
+
+                const response = await fetch('/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showToast('Account created successfully! You can now login.', 'success');
+                    
+                    // Reset form after successful submission
+                    setTimeout(() => {
+                        form.reset();
+                        // Redirect to login page
+                        window.location.href = '/app/login';
+                    }, 2000);
+                } else {
+                    showToast(result.detail || 'Registration failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+
+        // Set default joining date to today
+        document.getElementById('joiningDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>

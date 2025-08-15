@@ -37,6 +37,11 @@ async def login_page(request: Request, current_user: UserInDB = Depends(get_curr
     
     return templates.TemplateResponse("login.html", {"request": request})
 
+@router.get("/signup/development", response_class=HTMLResponse)
+async def development_signup_page(request: Request):
+    """Serve the development department signup page"""
+    return templates.TemplateResponse("development_signup.html", {"request": request})
+
 @router.get("/app/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
     """Serve the dashboard page"""

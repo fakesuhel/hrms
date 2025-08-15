@@ -810,6 +810,8 @@ async def create_employee(
     try:
         from app.database.users import UserCreate
         
+        print(f"Creating employee with data: {employee_data}")  # Debug log
+        
         # Convert dict to UserCreate model
         # Generate a default password if not provided
         if "password" not in employee_data:
@@ -837,6 +839,9 @@ async def create_employee(
             employee_data["username"] = username
         
         user_create = UserCreate(**employee_data)
+        print(f"UserCreate object role: {user_create.role}")  # Debug log
+        print(f"UserCreate object position: {getattr(user_create, 'position', 'N/A')}")  # Debug log
+        
         new_employee = await DatabaseUsers.create_user(user_create)
         
         # Remove sensitive information
