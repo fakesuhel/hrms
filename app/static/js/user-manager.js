@@ -137,9 +137,9 @@ class UserManager {
         
         if (dept === 'sales') {
             return '/app/sales/dashboard';
-        } else if (dept === 'hr' || dept === 'management') {
+        } else if (dept === 'human resources' || dept === 'hr') {
             return '/app/hr/dashboard';
-        } else if (dept === 'it' || dept === 'development') {
+        } else if (dept === 'development') {
             return '/app/it/dashboard';
         }
         

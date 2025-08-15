@@ -4,14 +4,14 @@
 class RoleManager {
     constructor() {
         this.roleHierarchy = {
-            // Management Department
+            // Human Resources Department
             'director': {
-                department: 'management',
+                department: 'human resources',
                 level: 10,
                 permissions: ['all_access']
             },
             'hr': {
-                department: 'management', 
+                department: 'human resources', 
                 level: 8,
                 permissions: [
                     'attendance_check', 'attendance_modify', 'mark_absent', 'mark_present',
