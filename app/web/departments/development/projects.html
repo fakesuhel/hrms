@@ -174,6 +174,22 @@
             margin-right: 0.5rem;
         }
         
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            margin-right: 0.5rem;
+        }
+        
+        .user-fullname {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
         .user-dropdown {
             position: absolute;
             top: 100%;
@@ -921,12 +937,6 @@
                 </ul>
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div id="sidebar-username" style="font-weight: 500;">soherucontinue</div>
-                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
-                </div>
-            </div>
         </aside>
         
         <div class="main-content">
@@ -940,15 +950,16 @@
                 
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userInitials">SC</div>
-                    <span id="userTimeDisplay">07:45 - soherucontinue</span>
+                    <div class="user-info-header">
+                        <div id="userFullName" class="user-fullname">User Name</div>
+                        <div id="userTimeDisplay" class="user-time"></div>
+                    </div>
                     
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/static/profile.html" class="dropdown-item">
                             <i>👤</i> Your Profile
                         </a>
-                        <a href="/static/settings.html" class="dropdown-item">
-                            <i>⚙️</i> Settings
-                        </a>
+                        
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
@@ -1531,7 +1542,14 @@
             console.log('User role detected:', userRole);
         }
 
-        // Projects Module - Complete JavaScript
+        // Function to format user display name
+        function formatUserDisplayName(user) {
+            if (!user) return 'User';
+            if (user.first_name && user.last_name) {
+                return `${user.first_name} ${user.last_name}`;
+            }
+            return user.full_name || user.username || 'User';
+        }
 document.addEventListener('DOMContentLoaded', async function() {
     // Check authentication
     const token = localStorage.getItem('bhoomitechzone_token');
@@ -1545,19 +1563,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         currentUser = await getCurrentUser();
         window.currentUser = currentUser; // Make currentUser globally accessible
-        console.log('Current user loaded:', currentUser.username);
+        console.log('Current user loaded:', formatUserDisplayName(currentUser));
         
         // Update UI with user info
         if (currentUser) {
-            document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+            document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + formatUserDisplayName(currentUser);
             
             // Set user initials
             const initials = currentUser.first_name && currentUser.last_name ? 
                             (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
-                            currentUser.username[0].toUpperCase();
-            document.getElementById('userInitials').textContent = initials;
-            document.getElementById('sidebar-username').textContent = currentUser.username;
-            document.getElementById('sidebar-position').textContent = currentUser.position || 'Team Member';
+                            (formatUserDisplayName(currentUser))[0].toUpperCase();
+            
+            const userInitials = document.getElementById('userInitials');
+            const userFullName = document.getElementById('userFullName');
+            const sidebarUsername = document.getElementById('sidebar-username');
+            const sidebarPosition = document.getElementById('sidebar-position');
+            
+            if (userInitials) userInitials.textContent = initials;
+            if (userFullName) userFullName.textContent = formatUserDisplayName(currentUser);
+            if (sidebarUsername) sidebarUsername.textContent = formatUserDisplayName(currentUser);
+            if (sidebarPosition) sidebarPosition.textContent = currentUser.position || 'Team Member';
             
             // Setup role-based UI
             setupRoleBasedUI(currentUser);
@@ -1567,7 +1592,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // Start live clock update
             setInterval(() => {
-                document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                if (userTimeDisplay) {
+                    userTimeDisplay.textContent = getCurrentTimeFormatted() + ' - ' + formatUserDisplayName(currentUser);
+                }
             }, 1000);
 
             // Set up user search for task assignment (delayed to avoid sidebar conflicts)
@@ -1580,9 +1608,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('Error getting current user:', error);
         // Default to values from the URL if user can't be loaded
-        document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - soheruwite';
+        document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + formatUserDisplayName();
         document.getElementById('userInitials').textContent = 'SW';
-        document.getElementById('sidebar-username').textContent = 'soheruwite';
+
     }
 
     // Add styles for user search
@@ -1595,7 +1623,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadProjectStats();
     loadProjects();
 
-    console.log(`Projects page loaded at ${getCurrentTimeFormatted()} by ${currentUser?.username || 'soheruwite'}`);
+    console.log(`Projects page loaded at ${getCurrentTimeFormatted()} by ${currentUser?.username || 'unknown'}`);
 });
 
 // ========================
@@ -1722,7 +1750,7 @@ function formatTime(dateTimeString) {
 // Get today's date in YYYY-MM-DD format
 function getTodayFormatted() {
     // For demo purposes, using the specified date
-    return "2025-06-12";
+    return new Date().toISOString().split('T')[0];
 }
 
 // ========================
@@ -2275,7 +2303,7 @@ async function createProject() {
         
         const currentUser = await getCurrentUser();
         console.log(`Creating project: ${name}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch('/projects', {
             method: 'POST',
@@ -2366,7 +2394,7 @@ async function updateProject() {
         
         const currentUser = await getCurrentUser();
         console.log(`Updating project: ${projectId}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch(`/projects/${projectId}`, {
             method: 'PUT',
@@ -2405,7 +2433,7 @@ async function deleteProject(projectId) {
         const token = localStorage.getItem('bhoomitechzone_token');
         const currentUser = await getCurrentUser();
         console.log(`Deleting project: ${projectId}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch(`/projects/${projectId}`, {
             method: 'DELETE',
@@ -2562,7 +2590,7 @@ async function createTask() {
         
         const currentUser = await getCurrentUser();
         console.log(`Creating task for project: ${projectId}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch(`/projects/${projectId}/tasks`, {
             method: 'POST',
@@ -2640,7 +2668,7 @@ async function updateTask() {
         
         const currentUser = await getCurrentUser();
         console.log(`Updating task ${taskId} in project: ${projectId}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch(`/projects/${projectId}/tasks/${taskId}`, {
             method: 'PUT',
@@ -2682,7 +2710,7 @@ async function deleteTask() {
         
         const currentUser = await getCurrentUser();
         console.log(`Deleting task ${taskId} from project: ${projectId}`);
-        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'soheruwite'}`);
+        console.log(`Current time: ${getCurrentTimeFormatted()}, User: ${currentUser?.username || 'unknown'}`);
         
         const response = await fetch(`/projects/${projectId}/tasks/${taskId}`, {
             method: 'DELETE',
@@ -2849,7 +2877,7 @@ function openCreateTaskModal(initialStatus) {
     taskStatusSelect.value = initialStatus || 'todo';
     
     // Set default due date to 7 days from now
-    const defaultDueDate = new Date('2025-06-12');
+    const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 7);
     document.getElementById('taskDueDate').value = formatDateInput(defaultDueDate);
     
@@ -3121,10 +3149,10 @@ function setupEventListeners() {
     // Create project button
     document.getElementById('createProjectBtn')?.addEventListener('click', function() {
         // Set default dates
-        const today = new Date('2025-06-12');
+        const today = new Date();
         document.getElementById('projectStartDate').value = formatDateInput(today);
         
-        const endDate = new Date('2025-06-12');
+        const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 3); // Default to 3 months from now
         document.getElementById('projectEndDate').value = formatDateInput(endDate);
         

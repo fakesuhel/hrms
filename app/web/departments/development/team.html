@@ -819,16 +819,6 @@
                 </ul>
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-info-avatar" id="sidebar-user-avatar">S</div>
-                    <div class="user-info-details">
-                        <div id="sidebar-username" style="font-weight: 500;">soheru</div>
-                        <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team</div>
-                    </div>
-                </div>
-                <div id="sidebar-time" class="sidebar-time">00:00:00</div>
-            </div>
         </aside>
         
         <div class="main-content">
@@ -844,16 +834,14 @@
                     <div class="user-avatar" id="userInitials">S</div>
                     <div class="user-info-header">
                         <div id="userFullName" class="user-fullname">User Name</div>
-                        <div id="userTimeDisplay" class="user-time">13:29:00</div>
+                        <div id="userTimeDisplay" class="user-time"></div>
                     </div>
                     
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/static/profile.html" class="dropdown-item">
                             <i>👤</i> Your Profile
                         </a>
-                        <a href="/static/settings.html" class="dropdown-item">
-                            <i>⚙️</i> Settings
-                        </a>
+                        
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
@@ -931,7 +919,7 @@
                 // Log current datetime and user
                 const currentTime = getCurrentFormattedTime();
                 console.log(`Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): ${currentTime}`);
-                console.log(`Current User's Login: ${currentUser.username}`);
+                console.log(`Current User's Login: ${formatUserDisplayName(currentUser)}`);
                 
                 // Load projects
                 await loadTeamProjects();
@@ -984,6 +972,14 @@
                 const username = localStorage.getItem('bhoomitechzone_username') || 'User';
                 return { username: username, role: 'Team Member' };
             }
+        }
+
+        // Function to format user display name
+        function formatUserDisplayName(user) {
+            if (user.first_name && user.last_name) {
+                return `${user.first_name} ${user.last_name}`;
+            }
+            return user.full_name || user.username || 'User';
         }
 
         function getCurrentFormattedTime() {
@@ -1940,13 +1936,13 @@
             const sidebarAvatar = document.getElementById('sidebar-user-avatar');
             
             if (sidebarUsername) {
-                sidebarUsername.textContent = currentUser.username || 'User';
+                sidebarUsername.textContent = formatUserDisplayName(currentUser) || 'User';
             }
             if (sidebarPosition) {
                 sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
             }
             if (sidebarAvatar) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 sidebarAvatar.textContent = initial;
             }
             
@@ -1955,10 +1951,10 @@
             const userInitials = document.getElementById('userInitials');
             
             if (userFullName) {
-                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+                userFullName.textContent = currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'User';
             }
             if (userInitials) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 userInitials.textContent = initial;
             }
         }
@@ -2253,13 +2249,13 @@
             const sidebarAvatar = document.getElementById('sidebar-user-avatar');
             
             if (sidebarUsername) {
-                sidebarUsername.textContent = currentUser.username || 'User';
+                sidebarUsername.textContent = formatUserDisplayName(currentUser) || 'User';
             }
             if (sidebarPosition) {
                 sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
             }
             if (sidebarAvatar) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 sidebarAvatar.textContent = initial;
             }
             
@@ -2268,10 +2264,10 @@
             const userInitials = document.getElementById('userInitials');
             
             if (userFullName) {
-                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+                userFullName.textContent = currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'User';
             }
             if (userInitials) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 userInitials.textContent = initial;
             }
         }
@@ -2542,13 +2538,13 @@
             const sidebarAvatar = document.getElementById('sidebar-user-avatar');
             
             if (sidebarUsername) {
-                sidebarUsername.textContent = currentUser.username || 'User';
+                sidebarUsername.textContent = formatUserDisplayName(currentUser) || 'User';
             }
             if (sidebarPosition) {
                 sidebarPosition.textContent = currentUser.position || currentUser.role || 'Team Member';
             }
             if (sidebarAvatar) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 sidebarAvatar.textContent = initial;
             }
             
@@ -2557,10 +2553,10 @@
             const userInitials = document.getElementById('userInitials');
             
             if (userFullName) {
-                userFullName.textContent = currentUser.full_name || currentUser.name || currentUser.username || 'User';
+                userFullName.textContent = currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'User';
             }
             if (userInitials) {
-                const initial = (currentUser.full_name || currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
+                const initial = (currentUser.full_name || currentUser.name || formatUserDisplayName(currentUser) || 'U').charAt(0).toUpperCase();
                 userInitials.textContent = initial;
             }
         }

@@ -162,6 +162,22 @@
             margin-right: 0.5rem;
         }
         
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            margin-right: 0.5rem;
+        }
+        
+        .user-fullname {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
         .user-dropdown {
             position: absolute;
             top: 100%;
@@ -633,12 +649,6 @@
                 </ul>
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div id="sidebar-username" style="font-weight: 500;">soheru</div>
-                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Employee</div>
-                </div>
-            </div>
         </aside>
         
         <div class="main-content">
@@ -652,15 +662,16 @@
                 
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userInitials">S</div>
-                    <span id="userTimeDisplay">20:30 - soheru</span>
+                    <div class="user-info-header">
+                        <div id="userFullName" class="user-fullname">User Name</div>
+                        <div id="userTimeDisplay" class="user-time"></div>
+                    </div>
                     
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/static/profile.html" class="dropdown-item">
                             <i>👤</i> Your Profile
                         </a>
-                        <a href="/static/settings.html" class="dropdown-item">
-                            <i>⚙️</i> Settings
-                        </a>
+                        
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
@@ -673,11 +684,11 @@
                 <!-- Employee Dashboard View -->
                 <div class="dashboard-view" id="employeeDashboard">
                     <div class="dashboard-welcome">
-                        <h1 class="welcome-title">Welcome back, <span id="employeeName">soheru</span>!</h1>
+                        <h1 class="welcome-title">Welcome back, <span id="employeeName"></span>!</h1>
                         <p class="welcome-subtitle" id="dateDisplay">Here's your activity summary for today, Friday, 13 June 2025</p>
                         <div>
                             <span class="status-badge status-online">🟢 Online</span>
-                            <span>Current time: <strong id="timeDisplay">20:30</strong></span>
+                            <span>Current time: <strong id="timeDisplay"></strong></span>
                         </div>
                     </div>
                     
@@ -762,7 +773,7 @@
                         <p class="welcome-subtitle" id="tlDateDisplay">Team overview for Friday, 13 June 2025</p>
                         <div>
                             <span class="status-badge status-online">🟢 Online</span>
-                            <span>Current time: <strong id="tlTimeDisplay">20:30</strong></span>
+                            <span>Current time: <strong id="tlTimeDisplay"></strong></span>
                         </div>
                     </div>
                     
@@ -866,7 +877,7 @@
                         <p class="welcome-subtitle" id="mgrDateDisplay">Department overview for Friday, 13 June 2025</p>
                         <div>
                             <span class="status-badge status-online">🟢 Online</span>
-                            <span>Current time: <strong id="mgrTimeDisplay">20:30</strong></span>
+                            <span>Current time: <strong id="mgrTimeDisplay"></strong></span>
                         </div>
                     </div>
                     
@@ -958,7 +969,7 @@
                         <p class="welcome-subtitle" id="dirDateDisplay">Company-wide overview for Friday, 13 June 2025</p>
                         <div>
                             <span class="status-badge status-online">🟢 Online</span>
-                            <span>Current time: <strong id="dirTimeDisplay">20:30</strong></span>
+                            <span>Current time: <strong id="dirTimeDisplay"></strong></span>
                         </div>
                     </div>
                     
@@ -1040,9 +1051,62 @@
         // IST timezone conversion (UTC +5:30)
         function getCurrentTimeFormatted() {
             const now = new Date();
-            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-            const istTime = new Date(now.getTime() + istOffset);
-            return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
+            return now.toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Format user display name
+        function formatUserDisplayName(user) {
+            if (user.first_name && user.last_name) {
+                return `${user.first_name} ${user.last_name}`;
+            }
+            return user.full_name || user.username || 'User';
+        }
+
+        // Update user display elements
+        function updateUserDisplay(user) {
+            const displayName = formatUserDisplayName(user);
+            const currentTime = getCurrentTimeFormatted();
+            
+            // Update sidebar
+            const sidebarUsername = document.getElementById('sidebar-username');
+            const sidebarPosition = document.getElementById('sidebar-position');
+            if (sidebarUsername) sidebarUsername.textContent = displayName;
+            if (sidebarPosition) sidebarPosition.textContent = user.position || user.role || 'Team Member';
+            
+            // Update navbar time display
+            const userTimeDisplay = document.getElementById('userTimeDisplay');
+            if (userTimeDisplay) userTimeDisplay.textContent = `${currentTime} - ${displayName}`;
+            
+            // Update header user info
+            const userFullName = document.getElementById('userFullName');
+            const userInitials = document.getElementById('userInitials');
+            if (userFullName) userFullName.textContent = displayName;
+            if (userInitials) {
+                const initial = user.first_name && user.last_name ? 
+                              (user.first_name[0] + user.last_name[0]).toUpperCase() :
+                              displayName.charAt(0).toUpperCase();
+                userInitials.textContent = initial;
+            }
+            
+            // Update welcome message
+            const employeeName = document.getElementById('employeeName');
+            if (employeeName) employeeName.textContent = displayName;
+        }
+
+        // Start live time updates
+        function startLiveTimeUpdates(user) {
+            updateUserDisplay(user); // Initial update
+            setInterval(() => {
+                const displayName = formatUserDisplayName(user);
+                const currentTime = getCurrentTimeFormatted();
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                if (userTimeDisplay) userTimeDisplay.textContent = `${currentTime} - ${displayName}`;
+            }, 1000);
         }
 
         // Navigation configuration for different roles
@@ -1173,18 +1237,18 @@
             // Fallback to mock user if API fails
             return {
                 id: 1,
-                username: 'soheru',
-                first_name: 'Soheru',
-                last_name: 'User',
+                username: 'user',
+                first_name: 'User',
+                last_name: 'Name',
                 role: 'employee',
                 position: 'Developer'
             };
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
-            // Initialize with the current timestamp from API
-            const currentTimestamp = "2025-06-13 20:30:29";
-            const currentDate = new Date(currentTimestamp);
+            // Initialize with the current timestamp dynamically
+            const currentTimestamp = getCurrentTimeFormatted();
+            const currentDate = new Date();
             
             // Update all date/time displays with the current timestamp
             updateDateTimeDisplays(currentDate);
@@ -1202,23 +1266,13 @@
                 
                 // Update UI with user info
                 if (currentUser) {
-                    document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
-                    
-                    // Set user initials
-                    const initials = currentUser.first_name && currentUser.last_name ? 
-                                    (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
-                                    currentUser.username[0].toUpperCase();
-                    document.getElementById('userInitials').textContent = initials;
-                    document.getElementById('sidebar-username').textContent = currentUser.username;
-                    document.getElementById('sidebar-position').textContent = currentUser.position || 'Team Member';
+                    updateUserDisplay(currentUser);
                     
                     // Setup role-based UI
                     setupRoleBasedUI(currentUser);
                     
                     // Start live clock update
-                    setInterval(() => {
-                        document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
-                    }, 1000);
+                    startLiveTimeUpdates(currentUser);
                 }
                 
                 // Load user data
@@ -1290,14 +1344,24 @@
                 // Store user data
                 window.currentUser = userData;
                 window.userRole = userData.role;
-                const username = userData.username || 'soheru'; // Default to 'soheru' if username not available
+                const username = userData.username || 'user'; // Default to 'user' if username not available
                 
                 // Update UI with user info
-                document.getElementById('userInitials').textContent = getInitials(userData.first_name, userData.last_name);
-                document.getElementById('userTimeDisplay').textContent = `20:30 - ${username}`;
-                document.getElementById('sidebar-username').textContent = username;
-                document.getElementById('sidebar-position').textContent = userData.position || userData.role || 'Employee';
-                document.getElementById('employeeName').textContent = userData.first_name || username;
+                // Update UI elements safely
+                const userInitials = document.getElementById('userInitials');
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                const sidebarUsername = document.getElementById('sidebar-username');
+                const sidebarPosition = document.getElementById('sidebar-position');
+                const employeeName = document.getElementById('employeeName');
+                
+                const displayName = formatUserDisplayName(userData);
+                const initials = getInitials(userData.first_name, userData.last_name);
+                
+                if (userInitials) userInitials.textContent = initials;
+                if (userTimeDisplay) userTimeDisplay.textContent = `${getCurrentTimeFormatted()} - ${displayName}`;
+                if (sidebarUsername) sidebarUsername.textContent = displayName;
+                if (sidebarPosition) sidebarPosition.textContent = userData.position || userData.role || 'Employee';
+                if (employeeName) employeeName.textContent = displayName;
                 
                 // Set up dashboard based on role
                 showDashboardByRole(userData.role);
@@ -1310,12 +1374,18 @@
             } catch (error) {
                 console.error('Error loading user data:', error);
                 
-                // Set default values as fallback
-                document.getElementById('userInitials').textContent = 'S';
-                document.getElementById('userTimeDisplay').textContent = '20:30 - soheru';
-                document.getElementById('sidebar-username').textContent = 'soheru';
-                document.getElementById('sidebar-position').textContent = 'Employee';
-                document.getElementById('employeeName').textContent = 'soheru';
+                // Set default values as fallback with null checks
+                const userInitials = document.getElementById('userInitials');
+                const userTimeDisplay = document.getElementById('userTimeDisplay');
+                const sidebarUsername = document.getElementById('sidebar-username');
+                const sidebarPosition = document.getElementById('sidebar-position');
+                const employeeName = document.getElementById('employeeName');
+                
+                if (userInitials) userInitials.textContent = 'U';
+                if (userTimeDisplay) userTimeDisplay.textContent = `${getCurrentTimeFormatted()} - User`;
+                if (sidebarUsername) sidebarUsername.textContent = 'User';
+                if (sidebarPosition) sidebarPosition.textContent = 'Employee';
+                if (employeeName) employeeName.textContent = 'User';
                 
                 showToast('Failed to load user data');
                 
@@ -3316,7 +3386,7 @@
                 initials += lastName.charAt(0).toUpperCase();
             }
             
-            return initials || 'S';  // Default to 'S' for soheru
+            return initials || 'U';  // Default to 'U' for User
         }
         
         function showToast(message) {
@@ -3331,19 +3401,8 @@
         
         // Initial timestamp and username update
         document.addEventListener('DOMContentLoaded', function() {
-            const currentTimestamp = "2025-06-13 20:50:06";  // Updated timestamp from API
-            const username = "soheru";  // Username from API
-            
-            document.getElementById('userTimeDisplay').textContent = `20:50 - ${username}`;
-            document.getElementById('sidebar-username').textContent = username;
-            document.getElementById('employeeName').textContent = username;
-            
-            // Update all time displays on page load
-            const date = new Date(currentTimestamp);
-            updateDateTimeDisplays(date);
-            
-            console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-13 20:50:06");
-            console.log("Current User's Login: soheru");
+            // This will be updated by the main getCurrentUser() function
+            console.log("Dashboard loaded, waiting for user data...");
             
             // Listen for attendance updates from other tabs/pages
             window.addEventListener('storage', function(e) {

@@ -715,12 +715,6 @@
                 </ul>
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div id="sidebar-username" style="font-weight: 500;">Loading...</div>
-                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
-                </div>
-            </div>
         </aside>
         
         <div class="main-content">
@@ -734,7 +728,10 @@
                 
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userInitials">U</div>
-                    <span id="userTimeDisplay">Loading...</span>
+                    <div class="user-info-header">
+                        <div id="userFullName" class="user-fullname">User Name</div>
+                        <div id="userTimeDisplay" class="user-time"></div>
+                    </div>
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/app/profile" class="dropdown-item">
                             <i>👤</i> Your Profile
@@ -1296,6 +1293,14 @@
             ]
         };
 
+        // Function to format user display name
+        function formatUserDisplayName(user) {
+            if (user.first_name && user.last_name) {
+                return `${user.first_name} ${user.last_name}`;
+            }
+            return user.full_name || user.username || 'User';
+        }
+
         function generateNavigationMenu(userRole) {
             const menuItems = navigationConfig[userRole] || navigationConfig['employee'];
             
@@ -1669,6 +1674,12 @@
                 userInitialsElement.textContent = initials;
             }
             
+            // Update user full name
+            const userFullNameElement = document.getElementById('userFullName');
+            if (userFullNameElement) {
+                userFullNameElement.textContent = formatUserDisplayName(userData);
+            }
+            
             // Update time display
             updateTimeDisplay(userData);
             
@@ -1690,7 +1701,7 @@
                     hour: '2-digit', 
                     minute: '2-digit' 
                 });
-                const username = userData.username || userData.full_name || 'User';
+                const username = formatUserDisplayName(userData);
                 userTimeDisplay.textContent = `${timeString} - ${username}`;
             }
             

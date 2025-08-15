@@ -174,6 +174,22 @@
             font-weight: 500;
             margin-right: 0.5rem;
         }
+
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            margin-right: 0.5rem;
+        }
+
+        .user-fullname {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .user-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
         
         .user-dropdown {
             position: absolute;
@@ -282,6 +298,22 @@
         
         .btn i {
             margin-right: 0.5rem;
+        }
+
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            margin-right: 0.5rem;
+        }
+
+        .user-fullname {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .user-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
         
         .btn-sm {
@@ -780,13 +812,6 @@
                     <!-- Dynamic navigation will be populated here -->
                 </ul>
             </nav>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div id="sidebar-username" style="font-weight: 500;">soheruwite</div>
-                    <div id="sidebar-position" style="color: var(--text-secondary); font-size: 0.875rem;">Team Lead</div>
-                </div>
-            </div>
         </aside>
         
         <div class="main-content">
@@ -800,15 +825,16 @@
                 
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userInitials">SW</div>
-                    <span id="userTimeDisplay">10:07 - soheruwite</span>
+                    <div class="user-info-header">
+                        <div id="userFullName" class="user-fullname">User Name</div>
+                        <div id="userTimeDisplay" class="user-time"></div>
+                    </div>
                     
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/static/profile.html" class="dropdown-item">
                             <i>👤</i> Your Profile
                         </a>
-                        <a href="/static/settings.html" class="dropdown-item">
-                            <i>⚙️</i> Settings
-                        </a>
+                        
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" id="logoutBtn">
                             <i>🚪</i> Log Out
@@ -1111,6 +1137,14 @@
         console.log('User role detected:', userRole);
     }
 
+    // Function to format user display name
+    function formatUserDisplayName(user) {
+        if (user.first_name && user.last_name) {
+            return `${user.first_name} ${user.last_name}`;
+        }
+        return user.full_name || user.username || 'User';
+    }
+
     // Get current user from API or localStorage
     async function getCurrentUser() {
         try {
@@ -1134,9 +1168,9 @@
         // Fallback to mock user if API fails
         return {
             id: 1,
-            username: 'soheruwite',
-            first_name: 'Soheru',
-            last_name: 'User',
+            username: 'user',
+            first_name: 'User',
+            last_name: 'Name',
             role: 'employee',
             position: 'Developer'
         };
@@ -1158,26 +1192,31 @@
         if (currentUser) {
             const userTimeElement = document.getElementById('userTimeDisplay');
             if (userTimeElement) {
-                userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + formatUserDisplayName(currentUser);
                 
                 // Start live clock update
                 setInterval(() => {
-                    userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
+                    userTimeElement.textContent = getCurrentTimeFormatted() + ' - ' + formatUserDisplayName(currentUser);
                 }, 1000);
             }
             
             // Set user initials
             const initials = currentUser.first_name && currentUser.last_name ? 
                             (currentUser.first_name[0] + currentUser.last_name[0]).toUpperCase() :
-                            currentUser.username[0].toUpperCase();
+                            formatUserDisplayName(currentUser)[0].toUpperCase();
             const userInitialsElement = document.getElementById('userInitials');
             if (userInitialsElement) {
                 userInitialsElement.textContent = initials;
             }
             
+            const userFullNameElement = document.getElementById('userFullName');
+            if (userFullNameElement) {
+                userFullNameElement.textContent = formatUserDisplayName(currentUser);
+            }
+            
             const sidebarUsernameElement = document.getElementById('sidebar-username');
             if (sidebarUsernameElement) {
-                sidebarUsernameElement.textContent = currentUser.username;
+                sidebarUsernameElement.textContent = formatUserDisplayName(currentUser);
             }
             
             const sidebarPositionElement = document.getElementById('sidebar-position');
@@ -1226,8 +1265,8 @@
         setupEventListeners();
         
         // Current date and time
-        console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-12 11:05:29");
-        console.log("Current User's Login: soheruwrite");
+        console.log(`Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): ${new Date().toISOString().replace('T', ' ').split('.')[0]}`);
+        console.log("Current User's Login: user");
         
     } catch (error) {
         console.error('Error during initialization:', error);
@@ -1257,8 +1296,8 @@ async function loadUserData() {
         const userData = await response.json();
         
         // Update UI with user info
-        const currentUser = userData.username || "soheruwrite";
-        const currentTime = "11:05";
+        const currentUser = userData.username || "user";
+        const currentTime = getCurrentTimeFormatted();
         
         document.getElementById('userTimeDisplay').textContent = `${currentTime} - ${currentUser}`;
         document.getElementById('userInitials').textContent = currentUser.charAt(0).toUpperCase();
@@ -1959,7 +1998,7 @@ async function getCurrentUser() {
         return await response.json();
     } catch (error) {
         console.error('Error getting current user:', error);
-        return { username: 'soheru', id: null };
+        return { username: 'user', id: null };
     }
 }
 
@@ -2046,8 +2085,8 @@ async function saveReport() {
             reportData.project_id = document.getElementById('projectId').value;
         }
         
-        console.log("Current Date and Time: 2025-06-12 11:42:21");
-        console.log("Current User's Login: soheru");
+        console.log(`Current Date and Time: ${new Date().toISOString().replace('T', ' ').split('.')[0]}`);
+        console.log("Current User's Login: user");
         console.log(`Report date as string: "${rawDateString}"`);
         
         // Create or update report
@@ -2248,7 +2287,7 @@ function formatDateTime(date) {
 
 // Format time (HH:MM)
 function formatTime(date) {
-    return "11:05";
+    return getCurrentTimeFormatted();
 }
 
 // Show toast notification
