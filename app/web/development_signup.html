@@ -304,8 +304,49 @@
                 </div>
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required" for="programmingLanguage">Programming Language</label>
+                    <select id="programmingLanguage" name="programmingLanguage" class="form-select" required>
+                        <option value="">Select Primary Language</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="php">PHP</option>
+                        <option value="csharp">C#</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="swift">Swift</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="scala">Scala</option>
+                        <option value="dart">Dart</option>
+                        <option value="r">R</option>
+                        <option value="matlab">MATLAB</option>
+                        <option value="mern">MERN</option>
+                        <option value="sql">SQL</option>
+                        <option value="html_css">HTML/CSS</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <div class="error-message" id="programmingLanguageError">Please select a programming language</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="developerType">Developer Type</label>
+                    <select id="developerType" name="developerType" class="form-select" required>
+                        <option value="">Select Type</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="backend">Backend</option>
+                        <option value="fullstack">Full Stack</option>
+                    </select>
+                    <div class="error-message" id="developerTypeError">Please select developer type</div>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label class="form-label" for="employeeId">Employee ID (Optional)</label>
+                <label class="form-label" for="employeeId">Employee ID</label>
                 <input type="text" id="employeeId" name="employeeId" class="form-input" placeholder="Will be auto-generated if not provided">
             </div>
 
@@ -411,6 +452,20 @@
                     }
                     break;
 
+                case 'programmingLanguage':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Please select a programming language';
+                    }
+                    break;
+
+                case 'developerType':
+                    if (!value) {
+                        isValid = false;
+                        errorMessage = 'Please select developer type';
+                    }
+                    break;
+
                 case 'phoneNumber':
                     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
                     if (!value) {
@@ -477,10 +532,12 @@
                 password: formData.get('password'),
                 role: formData.get('position'), // Map position to role
                 department: 'Development',
-                phone_number: formData.get('phoneNumber'),
+                phone: formData.get('phoneNumber'),
                 employee_id: formData.get('employeeId') || null,
                 joining_date: formData.get('joiningDate') || null,
                 salary: formData.get('salary') ? parseFloat(formData.get('salary')) : null,
+                programming_language: formData.get('programmingLanguage'),
+                developer_type: formData.get('developerType'),
                 is_active: true
             };
 
