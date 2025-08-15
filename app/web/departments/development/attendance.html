@@ -1036,6 +1036,66 @@
 
         // Navigation configuration for different roles
         const navigationConfig = {
+            // IT Department Developer/Interns/Executives - Basic menu
+            intern: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            developer: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            executive: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // IT Department Team Leader - No Team management access
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // IT Department Manager - Full access including Team management
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            dev_manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // Fallback for backward compatibility
             employee: [
                 { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
                 { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
@@ -1044,31 +1104,6 @@
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
-                // { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
-            ],
-            team_lead: [
-                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
-                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
-                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
-                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
-                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
-                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
-                { icon: '👥', label: 'Team', href: '/app/it/team' },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' }
-            ],
-            manager: [
-                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
-                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
-                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
-                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
-                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
-                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
-                { icon: '👥', label: 'Team', href: '/app/it/team' },
-                { icon: '👤', label: 'Profile', href: '/app/it/profile' },
-                { icon: '⚠️', label: 'Penalties', href: '/app/it/penalties' },
-                { icon: '📈', label: 'Reports', href: '/app/it/reports' },
-                { icon: '⚙️', label: 'Settings', href: '/app/it/settings' }
             ]
         };
 

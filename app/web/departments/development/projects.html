@@ -920,24 +920,6 @@
                     <!-- Navigation will be populated dynamically based on user role -->
                 </ul>
             </nav>
-                            <i>⭐</i>
-                            Performance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/app/development/leave-requests" class="nav-link">
-                            <i>📅</i>
-                            Leave Requests
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/static/settings.html" class="nav-link">
-                            <i>⚙️</i>
-                            Settings
-                        </a>
-                    </li>
-                </ul>
-            </nav>
             
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -1437,74 +1419,116 @@
     <div id="toast" class="toast"></div>
     
     <script>
-        // ========================
-        // Navigation Generation Functions
-        // ========================
+        // Navigation configuration for different roles
+        const navigationConfig = {
+            // IT Department Developer/Interns/Executives - Basic menu
+            intern: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            developer: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            executive: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // IT Department Team Leader - No Team management access
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // IT Department Manager - Full access including Team management
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            dev_manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ],
+            // Fallback for backward compatibility
+            employee: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile' }
+            ]
+        };
 
-        function generateNavigationMenu(userRole, currentPage = 'projects') {
-            const navigationConfigs = {
-                'employee': [
-                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
-                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
-                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
-                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
-                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
-                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
-                ],
-                'team_lead': [
-                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
-                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
-                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
-                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
-                    { href: '/app/it/team', icon: '👥', label: 'Team' },
-                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
-                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
-                ],
-                'manager': [
-                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
-                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
-                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
-                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
-                    { href: '/app/it/team', icon: '👥', label: 'Team' },
-                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
-                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
-                ]
-            };
-            // Settings removed for development login
-
-            // Default to employee if role not found
-            const menuItems = navigationConfigs[userRole] || navigationConfigs['employee'];
+        // Generate navigation menu based on user role
+        function generateNavigationMenu(userRole) {
+            const menuItems = navigationConfig[userRole] || navigationConfig.employee;
+            const navigationMenu = document.getElementById('navigationMenu');
             
-            return menuItems.map(item => {
-                const isActive = item.href.includes(currentPage);
-                return `
-                    <li class="nav-item">
-                        <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}">
-                            <i>${item.icon}</i>
-                            ${item.label}
-                        </a>
-                    </li>
-                `;
-            }).join('');
+            if (!navigationMenu) return;
+            
+            navigationMenu.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = item.active ? 'nav-link active' : 'nav-link';
+                a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                
+                li.appendChild(a);
+                navigationMenu.appendChild(li);
+            });
         }
 
         // Setup UI based on user role
+        // Setup role-based UI elements
         function setupRoleBasedUI(currentUser) {
+            const userRole = currentUser.role || 'employee';
+            
             // Store user role globally for other functions
-            window.currentUserRole = currentUser.role;
+            window.currentUserRole = userRole;
             window.currentUserId = currentUser._id;
             
             // Generate and set navigation menu
-            const navigationMenu = document.getElementById('navigationMenu');
-            if (navigationMenu) {
-                navigationMenu.innerHTML = generateNavigationMenu(currentUser.role, 'projects');
-            }
+            generateNavigationMenu(userRole);
+            
+            // Log user role for debugging
+            console.log('User role detected:', userRole);
         }
 
         // Projects Module - Complete JavaScript
@@ -1538,15 +1562,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Setup role-based UI
             setupRoleBasedUI(currentUser);
             
+            // Setup role-based visibility
+            setupRoleBasedVisibility(currentUser);
+            
             // Start live clock update
             setInterval(() => {
                 document.getElementById('userTimeDisplay').textContent = getCurrentTimeFormatted() + ' - ' + currentUser.username;
             }, 1000);
 
-            // Set up user search for task assignment (only if currentUser is defined)
-            if (typeof setupUserSearchFields === 'function') {
-                setupUserSearchFields(currentUser);
-            }
+            // Set up user search for task assignment (delayed to avoid sidebar conflicts)
+            setTimeout(() => {
+                if (typeof setupUserSearchFields === 'function') {
+                    setupUserSearchFields();
+                }
+            }, 500);
         }
     } catch (error) {
         console.error('Error getting current user:', error);
@@ -1700,8 +1729,8 @@ function getTodayFormatted() {
 // Role-Based Access Control
 // ========================
 
-// Setup UI based on user role
-function setupRoleBasedUI(currentUser) {
+// Setup UI visibility based on user role
+function setupRoleBasedVisibility(currentUser) {
     const isEmployee = currentUser.role === 'employee';
     
     // Hide/show UI elements based on role
@@ -2799,7 +2828,7 @@ function initializeUserSearch(inputElement, resultsContainer) {
 // Setup user search fields on the page
 function setupUserSearchFields() {
     // Fetch all users at startup to populate our cache
-    fetchAllUsers(currentUser);
+    fetchAllUsers();
     
     // For backward compatibility, keep the old search functionality
     // Create results containers
@@ -3270,10 +3299,17 @@ async function fetchAllUsers() {
     try {
         if (privilegedRoles.includes(window.currentUserRole)) {
             const response = await fetch('/api/development/team-members', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
-            if (!response.ok) throw new Error('Failed to fetch team members');
+            if (!response.ok) {
+                console.error('Team members fetch failed:', response.status, response.statusText);
+                throw new Error(`Failed to fetch team members: ${response.status}`);
+            }
             userListCache = await response.json();
+            console.log('Team members loaded:', userListCache.length);
             return userListCache;
         } else {
             // Regular users: only themselves

@@ -710,68 +710,8 @@
             </div>
             
             <nav class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/app/it/dashboard" class="nav-link">
-                            <i>📊</i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item employee-nav">
-                        <a href="/app/it/attendance" class="nav-link">
-                            <i>🕒</i>
-                            Attendance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/app/it/projects" class="nav-link">
-                            <i>📁</i>
-                            Projects
-                        </a>
-                    </li>
-                    <li class="nav-item employee-nav">
-                        <a href="/app/it/daily-reports" class="nav-link">
-                            <i>📝</i>
-                            Daily Reports
-                        </a>
-                    </li>
-                    <!-- <li class="nav-item manager-nav">
-                        <a href="/app/it/teams" class="nav-link">
-                            <i>👥</i>
-                            Team
-                        </a>
-                    </li> -->
-                    <li class="nav-item">
-                        <a href="/app/it/performance" class="nav-link">
-                            <i>⭐</i>
-                            Performance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/app/it/leave-requests" class="nav-link">
-                            <i>📅</i>
-                            Leave Requests
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/app/it/profile" class="nav-link active">
-                            <i>👤</i>
-                            Profile
-                        </a>
-                    </li>
-                    <!-- <li class="nav-item hr-nav manager-nav director-nav">
-                        <a href="/app/it/salary" class="nav-link">
-                            <i>💰</i>
-                            Salary & Payroll
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/app/it/penalties" class="nav-link">
-                            <i>⚠️</i>
-                            Penalties
-                        </a>
-                    </li> -->
-                    <!-- Settings removed for development login -->
+                <ul class="nav-list" id="navigationMenu">
+                    <!-- Navigation will be populated dynamically based on user role -->
                 </ul>
             </nav>
             
@@ -1283,6 +1223,112 @@
     <div id="toast" class="toast"></div>
     
     <script>
+        // Navigation configuration for different roles
+        const navigationConfig = {
+            // IT Department Developer/Interns/Executives - Basic menu
+            intern: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            developer: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            executive: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            // IT Department Team Leader - No Team management access
+            team_lead: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            // IT Department Manager - Full access including Team management
+            manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            dev_manager: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ],
+            // Fallback for backward compatibility
+            employee: [
+                { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
+                { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
+                { icon: '📁', label: 'Projects', href: '/app/it/projects' },
+                { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
+                { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
+                { icon: '👤', label: 'Profile', href: '/app/it/profile', active: true }
+            ]
+        };
+
+        function generateNavigationMenu(userRole) {
+            const menuItems = navigationConfig[userRole] || navigationConfig['employee'];
+            
+            const navigationMenu = document.getElementById('navigationMenu');
+            
+            if (!navigationMenu) return;
+            
+            navigationMenu.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = item.active ? 'nav-link active' : 'nav-link';
+                a.innerHTML = `<i>${item.icon}</i>${item.label}`;
+                
+                li.appendChild(a);
+                navigationMenu.appendChild(li);
+            });
+        }
+
+        // Setup role-based UI elements
+        function setupRoleBasedUI(user) {
+            // Store user role globally for other functions
+            window.currentUserRole = user.role;
+            window.currentUserId = user._id;
+            
+            // Generate and set navigation menu
+            generateNavigationMenu(user.role);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadUserData();
             setupEventListeners();
@@ -1625,6 +1671,9 @@
             
             // Update time display
             updateTimeDisplay(userData);
+            
+            // Setup role-based UI
+            setupRoleBasedUI(userData);
         }
         
         function getInitials(name) {

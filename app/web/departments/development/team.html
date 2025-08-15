@@ -1630,16 +1630,35 @@
 
         function generateNavigationMenu(userRole, currentPage = 'team') {
             const navigationConfigs = {
-                'employee': [
+                // IT Department Developer/Interns/Executives - Basic menu (no Team access)
+                'intern': [
                     { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
                     { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
                     { href: '/app/it/projects', icon: '📁', label: 'Projects' },
                     { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
                     { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
                     { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
                 ],
+                'developer': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
+                ],
+                'executive': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
+                ],
+                // IT Department Team Leader - No Team management access
                 'team_lead': [
                     { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
                     { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
@@ -1648,9 +1667,9 @@
                     { href: '/app/it/team', icon: '👥', label: 'Team' },
                     { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
                     { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
                 ],
+                // IT Department Manager - Full access including Team management
                 'manager': [
                     { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
                     { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
@@ -1659,8 +1678,27 @@
                     { href: '/app/it/team', icon: '👥', label: 'Team' },
                     { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
                     { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
-                    { href: '/app/it/profile', icon: '👤', label: 'Profile' },
-                    { href: '/app/it/penalties', icon: '⚠️', label: 'Penalties' }
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
+                ],
+                'dev_manager': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/team', icon: '👥', label: 'Team' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
+                ],
+                // Fallback for backward compatibility (no Team access for basic employees)
+                'employee': [
+                    { href: '/app/it/dashboard', icon: '📊', label: 'Dashboard' },
+                    { href: '/app/it/attendance', icon: '🕒', label: 'Attendance' },
+                    { href: '/app/it/projects', icon: '📁', label: 'Projects' },
+                    { href: '/app/it/daily-reports', icon: '📝', label: 'Daily Reports' },
+                    { href: '/app/it/performance', icon: '⭐', label: 'Performance' },
+                    { href: '/app/it/leave-requests', icon: '📅', label: 'Leave Requests' },
+                    { href: '/app/it/profile', icon: '👤', label: 'Profile' }
                 ]
             };
 
@@ -2479,7 +2517,8 @@
                 const timeString = formatTimeWithSeconds(now);
                 const timeOnlyString = formatTimeOnly(now);
                 
-                // Update sidebar time                const sidebarTime = document.getElementById('sidebar-time');
+                // Update sidebar time
+                const sidebarTime = document.getElementById('sidebar-time');
                 if (sidebarTime) {
                     sidebarTime.textContent = timeString;
                 }

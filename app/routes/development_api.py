@@ -359,7 +359,7 @@ async def get_team_members(
     current_user: UserInDB = Depends(get_current_user)
 ):
     """Get team members for project assignment"""
-    if current_user.role not in ["director", "dev_manager", "team_lead"]:
+    if current_user.role not in ["director", "dev_manager", "team_lead", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view team members"
