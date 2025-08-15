@@ -1027,21 +1027,22 @@
                 return;
             }
 
-            // Current date and time - updated with latest values
-            const currentDateTime = new Date('2025-06-12T07:29:30');
+            // Current date and time - using IST for Indian development
+            const currentDateTime = new Date();
             const currentUser = 'soheruWRITE';
 
             try {
-                // Display current date
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                // Display current date in IST
                 const currentDateElement = document.getElementById('currentDate');
                 if (currentDateElement) {
-                    currentDateElement.textContent = currentDateTime.toLocaleDateString(undefined, options);
+                    const istDate = new Date(currentDateTime.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' };
+                    currentDateElement.textContent = currentDateTime.toLocaleDateString('en-IN', options);
                 }
 
                 const userTimeElement = document.getElementById('userTimeDisplay');
                 if (userTimeElement) {
-                    userTimeElement.textContent = formatTime(currentDateTime) + ' - ' + currentUser;
+                    userTimeElement.textContent = formatTime(currentDateTime) + ' IST - ' + currentUser;
                 }
 
                 const userInitialsElement = document.getElementById('userInitials');
@@ -1319,7 +1320,7 @@
         async function loadTodayStatus() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const today = formatDateInput(new Date('2025-06-12'));
+                const today = formatDateInput(new Date());
                 const response = await fetch(`/attendance/history?start_date=${today}&end_date=${today}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1530,7 +1531,7 @@
                 dayCell.className = 'calendar-day';
                 
                 // Mark today's date
-                const currentDate = new Date('2025-06-12');
+                const currentDate = new Date();
                 if (day === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
                     dayCell.classList.add('today');
                 }
@@ -1744,7 +1745,7 @@
                     body: JSON.stringify({
                         check_in_location: location,
                         check_in_note: note,
-                        date: new Date('2025-06-12').toISOString().split('T')[0]
+                        date: new Date().toISOString().split('T')[0]
                     })
                 });
                 
@@ -1904,17 +1905,23 @@
         
         function formatTime(dateTimeString) {
             const date = new Date(dateTimeString);
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
+            // Format time in IST (Indian Standard Time)
+            const hours = date.toLocaleTimeString('en-IN', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Asia/Kolkata'
+            });
+            return hours;
         }
         
         function formatDateInput(date) {
             return date.toISOString().split('T')[0];
         }
         
-        // Current timestamp and user info for logging
-        console.log(`Attendance page loaded at ${new Date().toISOString().replace('T', ' ').substring(0, 19)} by ${localStorage.getItem('username') || 'current user'}`);
+        // Current timestamp and user info for logging - using IST
+        const istTime = new Date().toLocaleString("en-IN", {timeZone: "Asia/Kolkata"}).replace(',', '');
+        console.log(`Attendance page loaded at ${istTime} IST by ${localStorage.getItem('username') || 'current user'}`);
     </script>
 </body>
 </html>
