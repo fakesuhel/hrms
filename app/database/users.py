@@ -52,6 +52,7 @@ class UserBase(BaseModel):
     zip_code: Optional[str] = None
     country: Optional[str] = None
     position: Optional[str] = None
+    role: Optional[str] = position
     department: Optional[str] = None
     employment_type: Optional[str] = None
     joining_date: Optional[str] = None  # Store as string in YYYY-MM-DD format

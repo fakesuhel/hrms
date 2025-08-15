@@ -1,6 +1,8 @@
 from app.database.performance_reviews import DatabasePerformanceReviews
 from fastapi import APIRouter, Body, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from typing import List, Optional
+import io
 
 from app.utils.auth import get_current_user, UserInDB
 from app.database.recruitment import (
@@ -13,6 +15,7 @@ from app.database.hr_policies import (
     DatabaseHRPolicies, HRPolicyCreate, HRPolicyUpdate, DatabasePolicyAcknowledgments, PolicyAcknowledgmentCreate
 )
 from app.database.leave_requests import DatabaseLeaveRequests
+from app.database.salary_slips import DatabaseSalarySlips, SalarySlipResponse, get_kolkata_now
 from datetime import datetime, timedelta
 
 # Define the router instance for this module (no prefix, prefix is set in app.include_router)
@@ -3141,3 +3144,199 @@ async def generate_performance_report(
     )
     # Removed orphaned 'except Exception as e:' and its block
     # The recruitment report endpoint should be a separate function, not inside generate_performance_report. Remove this misplaced block.
+
+# HR Salary Slip Management Endpoints
+@router.get("/salary-slips")
+async def get_all_salary_slips_hr(current_user: UserInDB = Depends(get_current_user)):
+    """Get all salary slips for HR management"""
+    # Check if user has HR permissions
+    if current_user.role not in ['hr', 'admin', 'manager']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access salary slip information"
+        )
+    
+    try:
+        slips = await DatabaseSalarySlips.get_all_salary_slips_for_hr()
+        
+        # Enhance with employee details
+        enhanced_slips = []
+        
+        for slip in slips:
+            user = await DatabaseUsers.get_user_by_id(slip.employee_id)
+            if user:
+                slip_dict = slip.model_dump()
+                slip_dict["employee_name"] = f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip()
+                slip_dict["employee_number"] = getattr(user, 'employee_id', '')
+                slip_dict["designation"] = getattr(user, 'position', '')
+                enhanced_slips.append(slip_dict)
+            else:
+                enhanced_slips.append(slip.model_dump())
+        
+        return {"salary_slips": enhanced_slips}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/employees/{employee_id}/salary-slips")
+async def get_employee_salary_slips_hr(
+    employee_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Get salary slips for a specific employee (HR access)"""
+    # Check if user has HR permissions
+    if current_user.role not in ['hr', 'admin', 'manager']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access salary slip information"
+        )
+    
+    try:
+        slips = await DatabaseSalarySlips.get_employee_salary_slips(employee_id)
+        
+        # Get employee details
+        user = await DatabaseUsers.get_user_by_id(employee_id)
+        
+        enhanced_slips = []
+        for slip in slips:
+            slip_dict = slip.model_dump()
+            if user:
+                slip_dict["employee_name"] = f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip()
+                slip_dict["employee_number"] = getattr(user, 'employee_id', '')
+                slip_dict["designation"] = getattr(user, 'position', '')
+                slip_dict["department"] = getattr(user, 'department', '')
+            enhanced_slips.append(slip_dict)
+        
+        return {
+            "employee_id": employee_id,
+            "employee_name": f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip() if user else "Unknown",
+            "salary_slips": enhanced_slips
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/employees/{employee_id}/salary-slips/generate")
+async def generate_employee_salary_slip(
+    employee_id: str,
+    month: int,
+    year: int,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Generate salary slip for an employee (HR function)"""
+    # Check if user has HR permissions
+    if current_user.role not in ['hr', 'admin', 'manager']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to generate salary slips"
+        )
+    
+    try:
+        # Get employee details
+        user = await DatabaseUsers.get_user_by_id(employee_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        # Check if salary slip already exists
+        existing_slip = await DatabaseSalarySlips.get_salary_slip(employee_id, str(month).zfill(2), year)
+        if existing_slip:
+            raise HTTPException(status_code=400, detail="Salary slip already exists for this period")
+        
+        # Calculate salary components
+        base_salary = getattr(user, 'base_salary', 0) or 0
+        hra = getattr(user, 'hra', 0) or 0
+        allowances = getattr(user, 'allowances', 0) or 0
+        performance_incentives = getattr(user, 'performance_incentives', 0) or 0
+        pf_deduction = getattr(user, 'pf_deduction', 0) or 0
+        tax_deduction = getattr(user, 'tax_deduction', 0) or 0
+        penalty_deductions = getattr(user, 'penalty_deductions', 0) or 0
+        
+        gross_salary = base_salary + hra + allowances + performance_incentives
+        total_deductions = pf_deduction + tax_deduction + penalty_deductions
+        net_salary = gross_salary - total_deductions
+        
+        # Get attendance data for the month (optional)
+        working_days = 30  # Default, can be calculated based on actual calendar
+        present_days = 30  # Default, should be calculated from attendance
+        absent_days = 0    # Default, should be calculated from attendance
+        
+        # Create salary slip data
+        slip_data = {
+            "employee_id": employee_id,
+            "employee_name": f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip(),
+            "employee_number": getattr(user, 'employee_id', ''),
+            "month": str(month).zfill(2),
+            "year": year,
+            "department": getattr(user, 'department', ''),
+            "designation": getattr(user, 'position', ''),
+            "join_date": getattr(user, 'joining_date', ''),
+            "working_days": working_days,
+            "present_days": present_days,
+            "absent_days": absent_days,
+            "base_salary": base_salary,
+            "hra": hra,
+            "allowances": allowances,
+            "performance_incentives": performance_incentives,
+            "pf_deduction": pf_deduction,
+            "tax_deduction": tax_deduction,
+            "penalty_deductions": penalty_deductions,
+            "other_deductions": 0,
+            "net_salary": net_salary,
+            "generated_by": str(current_user.id),
+            "generated_at": get_kolkata_now()
+        }
+        
+        # Create the salary slip
+        slip = await DatabaseSalarySlips.create_salary_slip(slip_data)
+        if not slip:
+            raise HTTPException(status_code=500, detail="Failed to generate salary slip")
+        
+        return {
+            "message": "Salary slip generated successfully",
+            "slip_id": slip.id,
+            "employee_id": employee_id,
+            "month": month,
+            "year": year,
+            "net_salary": net_salary
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Log the detailed error for debugging
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Salary slip generation error: {str(e)}")
+        print(f"🔍 Full traceback: {error_details}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.get("/salary-slips/{slip_id}/download")
+async def download_salary_slip_hr(
+    slip_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Download any salary slip (HR access)"""
+    # Check if user has HR permissions
+    if current_user.role not in ['hr', 'admin', 'manager']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to download salary slips"
+        )
+    
+    try:
+        slip = await DatabaseSalarySlips.get_salary_slip_by_id(slip_id)
+        if not slip:
+            raise HTTPException(status_code=404, detail="Salary slip not found")
+        
+        # Generate PDF using the profile route's PDF generator
+        from app.routes.profile import generate_salary_slip_pdf
+        pdf_content = await generate_salary_slip_pdf(slip)
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_content),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=salary_slip_{slip.month}_{slip.year}_{slip.employee_number or slip.employee_id}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

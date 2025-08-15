@@ -39,7 +39,24 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
     
     # Header
     story.append(Paragraph('SALARY SLIP', title_style))
-    month_name = datetime(slip_data['year'], slip_data['month'], 1).strftime('%B')
+    
+    # Handle month - it can be a string (like "August") or a number (like 3)
+    try:
+        if isinstance(slip_data['month'], str):
+            if slip_data['month'].isdigit():
+                # Month is a string number like "3"
+                month_num = int(slip_data['month'])
+                month_name = datetime(slip_data['year'], month_num, 1).strftime('%B')
+            else:
+                # Month is already a name like "August"
+                month_name = slip_data['month']
+        else:
+            # Month is an integer
+            month_name = datetime(slip_data['year'], slip_data['month'], 1).strftime('%B')
+    except (ValueError, TypeError):
+        # Fallback if month conversion fails
+        month_name = str(slip_data.get('month', 'Unknown'))
+    
     story.append(Paragraph(f'{month_name} {slip_data["year"]}', subtitle_style))
     
     # Company Info - Clean without icons
@@ -52,27 +69,49 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
                           ParagraphStyle('Company', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER)))
     story.append(Spacer(1, 30))
     
-    # Calculate salary including incentives
-    total_monthly_salary = slip_data['base_salary'] + slip_data['hra'] + slip_data['allowances'] + slip_data.get('incentives', 0)
-    actual_working_days = 30 - slip_data['absent_days'] - (slip_data.get('half_days', 0) * 0.5)
+    # Helper function to safely convert None to 0 for calculations
+    def safe_float(value):
+        if value is None:
+            return 0.0
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
     
-    proportional_base = (slip_data['base_salary'] / 30) * actual_working_days
-    proportional_hra = (slip_data['hra'] / 30) * actual_working_days
-    proportional_allowances = (slip_data['allowances'] / 30) * actual_working_days
-    proportional_incentives = (slip_data.get('incentives', 0) / 30) * actual_working_days
+    # Calculate salary including incentives - handle None values
+    base_salary = safe_float(slip_data.get('base_salary'))
+    hra = safe_float(slip_data.get('hra'))
+    allowances = safe_float(slip_data.get('allowances'))
+    incentives = safe_float(slip_data.get('incentives', 0))
+    
+    total_monthly_salary = base_salary + hra + allowances + incentives
+    absent_days = safe_float(slip_data.get('absent_days', 0))
+    half_days = safe_float(slip_data.get('half_days', 0))
+    actual_working_days = 30 - absent_days - (half_days * 0.5)
+    
+    proportional_base = (base_salary / 30) * actual_working_days
+    proportional_hra = (hra / 30) * actual_working_days
+    proportional_allowances = (allowances / 30) * actual_working_days
+    proportional_incentives = (incentives / 30) * actual_working_days
     
     gross_salary = proportional_base + proportional_hra + proportional_allowances + proportional_incentives
-    total_deductions = (slip_data['pf_deduction'] + slip_data['tax_deduction'] + 
-                       slip_data['penalty_deductions'] + slip_data.get('other_deductions', 0))
+    
+    # Handle deductions - safely convert None to 0
+    pf_deduction = safe_float(slip_data.get('pf_deduction'))
+    tax_deduction = safe_float(slip_data.get('tax_deduction'))
+    penalty_deductions = safe_float(slip_data.get('penalty_deductions'))
+    other_deductions = safe_float(slip_data.get('other_deductions', 0))
+    
+    total_deductions = pf_deduction + tax_deduction + penalty_deductions + other_deductions
     net_pay = gross_salary - total_deductions
     
     # Single Complete Table with all information
     table_data = [
         # Employee Information Header
         ['EMPLOYEE INFORMATION', '', '', ''],
-        ['Employee ID:', slip_data['employee_id'], 'Name:', slip_data['employee_name']],
-        ['Department:', slip_data['department'], 'Designation:', slip_data['designation']],
-        ['Working Days:', f"{actual_working_days:.0f}/30", 'Absent Days:', str(slip_data['absent_days'])],
+        ['Employee ID:', slip_data.get('employee_id', ''), 'Name:', slip_data.get('employee_name', '')],
+        ['Department:', slip_data.get('department', ''), 'Designation:', slip_data.get('designation', '')],
+        ['Working Days:', f"{actual_working_days:.0f}/30", 'Absent Days:', f"{absent_days:.0f}"],
         
         # Spacing row
         ['', '', '', ''],
@@ -80,13 +119,13 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
         # Salary Information Header  
         ['SALARY BREAKDOWN', '', '', ''],
         ['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT'],
-        ['Basic Salary', f"Rs. {proportional_base:,.0f}", 'PF Deduction', f"Rs. {slip_data['pf_deduction']:,.0f}"],
-        ['HRA', f"Rs. {proportional_hra:,.0f}", 'Tax Deduction', f"Rs. {slip_data['tax_deduction']:,.0f}"],
-        ['Allowances', f"Rs. {proportional_allowances:,.0f}", 'Penalty', f"Rs. {slip_data['penalty_deductions']:,.0f}"],
+        ['Basic Salary', f"Rs. {proportional_base:,.0f}", 'PF Deduction', f"Rs. {pf_deduction:,.0f}"],
+        ['HRA', f"Rs. {proportional_hra:,.0f}", 'Tax Deduction', f"Rs. {tax_deduction:,.0f}"],
+        ['Allowances', f"Rs. {proportional_allowances:,.0f}", 'Penalty', f"Rs. {penalty_deductions:,.0f}"],
     ]
     
     # Add incentives row if it exists
-    if slip_data.get('incentives', 0) > 0:
+    if incentives > 0:
         table_data.append(['Incentives', f"Rs. {proportional_incentives:,.0f}", '', ''])
     
     # Add totals and net salary
@@ -306,29 +345,48 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
     story.append(company_table)
     story.append(Spacer(1, 20))
     
-    # Calculate salary based on 30-day month standard
-    total_monthly_salary = slip_data['base_salary'] + slip_data['hra'] + slip_data['allowances']
+    # Helper function to safely convert None to 0 for calculations
+    def safe_float(value):
+        if value is None:
+            return 0.0
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+    
+    # Calculate salary based on 30-day month standard - handle None values
+    base_salary = safe_float(slip_data.get('base_salary'))
+    hra = safe_float(slip_data.get('hra'))
+    allowances = safe_float(slip_data.get('allowances'))
+    
+    total_monthly_salary = base_salary + hra + allowances
     per_day_earning = total_monthly_salary / 30
     
     # Calculate actual days worked (30 - absent_days - (half_days * 0.5))
-    actual_working_days = 30 - slip_data['absent_days'] - (slip_data.get('half_days', 0) * 0.5)
+    absent_days = safe_float(slip_data.get('absent_days', 0))
+    half_days = safe_float(slip_data.get('half_days', 0))
+    actual_working_days = 30 - absent_days - (half_days * 0.5)
     
     # Calculate proportional salary
-    proportional_base = (slip_data['base_salary'] / 30) * actual_working_days
-    proportional_hra = (slip_data['hra'] / 30) * actual_working_days
-    proportional_allowances = (slip_data['allowances'] / 30) * actual_working_days
+    proportional_base = (base_salary / 30) * actual_working_days
+    proportional_hra = (hra / 30) * actual_working_days
+    proportional_allowances = (allowances / 30) * actual_working_days
     
     gross_salary = proportional_base + proportional_hra + proportional_allowances
     
-    # Deductions remain the same regardless of working days
-    total_deductions = (slip_data['pf_deduction'] + slip_data['tax_deduction'] + 
-                       slip_data['penalty_deductions'] + slip_data.get('other_deductions', 0))
+    # Deductions remain the same regardless of working days - handle None values
+    pf_deduction = safe_float(slip_data.get('pf_deduction'))
+    tax_deduction = safe_float(slip_data.get('tax_deduction'))
+    penalty_deductions = safe_float(slip_data.get('penalty_deductions'))
+    other_deductions = safe_float(slip_data.get('other_deductions', 0))
+    
+    total_deductions = pf_deduction + tax_deduction + penalty_deductions + other_deductions
     
     # Simple Employee Info
     emp_info_data = [
-        ['Employee ID:', slip_data['employee_id'], 'Name:', slip_data['employee_name']],
-        ['Department:', slip_data['department'], 'Designation:', slip_data['designation']],
-        ['Working Days:', f"{actual_working_days:.0f}/30", 'Absent Days:', str(slip_data['absent_days'])]
+        ['Employee ID:', slip_data.get('employee_id', ''), 'Name:', slip_data.get('employee_name', '')],
+        ['Department:', slip_data.get('department', ''), 'Designation:', slip_data.get('designation', '')],
+        ['Working Days:', f"{actual_working_days:.0f}/30", 'Absent Days:', f"{absent_days:.0f}"]
     ]
     
     emp_table = Table(emp_info_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
@@ -348,9 +406,9 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
     
     # Employee Information Table
     emp_data = [
-        ['Employee Name:', slip_data['employee_name'], 'Employee ID:', slip_data['employee_id']],
-        ['Department:', slip_data['department'], 'Designation:', slip_data['designation']],
-        ['Date of Joining:', slip_data['join_date'], 'Bank Account:', slip_data.get('account_number', 'N/A')],
+        ['Employee Name:', slip_data.get('employee_name', ''), 'Employee ID:', slip_data.get('employee_id', '')],
+        ['Department:', slip_data.get('department', ''), 'Designation:', slip_data.get('designation', '')],
+        ['Date of Joining:', slip_data.get('join_date', ''), 'Bank Account:', slip_data.get('account_number', 'N/A')],
         ['PAN Number:', slip_data.get('pan_number', 'N/A'), 'UAN Number:', slip_data.get('uan_number', 'N/A')]
     ]
     
@@ -372,9 +430,9 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
     attendance_data = [
         ['ATTENDANCE SUMMARY'],
         ['Total Days in Month', '30'],
-        ['Present Days', str(30 - slip_data['absent_days'])],
-        ['Absent Days', str(slip_data['absent_days'])],
-        ['Half Days', str(slip_data.get('half_days', 0))],
+        ['Present Days', f"{30 - absent_days:.0f}"],
+        ['Absent Days', f"{absent_days:.0f}"],
+        ['Half Days', f"{half_days:.0f}"],
         ['Effective Working Days', f"{actual_working_days:.1f}"]
     ]
     
@@ -399,31 +457,15 @@ async def generate_salary_slip_pdf(slip_data: Dict[str, Any]) -> bytes:
     # Earnings and Deductions Table
     story.append(Paragraph("<b>EARNINGS & DEDUCTIONS</b>", section_style))
     
-    # Calculate salary based on 30-day month standard
-    # Per day earning = Monthly salary / 30
-    total_monthly_salary = slip_data['base_salary'] + slip_data['hra'] + slip_data['allowances']
-    per_day_earning = total_monthly_salary / 30
-    
-    # Calculate actual days worked (30 - absent_days - (half_days * 0.5))
-    actual_working_days = 30 - slip_data['absent_days'] - (slip_data.get('half_days', 0) * 0.5)
-    
-    # Calculate proportional salary
-    proportional_base = (slip_data['base_salary'] / 30) * actual_working_days
-    proportional_hra = (slip_data['hra'] / 30) * actual_working_days
-    proportional_allowances = (slip_data['allowances'] / 30) * actual_working_days
-    
-    gross_salary = proportional_base + proportional_hra + proportional_allowances
-    
-    # Deductions remain the same regardless of working days
-    total_deductions = (slip_data['pf_deduction'] + slip_data['tax_deduction'] + 
-                       slip_data['penalty_deductions'] + slip_data.get('other_deductions', 0))
+    # Use the already calculated values from above
+    net_pay = gross_salary - total_deductions
     
     salary_data = [
         ['EARNINGS', 'FULL MONTH (₹)', 'PAYABLE (₹)', 'DEDUCTIONS', 'AMOUNT (₹)'],
-        ['Basic Salary', f"{slip_data['base_salary']:,.2f}", f"{proportional_base:,.2f}", 'PF Contribution', f"{slip_data['pf_deduction']:,.2f}"],
-        ['HRA', f"{slip_data['hra']:,.2f}", f"{proportional_hra:,.2f}", 'Tax Deduction (TDS)', f"{slip_data['tax_deduction']:,.2f}"],
-        ['Other Allowances', f"{slip_data['allowances']:,.2f}", f"{proportional_allowances:,.2f}", 'Penalty Deductions', f"{slip_data['penalty_deductions']:,.2f}"],
-        ['', '', '', 'Other Deductions', f"{slip_data.get('other_deductions', 0):,.2f}"],
+        ['Basic Salary', f"{base_salary:,.2f}", f"{proportional_base:,.2f}", 'PF Contribution', f"{pf_deduction:,.2f}"],
+        ['HRA', f"{hra:,.2f}", f"{proportional_hra:,.2f}", 'Tax Deduction (TDS)', f"{tax_deduction:,.2f}"],
+        ['Other Allowances', f"{allowances:,.2f}", f"{proportional_allowances:,.2f}", 'Penalty Deductions', f"{penalty_deductions:,.2f}"],
+        ['', '', '', 'Other Deductions', f"{other_deductions:,.2f}"],
         ['GROSS EARNINGS', f"{total_monthly_salary:,.2f}", f"{gross_salary:,.2f}", 'TOTAL DEDUCTIONS', f"{total_deductions:,.2f}"]
     ]
     

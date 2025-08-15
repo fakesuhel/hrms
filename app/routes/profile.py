@@ -20,7 +20,8 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_ist_now():
     """Get current datetime in IST timezone"""
-    return datetime.now()
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo('Asia/Kolkata'))
 
 # Create uploads directory if it doesn't exist
 UPLOAD_DIR = "uploads"
@@ -401,11 +402,21 @@ async def download_all_documents(
 async def get_salary_slips(current_user: UserInDB = Depends(get_current_user)):
     """Get salary slips for the current user"""
     try:
+        print(f"Getting salary slips for user: {current_user.id}")
         slips = await DatabaseSalarySlips.get_user_salary_slips(str(current_user.id))
+        print(f"Found {len(slips)} salary slips")
+        
+        # Debug: Print first slip if available
+        if slips:
+            print(f"First slip data: {slips[0].model_dump()}")
+        
         return {
-            "salary_slips": [SalarySlipResponse(**slip.model_dump()) for slip in slips]
+            "salary_slips": slips
         }
     except Exception as e:
+        print(f"Error in get_salary_slips: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/salary-slips/{slip_id}/download")
@@ -416,8 +427,16 @@ async def download_salary_slip(
 ):
     """Download salary slip as PDF"""
     try:
+        print(f"Download request for slip_id: {slip_id}, user: {current_user.id}")
         slip = await DatabaseSalarySlips.get_salary_slip_by_id(slip_id)
-        if not slip or slip.user_id != str(current_user.id):
+        if not slip:
+            print(f"Salary slip not found: {slip_id}")
+            raise HTTPException(status_code=404, detail="Salary slip not found")
+        
+        print(f"Found slip with employee_id: {slip.employee_id}, current user id: {current_user.id}")
+        # Check if the slip belongs to the current user
+        if slip.employee_id != str(current_user.id):
+            print(f"Unauthorized access attempt - slip belongs to {slip.employee_id}, user is {current_user.id}")
             raise HTTPException(status_code=404, detail="Salary slip not found")
         
         # Generate PDF (we'll implement this function)
@@ -431,7 +450,12 @@ async def download_salary_slip(
             }
         )
     
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
+        print(f"Error downloading salary slip: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/salary-slips/current")
@@ -441,15 +465,22 @@ async def download_current_salary_slip(
 ):
     """Download current month's salary slip"""
     try:
+        print(f"Profile current salary slip requested by user: {current_user.id}")
         now = get_ist_now()
+        print(f"Current datetime: {now}, month: {now.month}, year: {now.year}")
+        
         slip = await DatabaseSalarySlips.get_salary_slip_by_month_year(
             str(current_user.id), now.month, now.year
         )
+        print(f"Found salary slip: {slip is not None}")
         
         if not slip:
+            print(f"No salary slip found for user {current_user.id}, month {now.month}, year {now.year}")
             raise HTTPException(status_code=404, detail="Current month's salary slip not found")
         
+        print("Generating PDF...")
         pdf_content = await generate_salary_slip_pdf(slip)
+        print(f"PDF generated, size: {len(pdf_content)} bytes")
         
         return StreamingResponse(
             io.BytesIO(pdf_content),
@@ -459,7 +490,12 @@ async def download_current_salary_slip(
             }
         )
     
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
+        print(f"Error in download_current_salary_slip: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # PDF Generation function

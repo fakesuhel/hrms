@@ -336,7 +336,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label class="form-label">Department *</label>
-                            <select id="department" name="department" class="form-select" required>
+                            <select id="department" name="department" class="form-select" required onchange="updatePositionOptions()">
                                 <option value="">Select Department</option>
                                 <option value="Sales">Sales</option>
                                 <option value="Human Resources">Human Resources</option>
@@ -346,7 +346,9 @@
                         
                         <div class="form-group">
                             <label class="form-label">Position *</label>
-                            <input type="text" id="position" name="position" class="form-input" required>
+                            <select id="position" name="position" class="form-select" required>
+                                <option value="">Select Position</option>
+                            </select>
                         </div>
                     </div>
                     
@@ -531,8 +533,19 @@
                     document.getElementById('lastName').value = employee.last_name || '';
                     document.getElementById('email').value = employee.email || '';
                     document.getElementById('phone').value = employee.phone || '';
+                    
+                    // Set department first
                     document.getElementById('department').value = employee.department || '';
-                    document.getElementById('position').value = employee.position || '';
+                    
+                    // Update position options based on department, then set position
+                    updatePositionOptions();
+                    
+                    // Try both position and role fields (backend might store as role)
+                    const positionValue = employee.position || employee.role || '';
+                    document.getElementById('position').value = positionValue;
+                    
+                    console.log('Setting position:', positionValue, 'from employee:', employee); // Debug log
+                    
                     document.getElementById('joinDate').value = employee.join_date ? employee.join_date.split('T')[0] : '';
                     document.getElementById('salary').value = employee.salary || '';
                     document.getElementById('address').value = employee.address || '';
@@ -544,6 +557,8 @@
                 modalTitle.textContent = 'Add Employee';
                 document.getElementById('employeeId').value = '';
                 document.getElementById('joinDate').value = new Date().toISOString().split('T')[0];
+                // Reset position options for new employee
+                document.getElementById('position').innerHTML = '<option value="">Select Position</option>';
             }
             
             modal.style.display = 'flex';
@@ -561,14 +576,18 @@
                 email: formData.get('email'),
                 phone: formData.get('phone'),
                 department: formData.get('department'),
-                position: formData.get('position'),
+                position: formData.get('position'), // Frontend display value
+                role: formData.get('position'),     // Backend role value (same as position)
                 join_date: formData.get('joinDate'),
+                joining_date: formData.get('joinDate'), // Backend expects joining_date
                 salary: parseFloat(formData.get('salary')) || 0,
                 address: formData.get('address'),
                 emergency_contact_name: formData.get('emergencyContactName'),
                 emergency_contact_phone: formData.get('emergencyContactPhone'),
                 status: formData.get('status')
             };
+            
+            console.log('Saving employee with data:', employeeData); // Debug log
             
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
@@ -590,6 +609,7 @@
                     await loadEmployees();
                 } else {
                     const error = await response.json();
+                    console.error('Server error:', error); // Debug log
                     throw new Error(error.detail || 'Failed to save employee');
                 }
             } catch (error) {
@@ -645,6 +665,48 @@
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3000);
+            }
+        }
+
+        function updatePositionOptions() {
+            const departmentSelect = document.getElementById('department');
+            const positionSelect = document.getElementById('position');
+            const selectedDepartment = departmentSelect.value;
+
+            console.log('Updating position options for department:', selectedDepartment); // Debug log
+
+            // Clear existing options
+            positionSelect.innerHTML = '<option value="">Select Position</option>';
+
+            // Department-specific position mappings
+            const positionMappings = {
+                'Development': [
+                    { display: 'Developer', value: 'developer' },
+                    { display: 'Intern', value: 'intern' },
+                    { display: 'Team Leader', value: 'team_lead' },
+                    { display: 'Manager', value: 'dev_manager' }
+                ],
+                'Sales': [
+                    { display: 'Manager', value: 'manager' },
+                    { display: 'Executives', value: 'executives' }
+                ],
+                'Human Resources': [
+                    { display: 'Manager', value: 'manager' },
+                    { display: 'Executive', value: 'executive' }
+                ]
+            };
+
+            // Add positions based on selected department
+            if (selectedDepartment && positionMappings[selectedDepartment]) {
+                console.log('Adding positions:', positionMappings[selectedDepartment]); // Debug log
+                positionMappings[selectedDepartment].forEach(position => {
+                    const option = document.createElement('option');
+                    option.value = position.value;
+                    option.textContent = position.display;
+                    positionSelect.appendChild(option);
+                });
+            } else {
+                console.log('No positions found for department:', selectedDepartment); // Debug log
             }
         }
         

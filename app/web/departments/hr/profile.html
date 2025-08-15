@@ -576,6 +576,101 @@
             border-radius: var(--border-radius);
         }
         
+        .salary-slips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .salary-slip-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .salary-slip-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .slip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .slip-header h4 {
+            margin: 0;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .slip-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .slip-status.finalized {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        
+        .slip-status.draft {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+        
+        .slip-details {
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-row span:first-child {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .amount {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .amount.payable {
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+        
+        .slip-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .slip-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+        
         .salary-slip-item {
             display: flex;
             justify-content: space-between;
@@ -2161,30 +2256,79 @@
                 slips = [slips];
             }
             slips.forEach(slip => {
+                const slipId = slip.id || slip._id;
+                console.log('Slip ID:', slipId, 'Full slip:', slip); // Debug log
+                
+                // Handle month display - convert number to month name if needed
+                let monthDisplay = slip.month;
+                if (!isNaN(slip.month)) {
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    monthDisplay = monthNames[parseInt(slip.month) - 1] || slip.month;
+                }
+                
+                // Handle date formatting safely
+                let generatedDate = '';
+                if (slip.generated_date) {
+                    try {
+                        generatedDate = new Date(slip.generated_date).toLocaleDateString();
+                    } catch (e) {
+                        generatedDate = slip.generated_date;
+                    }
+                } else if (slip.generated_at) {
+                    try {
+                        generatedDate = new Date(slip.generated_at).toLocaleDateString();
+                    } catch (e) {
+                        generatedDate = slip.generated_at;
+                    }
+                } else if (slip.created_at) {
+                    try {
+                        generatedDate = new Date(slip.created_at).toLocaleDateString();
+                    } catch (e) {
+                        generatedDate = slip.created_at;
+                    }
+                }
+                
+                // Handle status display
+                const status = slip.status || 'draft';
+                const isFinalized = status === 'paid' || status === 'finalized';
+                
                 html += `
                     <div class="salary-slip-card">
                         <div class="slip-header">
-                            <h4>${slip.month_name || slip.month} ${slip.year}</h4>
-                            <span class="slip-status ${slip.is_finalized ? 'finalized' : 'draft'}">
-                                ${slip.is_finalized ? 'Finalized' : 'Draft'}
-                                                       </span>
+                            <h4>${monthDisplay} ${slip.year}</h4>
+                            <span class="slip-status ${isFinalized ? 'finalized' : 'draft'}">
+                                ${isFinalized ? 'Finalized' : 'Draft'}
+                            </span>
                         </div>
                         <div class="slip-details">
                             <div class="detail-row">
                                 <span>Net Salary:</span>
-                                <span class="amount">₹${(slip.net_salary || 0).toLocaleString()}</span>
+                                <span class="amount">₹${(slip.net_salary || 0).toLocaleString('en-IN')}</span>
                             </div>
                             <div class="detail-row">
                                 <span>Payable Amount:</span>
-                                <span class="amount payable">₹${slip.payable_salary ? slip.payable_salary.toLocaleString() : (slip.net_salary || 0).toLocaleString()}</span>
+                                <span class="amount payable">₹${slip.payable_salary ? slip.payable_salary.toLocaleString('en-IN') : (slip.net_salary || 0).toLocaleString('en-IN')}</span>
                             </div>
                             <div class="detail-row">
                                 <span>Generated:</span>
-                                <span>${slip.generated_date ? new Date(slip.generated_date).toLocaleDateString() : (slip.generated_at ? new Date(slip.generated_at).toLocaleDateString() : '')}</span>
+                                <span>${generatedDate || 'Not available'}</span>
                             </div>
+                            ${slip.base_salary ? `
+                            <div class="detail-row">
+                                <span>Base Salary:</span>
+                                <span class="amount">₹${slip.base_salary.toLocaleString('en-IN')}</span>
+                            </div>
+                            ` : ''}
+                            ${slip.allowances ? `
+                            <div class="detail-row">
+                                <span>Allowances:</span>
+                                <span class="amount">₹${slip.allowances.toLocaleString('en-IN')}</span>
+                            </div>
+                            ` : ''}
                         </div>
                         <div class="slip-actions">
-                            <button class="btn btn-primary" onclick="downloadSalarySlip('${slip.id}')">
+                            <button class="btn btn-primary" onclick="downloadSalarySlip('${slipId}')" ${!slipId ? 'disabled' : ''}>
                                 📄 Download PDF
                             </button>
                         </div>
@@ -2246,6 +2390,36 @@
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3000);
+            }
+        }
+
+        async function downloadSalarySlip(slipId) {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                const response = await fetch(`/profile/salary-slips/${slipId}/download`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `salary_slip_${slipId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    showToast('Salary slip downloaded successfully', 'success');
+                } else {
+                    showToast('Error downloading salary slip', 'error');
+                }
+            } catch (error) {
+                console.error('Error downloading salary slip:', error);
+                showToast('Error downloading salary slip', 'error');
             }
         }
     </script>
