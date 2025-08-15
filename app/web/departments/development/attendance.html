@@ -1096,6 +1096,7 @@
                 { icon: '🕒', label: 'Attendance', href: '/app/it/attendance', active: true },
                 { icon: '📁', label: 'Projects', href: '/app/it/projects' },
                 { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
@@ -1267,6 +1268,9 @@ function showProjectManagementPage() {
             
             // Get current user and setup UI
             const currentUser = await getCurrentUser();
+            
+            // Set global currentUser for use in other functions
+            window.currentUser = currentUser;
             
             // Current date and time - updated with latest values
             const currentDateTime = new Date();
@@ -1756,6 +1760,27 @@ function showProjectManagementPage() {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const dateStr = formatDateInput(forDate);
                 
+                // First get team members from active projects where current user is manager
+                let teamMemberIds = [];
+                let teamMembersMap = new Map();
+                try {
+                    const teamResponse = await fetch('/api/development/my-project-team-members', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (teamResponse.ok) {
+                        const teamMembers = await teamResponse.json();
+                        teamMemberIds = teamMembers.map(member => member.id);
+                        // Create a map of user ID to user info for quick lookup
+                        teamMembers.forEach(member => {
+                            teamMembersMap.set(member.id, member);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading project team members:', error);
+                    // Fallback to all team attendance if project API fails
+                }
+                
                 const response = await fetch(`/attendance/team?for_date=${dateStr}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1775,18 +1800,43 @@ function showProjectManagementPage() {
                 
                 tableBody.innerHTML = '';
                 
-                if (records.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No team attendance records found for the selected date.</td></tr>';
+                // Filter records to only show project team members for team leads
+                let filteredRecords = records;
+                const currentUser = window.currentUser;
+                
+                console.log('Team attendance filtering debug:');
+                console.log('- Current user:', currentUser);
+                console.log('- Team member IDs:', teamMemberIds);
+                console.log('- Total records:', records.length);
+                
+                if (currentUser && (currentUser.role === 'team_lead' || currentUser.role === 'manager' || currentUser.role === 'dev_manager') && teamMemberIds.length > 0) {
+                    filteredRecords = records.filter(record => 
+                        teamMemberIds.includes(record.user_id)
+                    );
+                    console.log('- Filtered records:', filteredRecords.length);
+                } else {
+                    console.log('- No filtering applied (not team lead/manager or no team members)');
+                }
+                
+                if (filteredRecords.length === 0) {
+                    const message = teamMemberIds.length > 0 && (currentUser?.role === 'team_lead' || currentUser?.role === 'manager' || currentUser?.role === 'dev_manager')
+                        ? 'No attendance records found for your project team members on the selected date.'
+                        : 'No team attendance records found for the selected date.';
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">${message}</td></tr>`;
                     return;
                 }
                 
                 // Populate table
-                records.forEach(record => {
+                filteredRecords.forEach(record => {
                     // Format data
                     const checkIn = record.check_in ? formatTime(record.check_in) : 'Not checked in';
                     const checkOut = record.check_out ? formatTime(record.check_out) : 'Not checked out';
                     const workHours = record.work_hours ? `${record.work_hours} hours` : 'N/A';
                     const location = record.check_in_location || 'N/A';
+                    
+                    // Get user name from team members map, fallback to user_id
+                    const userInfo = teamMembersMap.get(record.user_id);
+                    const userName = userInfo ? userInfo.full_name : (record.user_name || `User ${record.user_id?.substring(0, 8)}`);
                     
                     // Status
                     let status = 'Present';
@@ -1805,7 +1855,7 @@ function showProjectManagementPage() {
                     
                     tableBody.innerHTML += `
                         <tr>
-                            <td>${record.user_id}</td>
+                            <td>${userName}</td>
                             <td>${checkIn}</td>
                             <td>${checkOut}</td>
                             <td>${workHours}</td>

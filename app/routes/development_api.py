@@ -358,7 +358,7 @@ async def get_development_teams(
 async def get_team_members(
     current_user: UserInDB = Depends(get_current_user)
 ):
-    """Get team members for project assignment"""
+    """Get all development department team members"""
     if current_user.role not in ["director", "dev_manager", "team_lead", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -366,10 +366,13 @@ async def get_team_members(
         )
     
     try:
-        # Get development department users
+        # Get ALL development department users - check for both "Development" and "development"
         from app.database.users import users_collection
         query = {
-            "department": "development",
+            "$or": [
+                {"department": "Development"},
+                {"department": "development"}
+            ],
             "is_active": True
         }
         
@@ -377,6 +380,8 @@ async def get_team_members(
             "_id": 1,
             "username": 1,
             "full_name": 1,
+            "first_name": 1,
+            "last_name": 1,
             "role": 1,
             "position": 1
         }))
@@ -384,10 +389,24 @@ async def get_team_members(
         # Convert to expected format
         team_members = []
         for user in users:
+            # Always construct full_name from first_name + last_name (with last_name optional)
+            first_name = user.get("first_name", "").strip()
+            last_name = user.get("last_name", "").strip()
+            
+            if first_name and last_name:
+                full_name = f"{first_name} {last_name}"
+            elif first_name:
+                full_name = first_name
+            elif last_name:
+                full_name = last_name
+            else:
+                # Fallback to existing full_name field or username
+                full_name = user.get("full_name") or user["username"]
+            
             team_members.append({
                 "id": str(user["_id"]),
                 "username": user["username"],
-                "full_name": user.get("full_name", user["username"]),
+                "full_name": full_name,
                 "role": user.get("role", "developer"),
                 "position": user.get("position", "Developer")
             })
@@ -397,6 +416,133 @@ async def get_team_members(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching team members: {str(e)}"
+        )
+
+@router.get("/project-managers")
+async def get_project_managers(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Get users who can be assigned as project managers (team_lead or manager roles)"""
+    if current_user.role not in ["director", "dev_manager", "team_lead", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view project managers"
+        )
+    
+    try:
+        # Get development department users with team_lead or manager roles
+        from app.database.users import users_collection
+        query = {
+            "$or": [
+                {"department": "Development"},
+                {"department": "development"}
+            ],
+            "role": {
+                "$in": ["team_lead", "manager", "dev_manager", "director"]
+            },
+            "is_active": True
+        }
+        
+        users = list(users_collection.find(query, {
+            "_id": 1,
+            "username": 1,
+            "full_name": 1,
+            "first_name": 1,
+            "last_name": 1,
+            "role": 1,
+            "position": 1
+        }))
+        
+        # Convert to expected format
+        project_managers = []
+        for user in users:
+            # Create full_name if not present
+            full_name = user.get("full_name")
+            if not full_name:
+                first_name = user.get("first_name", "")
+                last_name = user.get("last_name", "")
+                if first_name or last_name:
+                    full_name = f"{first_name} {last_name}".strip()
+                else:
+                    full_name = user["username"]
+            
+            project_managers.append({
+                "id": str(user["_id"]),
+                "username": user["username"],
+                "full_name": full_name,
+                "role": user.get("role", "team_lead"),
+                "position": user.get("position", "Team Lead")
+            })
+        
+        return project_managers
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching project managers: {str(e)}"
+        )
+
+@router.get("/my-project-team-members")
+async def get_my_project_team_members(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Get team members assigned to active projects where current user is the project manager"""
+    if current_user.role not in ["team_lead", "manager", "dev_manager", "director"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view project team members"
+        )
+    
+    try:
+        # Get user IDs from active projects and tasks where current user is manager
+        user_ids = await DatabaseProjects.get_users_from_active_projects_and_tasks(str(current_user.id))
+        
+        if not user_ids:
+            return []
+        
+        # Get user details for these IDs
+        from app.database.users import users_collection
+        from bson import ObjectId
+        
+        object_ids = [ObjectId(user_id) for user_id in user_ids]
+        users = list(users_collection.find(
+            {"_id": {"$in": object_ids}, "is_active": True},
+            {
+                "_id": 1,
+                "username": 1,
+                "full_name": 1,
+                "first_name": 1,
+                "last_name": 1,
+                "role": 1,
+                "position": 1
+            }
+        ))
+        
+        # Convert to expected format
+        team_members = []
+        for user in users:
+            # Create full_name if not present
+            full_name = user.get("full_name")
+            if not full_name:
+                first_name = user.get("first_name", "")
+                last_name = user.get("last_name", "")
+                if first_name or last_name:
+                    full_name = f"{first_name} {last_name}".strip()
+                else:
+                    full_name = user["username"]
+            
+            team_members.append({
+                "id": str(user["_id"]),
+                "username": user["username"],
+                "full_name": full_name,
+                "role": user.get("role", "developer"),
+                "position": user.get("position", "Developer")
+            })
+        
+        return team_members
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching my project team members: {str(e)}"
         )
 
 # Development Analytics and Reports

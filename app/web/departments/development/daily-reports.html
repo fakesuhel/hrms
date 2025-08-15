@@ -571,6 +571,16 @@
             flex-direction: column;
         }
         
+        .team-report-card.missing-report {
+            border-left: 4px solid var(--danger);
+            background-color: rgba(239, 68, 68, 0.02);
+        }
+        
+        .team-report-card.submitted-report {
+            border-left: 4px solid var(--success);
+            background-color: rgba(16, 185, 129, 0.02);
+        }
+        
         .team-report-header {
             padding: 1rem;
             background-color: var(--bg-light);
@@ -1068,6 +1078,7 @@
             { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
             { icon: '📁', label: 'Projects', href: '/app/it/projects' },
             { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports', active: true },
+            { icon: '👥', label: 'Team', href: '/app/it/team' },
             { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
             { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
             { icon: '👤', label: 'Profile', href: '/app/it/profile' }
@@ -1187,6 +1198,9 @@
     try {
         // Get current user and setup UI
         const currentUser = await getCurrentUser();
+        
+        // Set global currentUser for use in other functions
+        window.currentUser = currentUser;
         
         // Update UI with user info
         if (currentUser) {
@@ -1554,12 +1568,40 @@ async function loadTeamReports(selectedDate) {
         const token = localStorage.getItem('bhoomitechzone_token');
         const formattedDate = formatDateInput(selectedDate);
         
+        // Get team members based on role
+        let teamMembers = [];
+        let teamMemberIds = [];
+        try {
+            const currentUser = window.currentUser;
+            let apiEndpoint;
+            
+            // Managers and dev_managers see all development department members
+            if (currentUser && (currentUser.role === 'manager' || currentUser.role === 'dev_manager')) {
+                apiEndpoint = '/api/development/team-members';
+            } else {
+                // Team leads see only their project team members
+                apiEndpoint = '/api/development/my-project-team-members';
+            }
+            
+            const teamResponse = await fetch(apiEndpoint, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (teamResponse.ok) {
+                teamMembers = await teamResponse.json();
+                teamMemberIds = teamMembers.map(member => member.id);
+            }
+        } catch (error) {
+            console.error('Error loading team members:', error);
+            // Fallback to all team reports if API fails
+        }
+
         const response = await fetch(`/daily-reports/team/today`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (!response.ok) {
             if (response.status === 403) {
                 document.getElementById('teamReportsTab').style.display = 'none';
@@ -1567,26 +1609,95 @@ async function loadTeamReports(selectedDate) {
             }
             throw new Error('Failed to load team reports');
         }
-        
+
         const reports = await response.json();
         const teamReportsGrid = document.getElementById('teamReportsGrid');
         
         // Clear existing reports
         teamReportsGrid.innerHTML = '';
-        
-        if (reports.length === 0) {
+
+        // Filter reports to only show project team members for team leads and managers
+        let filteredReports = reports;
+        const currentUser = window.currentUser;
+        if (currentUser && (currentUser.role === 'team_lead' || currentUser.role === 'manager' || currentUser.role === 'dev_manager') && teamMemberIds.length > 0) {
+            filteredReports = reports.filter(report => 
+                teamMemberIds.includes(report.user_id)
+            );
+        }
+
+        // Find team members who haven't submitted reports yet
+        let missingReports = [];
+        if (currentUser && (currentUser.role === 'team_lead' || currentUser.role === 'manager' || currentUser.role === 'dev_manager') && teamMembers.length > 0) {
+            const submittedUserIds = filteredReports.map(report => report.user_id);
+            missingReports = teamMembers.filter(member => 
+                !submittedUserIds.includes(member.id)
+            );
+        }
+
+        // Show missing reports first (if any)
+        if (missingReports.length > 0) {
+            missingReports.forEach(member => {
+                const reportCard = document.createElement('div');
+                reportCard.className = 'team-report-card missing-report';
+                
+                // Get user initials from full name or first/last name
+                let userInitials = 'TM';
+                if (member.full_name) {
+                    const names = member.full_name.trim().split(' ');
+                    if (names.length >= 1) {
+                        userInitials = names[0][0].toUpperCase();
+                        if (names.length >= 2) {
+                            userInitials += names[names.length - 1][0].toUpperCase();
+                        }
+                    }
+                } else if (member.first_name && member.last_name) {
+                    userInitials = member.first_name[0].toUpperCase() + member.last_name[0].toUpperCase();
+                } else if (member.username) {
+                    userInitials = member.username[0].toUpperCase();
+                }
+
+                const displayName = member.full_name || 
+                                  (member.first_name && member.last_name ? 
+                                   `${member.first_name} ${member.last_name}` : 
+                                   member.username);
+
+                reportCard.innerHTML = `
+                    <div class="team-report-header">
+                        <div class="team-report-user">
+                            <div class="team-member-avatar" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger);">${userInitials}</div>
+                            <span>${displayName}</span>
+                        </div>
+                        <span class="badge" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger); font-size: 0.75rem;">Not Submitted</span>
+                    </div>
+                    <div class="team-report-body">
+                        <p style="color: var(--text-secondary); font-style: italic;">Daily report not submitted yet for ${formattedDate}</p>
+                        <div class="report-stats" style="margin-top: 0.75rem;">
+                            <span style="color: var(--danger); font-size: 0.875rem;">⚠️ Pending submission</span>
+                        </div>
+                    </div>
+                `;
+                
+                teamReportsGrid.appendChild(reportCard);
+            });
+        }
+
+        // Show submitted reports
+        if (filteredReports.length === 0 && missingReports.length === 0) {
+            const message = teamMemberIds.length > 0 && (currentUser?.role === 'team_lead' || currentUser?.role === 'manager' || currentUser?.role === 'dev_manager')
+                ? `No team members assigned to your active projects for ${formattedDate}`
+                : `No team reports submitted for ${formattedDate}`;
             teamReportsGrid.innerHTML = `
                 <div class="team-report-card" style="grid-column: 1 / -1;">
                     <div class="team-report-body" style="text-align: center; padding: 2rem;">
-                        <p>No team reports submitted for ${formattedDate}</p>
+                        <p>${message}</p>
                     </div>
                 </div>
             `;
             return;
         }
-        
-        // Format and display each team member's report
-        reports.forEach(async report => {
+
+        // Format and display each team member's submitted report
+        filteredReports.forEach(async report => {
             try {
                 // Get user details
                 const userResponse = await fetch(`/users/${report.user_id}`, {
@@ -1594,10 +1705,10 @@ async function loadTeamReports(selectedDate) {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
+
                 let userName = 'Team Member';
                 let userInitials = 'TM';
-                
+
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     userName = userData.first_name && userData.last_name ? 
@@ -1607,18 +1718,18 @@ async function loadTeamReports(selectedDate) {
                         userData.first_name[0] + userData.last_name[0] : 
                         userData.username[0];
                 }
-                
+
                 const reportCard = document.createElement('div');
-                reportCard.className = 'team-report-card';
-                
+                reportCard.className = 'team-report-card submitted-report';
+
                 // Count tasks
                 const completedCount = report.tasks_completed.length;
                 const inProgressCount = report.tasks_in_progress.length;
-                
+
                 reportCard.innerHTML = `
                     <div class="team-report-header">
                         <div class="team-report-user">
-                            <div class="team-member-avatar">${userInitials}</div>
+                            <div class="team-member-avatar" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success);">${userInitials}</div>
                             <span>${userName}</span>
                         </div>
                         <button class="btn btn-sm btn-outline view-team-report" data-id="${report._id}">View Report</button>
@@ -1637,22 +1748,22 @@ async function loadTeamReports(selectedDate) {
                         </div>
                     </div>
                 `;
-                
+
                 // Add event listener
                 reportCard.querySelector('.view-team-report').addEventListener('click', function() {
                     openViewReportModal(report._id);
                 });
-                
+
                 teamReportsGrid.appendChild(reportCard);
             } catch (error) {
                 console.error('Error loading team member report:', error);
             }
         });
-        
+
     } catch (error) {
         console.error('Error loading team reports:', error);
         showToast('Error loading team reports: ' + error.message);
-        
+
         const teamReportsGrid = document.getElementById('teamReportsGrid');
         teamReportsGrid.innerHTML = `
             <div class="team-report-card" style="grid-column: 1 / -1;">
@@ -1662,7 +1773,7 @@ async function loadTeamReports(selectedDate) {
                 </div>
             </div>
         `;
-        
+
         document.getElementById('retryLoadTeamReports').addEventListener('click', function() {
             loadTeamReports(selectedDate);
         });

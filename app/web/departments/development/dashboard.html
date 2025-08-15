@@ -1139,12 +1139,13 @@
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
             ],
-            // IT Department Team Leader - No Team management access
+            // IT Department Team Leader - With Team management access
             team_lead: [
                 { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard', active: true },
                 { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
                 { icon: '📁', label: 'Projects', href: '/app/it/projects' },
                 { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
@@ -1408,7 +1409,7 @@
                 document.getElementById('managerDashboard').classList.add('active');
             } else if (role === 'team_lead') {
                 document.getElementById('teamLeadDashboard').classList.add('active');
-            } else if (role === 'manager') {
+            } else if (role === 'manager' || role === 'dev_manager') {
                 document.getElementById('managerDashboard').classList.add('active');
             } else if (role === 'director' || role === 'admin') {
                 document.getElementById('directorDashboard').classList.add('active');
@@ -1445,7 +1446,7 @@
                 await loadHRDashboard();
             } else if (role === 'team_lead') {
                 await loadTeamLeadDashboard();
-            } else if (role === 'manager') {
+            } else if (role === 'manager' || role === 'dev_manager') {
                 await loadManagerDashboard();
             } else if (role === 'director' || role === 'admin') {
                 await loadDirectorDashboard();
@@ -1673,9 +1674,9 @@
                 document.getElementById('tlCheckInBtn').addEventListener('click', handleCheckIn);
             }
             
-            // Load team members
+            // Load team members from current active projects where user is project manager
             try {
-                const teamResponse = await fetch('/users/team', {
+                const teamResponse = await fetch('/api/development/my-project-team-members', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -1689,7 +1690,7 @@
                 console.error('Error loading team members:', error);
                 document.getElementById('teamMembers').innerHTML = `
                     <div class="empty-state">
-                        <p>No team members found.</p>
+                        <p>No team members assigned to your active projects.</p>
                     </div>
                 `;
             }
@@ -1713,7 +1714,7 @@
                         const allProjects = await allProjectsResponse.json();
                         
                         // Get team members data to check task assignments
-                        const teamResponse = await fetch('/users/team', {
+                        const teamResponse = await fetch('/api/development/team-members', {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
                         
@@ -1753,23 +1754,59 @@
                 `;
             }
             
-            // Load team attendance
+            // Load team attendance for project team members only
             try {
-                const attendanceResponse = await fetch('/attendance/team', {
+                // First get project team members
+                const teamMembersResponse = await fetch('/api/development/my-project-team-members', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (attendanceResponse.ok) {
-                    const attendanceData = await attendanceResponse.json();
-                    displayTeamAttendance(attendanceData);
+                if (teamMembersResponse.ok) {
+                    const teamMembers = await teamMembersResponse.json();
+                    const teamMemberIds = teamMembers.map(member => member.id);
+                    
+                    if (teamMemberIds.length > 0) {
+                        // Get attendance for all users and filter
+                        const attendanceResponse = await fetch('/attendance/team', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (attendanceResponse.ok) {
+                            const allAttendanceData = await attendanceResponse.json();
+                            // Filter to only show attendance for project team members
+                            const filteredAttendanceData = allAttendanceData.filter(record => 
+                                teamMemberIds.includes(record.user_id)
+                            );
+                            
+                            // Add user names to attendance records
+                            const attendanceWithNames = filteredAttendanceData.map(record => {
+                                const member = teamMembers.find(m => m.id === record.user_id);
+                                return {
+                                    ...record,
+                                    user_name: member ? member.full_name : `User ${record.user_id?.substring(0, 6)}`
+                                };
+                            });
+                            
+                            displayTeamAttendance(attendanceWithNames);
+                        } else {
+                            throw new Error('Failed to load team attendance');
+                        }
+                    } else {
+                        // No project team members, show empty state
+                        document.getElementById('teamAttendance').innerHTML = `
+                            <div class="empty-state">
+                                <p>No project team members to show attendance for.</p>
+                            </div>
+                        `;
+                    }
                 } else {
-                    throw new Error('Failed to load team attendance');
+                    throw new Error('Failed to load project team members');
                 }
             } catch (error) {
                 console.error('Error loading team attendance:', error);
                 document.getElementById('teamAttendance').innerHTML = `
                     <div class="empty-state">
-                        <p>No team attendance records found for today.</p>
+                        <p>No team attendance records found for your project members.</p>
                     </div>
                 `;
             }
@@ -1795,23 +1832,59 @@
                 `;
             }
             
-            // Load team daily reports
+            // Load team daily reports for project team members only
             try {
-                const reportsResponse = await fetch('/daily-reports/team', {
+                // First get project team members
+                const teamMembersResponse = await fetch('/api/development/my-project-team-members', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (reportsResponse.ok) {
-                    const reportsData = await reportsResponse.json();
-                    displayTeamReports(reportsData);
+                if (teamMembersResponse.ok) {
+                    const teamMembers = await teamMembersResponse.json();
+                    const teamMemberIds = teamMembers.map(member => member.id);
+                    
+                    if (teamMemberIds.length > 0) {
+                        // Get all team reports and filter
+                        const reportsResponse = await fetch('/daily-reports/team', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (reportsResponse.ok) {
+                            const allReportsData = await reportsResponse.json();
+                            // Filter to only show reports for project team members
+                            const filteredReportsData = allReportsData.filter(report => 
+                                teamMemberIds.includes(report.user_id)
+                            );
+                            
+                            // Add user names to report records
+                            const reportsWithNames = filteredReportsData.map(report => {
+                                const member = teamMembers.find(m => m.id === report.user_id);
+                                return {
+                                    ...report,
+                                    user_name: member ? member.full_name : `User ${report.user_id?.substring(0, 6)}`
+                                };
+                            });
+                            
+                            displayTeamReports(reportsWithNames);
+                        } else {
+                            throw new Error('Failed to load team reports');
+                        }
+                    } else {
+                        // No project team members, show empty state
+                        document.getElementById('teamReports').innerHTML = `
+                            <div class="empty-state">
+                                <p>No project team members to show reports for.</p>
+                            </div>
+                        `;
+                    }
                 } else {
-                    throw new Error('Failed to load team reports');
+                    throw new Error('Failed to load project team members');
                 }
             } catch (error) {
                 console.error('Error loading team reports:', error);
                 document.getElementById('teamReports').innerHTML = `
                     <div class="empty-state">
-                        <p>No team reports available for today.</p>
+                        <p>No team reports available for your project members.</p>
                     </div>
                 `;
             }
@@ -1914,9 +1987,9 @@
                 `;
             }
             
-            // Load team leaders - users with team_lead role who report to this manager
+            // Load team leaders - users with team_lead role from team members
             try {
-                const teamResponse = await fetch('/users/team', {
+                const teamResponse = await fetch('/api/development/team-members', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -1962,7 +2035,7 @@
             try {
                 // In a real app, this would be a specific API endpoint
                 // For now, we'll try to use team data to show an overview
-                const teamResponse = await fetch('/users/team', {
+                const teamResponse = await fetch('/api/development/team-members', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -2779,7 +2852,10 @@
             if (!teamData || teamData.length === 0) {
                 teamContainer.innerHTML = `
                     <div class="empty-state">
-                        <p>No team members found.</p>
+                        <p>No team members assigned to your active projects.</p>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                            Team members will appear here when they are assigned to projects you manage.
+                        </div>
                     </div>
                 `;
                 return;
@@ -2791,8 +2867,15 @@
                 const memberElement = document.createElement('div');
                 memberElement.className = 'list-item';
                 
-                const initials = getInitials(member.first_name, member.last_name);
-                const fullName = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.username;
+                // Handle the new API response format - use full_name or construct from first/last name
+                const fullName = member.full_name || 
+                                `${member.first_name || ''} ${member.last_name || ''}`.trim() || 
+                                member.username;
+                
+                // Get initials from full_name or first/last name
+                const initials = member.full_name ? 
+                                getInitialsFromFullName(member.full_name) :
+                                getInitials(member.first_name, member.last_name);
                 
                 memberElement.innerHTML = `
                     <div class="list-item-icon" style="background-color: rgba(59, 130, 246, 0.1); color: var(--primary);">
@@ -3387,6 +3470,23 @@
             }
             
             return initials || 'U';  // Default to 'U' for User
+        }
+        
+        function getInitialsFromFullName(fullName) {
+            if (!fullName) return 'U';
+            
+            const names = fullName.trim().split(' ');
+            let initials = '';
+            
+            if (names.length >= 1) {
+                initials += names[0].charAt(0).toUpperCase();
+            }
+            
+            if (names.length >= 2) {
+                initials += names[names.length - 1].charAt(0).toUpperCase();
+            }
+            
+            return initials || 'U';
         }
         
         function showToast(message) {

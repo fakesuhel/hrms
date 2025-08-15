@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.encoders import jsonable_encoder
 from typing import List, Optional
 from datetime import date
+from bson import ObjectId
 
 from app.database.leave_requests import LeaveRequestCreate, LeaveRequestUpdate, LeaveRequestApproval, LeaveRequestResponse, DatabaseLeaveRequests
 from app.utils.auth import get_current_user
@@ -11,6 +13,24 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+def validate_leave_id(leave_id: str) -> str:
+    """Validate leave_id format and return it if valid"""
+    if leave_id in ["undefined", "null", ""] or not leave_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid leave request ID"
+        )
+    
+    # Validate ObjectId format
+    try:
+        ObjectId(leave_id)  # This will raise an exception if invalid
+        return leave_id
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid leave request ID format"
+        )
+
 def convert_objectids_to_strings(leave_dict):
     """Convert ObjectId fields to strings for API response"""
     if '_id' in leave_dict:
@@ -19,9 +39,23 @@ def convert_objectids_to_strings(leave_dict):
         leave_dict['user_id'] = str(leave_dict['user_id'])
     if 'approver_id' in leave_dict and leave_dict['approver_id']:
         leave_dict['approver_id'] = str(leave_dict['approver_id'])
+    
+    # Convert date objects to ISO format strings
+    from datetime import date, datetime
+    if 'start_date' in leave_dict and isinstance(leave_dict['start_date'], date):
+        leave_dict['start_date'] = leave_dict['start_date'].isoformat()
+    if 'end_date' in leave_dict and isinstance(leave_dict['end_date'], date):
+        leave_dict['end_date'] = leave_dict['end_date'].isoformat()
+    if 'created_at' in leave_dict and isinstance(leave_dict['created_at'], datetime):
+        leave_dict['created_at'] = leave_dict['created_at'].isoformat()
+    if 'updated_at' in leave_dict and isinstance(leave_dict['updated_at'], datetime):
+        leave_dict['updated_at'] = leave_dict['updated_at'].isoformat()
+    if 'approved_at' in leave_dict and isinstance(leave_dict['approved_at'], datetime):
+        leave_dict['approved_at'] = leave_dict['approved_at'].isoformat()
+    
     return leave_dict
 
-@router.post("/", response_model=LeaveRequestResponse)
+@router.post("/")
 async def create_leave_request(
     leave_data: LeaveRequestCreate,
     current_user = Depends(get_current_user)
@@ -35,16 +69,34 @@ async def create_leave_request(
     
     try:
         leave = await DatabaseLeaveRequests.create_leave_request(leave_data)
+        print(f"DEBUG: Created leave record: {type(leave)}")
         
-        # Convert ObjectId fields to strings for response
-        leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
-        return LeaveRequestResponse(**leave_dict)
+        # Convert to JSON-serializable format manually with proper datetime handling
+        result = {
+            "_id": str(leave.id),
+            "user_id": str(leave.user_id),
+            "leave_type": leave.leave_type,
+            "start_date": leave.start_date.isoformat() if hasattr(leave.start_date, 'isoformat') else str(leave.start_date),
+            "end_date": leave.end_date.isoformat() if hasattr(leave.end_date, 'isoformat') else str(leave.end_date),
+            "reason": leave.reason,
+            "contact_during_leave": leave.contact_during_leave,
+            "status": leave.status,
+            "approver_id": str(leave.approver_id) if leave.approver_id else None,
+            "approver_comments": leave.approver_comments,
+            "created_at": leave.created_at.isoformat() if hasattr(leave.created_at, 'isoformat') else str(leave.created_at),
+            "updated_at": leave.updated_at.isoformat() if hasattr(leave.updated_at, 'isoformat') else str(leave.updated_at),
+            "approved_at": leave.approved_at.isoformat() if leave.approved_at and hasattr(leave.approved_at, 'isoformat') else (str(leave.approved_at) if leave.approved_at else None),
+            "duration_days": leave.duration_days
+        }
+        
+        return result
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
+        print(f"DEBUG: Exception during creation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -70,8 +122,8 @@ async def get_my_leave_requests(
 
 @router.get("/pending-approval", response_model=List[LeaveRequestResponse])
 async def get_pending_approvals(current_user = Depends(get_current_user)):
-    # Verify user has permission to approve leaves
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    # Verify user has permission to approve leaves - only manager, dev_manager, and admin
+    if current_user.role not in ['manager', 'dev_manager', 'admin']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to approve leave requests"
@@ -83,6 +135,34 @@ async def get_pending_approvals(current_user = Depends(get_current_user)):
     result = []
     for leave in leave_requests:
         leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+        # Ensure we have the id field set correctly
+        if '_id' in leave_dict and 'id' not in leave_dict:
+            leave_dict['id'] = leave_dict['_id']
+        result.append(LeaveRequestResponse(**leave_dict))
+    
+    return result
+
+@router.get("/all", response_model=List[LeaveRequestResponse])
+async def get_all_leaves(
+    status: Optional[str] = Query(None, description="Filter by status"),
+    current_user = Depends(get_current_user)
+):
+    # Only managers and dev_managers can see all leaves
+    if current_user.role not in ['manager', 'dev_manager', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view all leave requests"
+        )
+    
+    leave_requests = await DatabaseLeaveRequests.get_all_team_leaves(str(current_user.id), status)
+    
+    # Convert ObjectId fields to strings for response
+    result = []
+    for leave in leave_requests:
+        leave_dict = convert_objectids_to_strings(leave.dict(by_alias=True))
+        # Ensure we have the id field set correctly
+        if '_id' in leave_dict and 'id' not in leave_dict:
+            leave_dict['id'] = leave_dict['_id']
         result.append(LeaveRequestResponse(**leave_dict))
     
     return result
@@ -97,6 +177,8 @@ async def get_leave_request(
     leave_id: str,
     current_user = Depends(get_current_user)
 ):
+    # Validate leave_id format
+    leave_id = validate_leave_id(leave_id)
     leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
     
     if not leave:
@@ -128,6 +210,8 @@ async def update_leave_request(
     leave_data: LeaveRequestUpdate,
     current_user = Depends(get_current_user)
 ):
+    # Validate leave_id format
+    leave_id = validate_leave_id(leave_id)
     # Check if leave exists
     leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
     if not leave:
@@ -162,6 +246,9 @@ async def approve_reject_leave(
     approval_data: LeaveRequestApproval,
     current_user = Depends(get_current_user)
 ):
+    # Validate leave_id format
+    leave_id = validate_leave_id(leave_id)
+    
     # Check if leave exists
     leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
     if not leave:
@@ -177,8 +264,8 @@ async def approve_reject_leave(
             detail="Can only approve/reject pending leave requests"
         )
     
-    # Verify user has permission to approve/reject
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    # Verify user has permission to approve/reject - only manager, dev_manager, and admin
+    if current_user.role not in ['manager', 'admin', 'dev_manager']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to approve/reject leave requests"
@@ -210,6 +297,9 @@ async def cancel_leave_request(
     leave_id: str,
     current_user = Depends(get_current_user)
 ):
+    # Validate leave_id format
+    leave_id = validate_leave_id(leave_id)
+    
     # Check if leave exists
     leave = await DatabaseLeaveRequests.get_leave_request_by_id(leave_id)
     if not leave:

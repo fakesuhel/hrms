@@ -1460,12 +1460,13 @@
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
             ],
-            // IT Department Team Leader - No Team management access
+            // IT Department Team Leader - With Team management access
             team_lead: [
                 { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
                 { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
                 { icon: '📁', label: 'Projects', href: '/app/it/projects', active: true },
                 { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests' },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
@@ -1533,7 +1534,7 @@
             
             // Store user role globally for other functions
             window.currentUserRole = userRole;
-            window.currentUserId = currentUser._id;
+            window.currentUserId = currentUser.id || currentUser._id;
             
             // Generate and set navigation menu
             generateNavigationMenu(userRole);
@@ -1798,7 +1799,7 @@ function setupRoleBasedVisibility(currentUser) {
     
     // Store user role globally for other functions
     window.currentUserRole = currentUser.role;
-    window.currentUserId = currentUser._id;
+    window.currentUserId = currentUser.id || currentUser._id;
 }
 
 // Check if current user can edit a project
@@ -1812,7 +1813,8 @@ function canEditProject(project, currentUser) {
     
     // Employees can only edit projects they created
     if (currentUser.role === 'employee') {
-        return project.created_by === currentUser._id;
+        const currentUserId = currentUser.id || currentUser._id;
+        return project.created_by === currentUserId;
     }
     
     return false;
@@ -1869,7 +1871,8 @@ function getAllowedTaskAssignees(project, currentUser) {
     }
     
     // Employees can only assign tasks to themselves
-    return userListCache.filter(user => user._id === currentUser._id);
+    const currentUserId = currentUser.id || currentUser._id;
+    return userListCache.filter(user => (user.id || user._id) === currentUserId);
 }
 
 // ========================
@@ -3147,7 +3150,7 @@ function setupEventListeners() {
     });
     
     // Create project button
-    document.getElementById('createProjectBtn')?.addEventListener('click', function() {
+    document.getElementById('createProjectBtn')?.addEventListener('click', async function() {
         // Set default dates
         const today = new Date();
         document.getElementById('projectStartDate').value = formatDateInput(today);
@@ -3160,7 +3163,7 @@ function setupEventListeners() {
         setupTeamMembersDropdownForProjectEdit([]);
         
         // Initialize manager dropdown
-        setupManagerDropdown('projectManager', null);
+        await setupManagerDropdown('projectManager', null);
         
         document.getElementById('createProjectModal').style.display = 'flex';
     });
@@ -3257,9 +3260,9 @@ function populateEditTeamMembersDropdown(selectedUserIds = []) {
     select.innerHTML = '';
     userListCache.forEach(user => {
         const option = document.createElement('option');
-        option.value = user._id;
-        option.textContent = user.name || user.username || user._id;
-        if (selectedUserIds.includes(user._id)) {
+        option.value = user.id || user._id; // Support both formats
+        option.textContent = user.full_name || user.name || user.username || user.id || user._id;
+        if (selectedUserIds.includes(user.id || user._id)) {
             option.selected = true;
         }
         select.appendChild(option);
@@ -3321,7 +3324,7 @@ async function fetchAllUsers() {
         // fallback: get current user
         const currentUser = await getCurrentUser();
         window.currentUserRole = currentUser.role;
-        window.currentUserId = currentUser._id;
+        window.currentUserId = currentUser.id || currentUser._id;
     }
     const privilegedRoles = ['admin', 'director', 'manager', 'team_lead', 'dev_manager', 'hr'];
     try {
@@ -3343,7 +3346,8 @@ async function fetchAllUsers() {
             // Regular users: only themselves
             const currentUser = await getCurrentUser();
             userListCache = [{
-                _id: currentUser._id,
+                id: currentUser.id || currentUser._id,
+                _id: currentUser.id || currentUser._id, // Maintain compatibility
                 username: currentUser.username,
                 full_name: currentUser.full_name || currentUser.username,
                 role: currentUser.role,
@@ -3363,9 +3367,9 @@ function populateTeamMembersDropdown(selectedUserIds = []) {
     select.innerHTML = '';
     userListCache.forEach(user => {
         const option = document.createElement('option');
-        option.value = user._id;
-        option.textContent = user.name || user.username || user._id;
-        if (selectedUserIds.includes(user._id)) {
+        option.value = user.id || user._id; // Support both formats
+        option.textContent = user.full_name || user.name || user.username || user.id || user._id;
+        if (selectedUserIds.includes(user.id || user._id)) {
             option.selected = true;
         }
         select.appendChild(option);
@@ -3400,10 +3404,40 @@ function populateTeamMembersDropdown(selectedUserIds = []) {
     });
 }
 
-// Populate manager dropdown with dev_managers and admins
-function populateManagerDropdown(selectId, selectedManagerId = null) {
+let managerListCache = [];
+
+async function fetchProjectManagers() {
+    const token = localStorage.getItem('bhoomitechzone_token');
+    try {
+        const response = await fetch('/api/development/project-managers', {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            console.error('Project managers fetch failed:', response.status, response.statusText);
+            throw new Error(`Failed to fetch project managers: ${response.status}`);
+        }
+        managerListCache = await response.json();
+        console.log('Project managers loaded:', managerListCache.length);
+        return managerListCache;
+    } catch (err) {
+        console.error('Error loading project managers:', err);
+        showToast('Error loading project managers');
+        return [];
+    }
+}
+
+// Populate manager dropdown with team_lead, manager, dev_manager, and director roles
+async function populateManagerDropdown(selectId, selectedManagerId = null) {
     const select = document.getElementById(selectId);
     select.innerHTML = '';
+    
+    // Ensure we have project managers loaded
+    if (managerListCache.length === 0) {
+        await fetchProjectManagers();
+    }
     
     // Add "Not assigned" option
     const noneOption = document.createElement('option');
@@ -3414,15 +3448,12 @@ function populateManagerDropdown(selectId, selectedManagerId = null) {
     }
     select.appendChild(noneOption);
     
-    // Filter users who can be managers (dev_manager, admin, director)
-    const managerRoles = ['dev_manager', 'admin', 'director', 'manager'];
-    const managers = userListCache.filter(user => managerRoles.includes(user.role));
-    
-    managers.forEach(user => {
+    // Add project managers from the dedicated API
+    managerListCache.forEach(user => {
         const option = document.createElement('option');
-        option.value = user._id;
-        option.textContent = `${user.first_name && user.last_name ? user.first_name + ' ' + user.last_name : user.username} (${user.role})`;
-        if (selectedManagerId && selectedManagerId === user._id) {
+        option.value = user.id || user._id; // Support both formats
+        option.textContent = `${user.full_name || user.username} (${user.role})`;
+        if (selectedManagerId && selectedManagerId === (user.id || user._id)) {
             option.selected = true;
         }
         select.appendChild(option);
@@ -3431,8 +3462,8 @@ function populateManagerDropdown(selectId, selectedManagerId = null) {
 
 // Setup manager dropdown for project creation/editing
 async function setupManagerDropdown(selectId, selectedManagerId = null) {
-    await fetchAllUsers();
-    populateManagerDropdown(selectId, selectedManagerId);
+    await fetchProjectManagers();
+    await populateManagerDropdown(selectId, selectedManagerId);
 }
 
 // Call this function whenever you open the Project modal for Add/Edit

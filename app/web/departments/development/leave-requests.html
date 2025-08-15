@@ -801,32 +801,6 @@
                     </div>
                 </div>
                 
-                <!-- Leave Balances -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Leave Balances</h2>
-                        <div id="balanceLastUpdated" style="font-size: 0.875rem; color: var(--text-secondary);">
-                            Updated: Loading...
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="balanceLoading">
-                            <div class="skeleton-loading" style="height: 100px; margin-bottom: 1rem;"></div>
-                        </div>
-                        
-                        <div id="balanceContent" style="display: none;">
-                            <div class="balance-container">
-                                <div class="balance-card balance-total">
-                                    <div class="balance-type">Total Available</div>
-                                    <div class="balance-value" id="totalBalance">0</div>
-                                    <div>days</div>
-                                </div>
-                                <!-- Balance cards will be added dynamically here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Leave Requests Section -->
                 <div class="card">
                     <div class="card-header">
@@ -836,7 +810,7 @@
                         <!-- Tabs -->
                         <div class="tabs" id="leaveTabs">
                             <div class="tab active" data-tab="myLeaves">My Leaves</div>
-                            <div class="tab" data-tab="pendingApprovals" id="pendingApprovalsTab" style="display: none;">Pending Approvals</div>
+                            <div class="tab" data-tab="allLeaves" id="allLeavesTab" style="display: none;">All Leaves</div>
                         </div>
                         
                         <!-- My Leaves Tab -->
@@ -885,13 +859,26 @@
                             </div>
                         </div>
                         
-                        <!-- Pending Approvals Tab -->
-                        <div class="tab-content" id="pendingApprovals">
-                            <div id="pendingApprovalsLoading">
+                        <!-- All Leaves Tab -->
+                        <div class="tab-content" id="allLeaves">
+                            <div style="margin-bottom: 1.5rem;">
+                                <div class="form-group" style="max-width: 300px;">
+                                    <label class="form-label">Filter by Status</label>
+                                    <select class="form-control" id="allLeaveStatusFilter">
+                                        <option value="">All</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="allLeavesLoading">
                                 <div class="skeleton-loading" style="height: 300px;"></div>
                             </div>
                             
-                            <div id="pendingApprovalsList" style="display: none;">
+                            <div id="allLeavesList" style="display: none;">
                                 <table class="leave-table">
                                     <thead>
                                         <tr>
@@ -899,19 +886,20 @@
                                             <th>Type</th>
                                             <th>Duration</th>
                                             <th>Dates</th>
+                                            <th>Status</th>
                                             <th>Created</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="pendingApprovalsTableBody">
-                                        <!-- Pending approvals will be loaded dynamically -->
+                                    <tbody id="allLeavesTableBody">
+                                        <!-- All leave requests will be loaded dynamically -->
                                     </tbody>
                                 </table>
                             </div>
                             
-                            <div id="pendingApprovalsEmpty" style="display: none;" class="empty-state">
-                                <h3>No Pending Approvals</h3>
-                                <p>There are no leave requests waiting for your approval.</p>
+                            <div id="allLeavesEmpty" style="display: none;" class="empty-state">
+                                <h3>No Leave Requests</h3>
+                                <p>No leave requests found for your team.</p>
                             </div>
                         </div>
                     </div>
@@ -1054,12 +1042,13 @@
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
             ],
-            // IT Department Team Leader - No Team management access
+            // IT Department Team Leader - With Team management access
             team_lead: [
                 { icon: '📊', label: 'Dashboard', href: '/app/it/dashboard' },
                 { icon: '🕒', label: 'Attendance', href: '/app/it/attendance' },
                 { icon: '📁', label: 'Projects', href: '/app/it/projects' },
                 { icon: '📝', label: 'Daily Reports', href: '/app/it/daily-reports' },
+                { icon: '👥', label: 'Team', href: '/app/it/team' },
                 { icon: '⭐', label: 'Performance', href: '/app/it/performance' },
                 { icon: '📅', label: 'Leave Requests', href: '/app/it/leave-requests', active: true },
                 { icon: '👤', label: 'Profile', href: '/app/it/profile' }
@@ -1234,16 +1223,13 @@
                 // Initialize user data
                 await loadUserData();
                 
-                // Load leave balances
-                await loadLeaveBalances();
-                
                 // Load leave requests
                 await loadMyLeaves();
                 
-                // Load pending approvals if user is a manager
-                if (window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole)) {
-                    document.getElementById('pendingApprovalsTab').style.display = 'block';
-                    await loadPendingApprovals();
+                // Load all leaves if user is a manager or dev_manager (exclude team_lead)
+                if (window.userRole && ['admin', 'manager', 'dev_manager'].includes(window.userRole)) {
+                    document.getElementById('allLeavesTab').style.display = 'block';
+                    await loadAllLeaves();
                 }
                 
                 // Setup event listeners
@@ -1293,61 +1279,6 @@
             } catch (error) {
                 console.error('Error loading user data:', error);
                 return null;
-            }
-        }
-        
-        async function loadLeaveBalances() {
-            try {
-                const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/leave-requests/balance', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load leave balances');
-                }
-                
-                const balanceData = await response.json();
-                
-                // Hide loading, show content
-                document.getElementById('balanceLoading').style.display = 'none';
-                document.getElementById('balanceContent').style.display = 'block';
-                
-                // Update last updated timestamp
-                const lastUpdated = new Date();
-                document.getElementById('balanceLastUpdated').textContent = 
-                    `Updated: ${lastUpdated.toLocaleDateString()} at ${lastUpdated.toLocaleTimeString()}`;
-                
-                // Update total balance
-                document.getElementById('totalBalance').textContent = balanceData.total_available;
-                
-                // Create balance cards for each leave type
-                const balanceContainer = document.querySelector('.balance-container');
-                
-                // Keep only the total balance card
-                balanceContainer.innerHTML = balanceContainer.firstElementChild.outerHTML;
-                
-                // Add cards for each leave type
-                for (const [leaveType, balance] of Object.entries(balanceData.balances)) {
-                    const card = document.createElement('div');
-                    card.className = 'balance-card';
-                    card.innerHTML = `
-                        <div class="balance-type">${formatLeaveType(leaveType)}</div>
-                        <div class="balance-value">${balance}</div>
-                        <div>days</div>
-                    `;
-                    balanceContainer.appendChild(card);
-                }
-                
-            } catch (error) {
-                console.error('Error loading leave balances:', error);
-                document.getElementById('balanceLoading').style.display = 'none';
-                document.getElementById('balanceContent').style.display = 'block';
-                document.getElementById('balanceContent').innerHTML = `
-                    <div style="text-align: center; padding: 1rem;">
-                        <p>Failed to load leave balances. Please try again later.</p>
-                    </div>
-                `;
             }
         }
         
@@ -1451,55 +1382,90 @@
             }
         }
         
-        async function loadPendingApprovals() {
+        async function loadAllLeaves(status = '') {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/leave-requests/pending-approval', {
+                let url = '/leave-requests/all';
+                if (status) {
+                    url += `?status=${status}`;
+                }
+                
+                const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to load pending approvals');
+                    throw new Error('Failed to load all leave requests');
                 }
                 
-                const pendingRequests = await response.json();
+                const allLeaves = await response.json();
                 
                 // Hide loading state
-                document.getElementById('pendingApprovalsLoading').style.display = 'none';
+                document.getElementById('allLeavesLoading').style.display = 'none';
                 
-                // Check if there are any pending requests
-                if (pendingRequests.length === 0) {
-                    document.getElementById('pendingApprovalsEmpty').style.display = 'block';
+                // Check if there are any leave requests
+                if (allLeaves.length === 0) {
+                    document.getElementById('allLeavesEmpty').style.display = 'block';
                     return;
                 }
                 
-                // Show pending requests list
-                document.getElementById('pendingApprovalsList').style.display = 'block';
+                // Show all leaves list
+                document.getElementById('allLeavesList').style.display = 'block';
                 
-                // Populate pending requests table
-                const tableBody = document.getElementById('pendingApprovalsTableBody');
+                // Populate all leaves table
+                const tableBody = document.getElementById('allLeavesTableBody');
                 tableBody.innerHTML = '';
                 
-                pendingRequests.forEach(leave => {
+                allLeaves.forEach(leave => {
                     // Format dates
                     const startDate = formatDate(leave.start_date);
                     const endDate = formatDate(leave.end_date);
                     
+                    // Get employee name - use employee_name if available, otherwise format from first/last name
+                    let employeeName = leave.employee_name;
+                    if (!employeeName && (leave.employee_first_name || leave.employee_last_name)) {
+                        employeeName = `${leave.employee_first_name || ''} ${leave.employee_last_name || ''}`.trim();
+                    }
+                    if (!employeeName) {
+                        employeeName = leave.user_id; // fallback to user_id
+                    }
+                    
+                    // Ensure we have a valid leave ID
+                    const leaveId = leave.id || leave._id;
+                    
+                    // Format the status for display
+                    let statusClass = 'badge-pending';
+                    
+                    switch(leave.status) {
+                        case 'approved':
+                            statusClass = 'badge-approved';
+                            break;
+                        case 'rejected':
+                            statusClass = 'badge-rejected';
+                            break;
+                        case 'cancelled':
+                            statusClass = 'badge-cancelled';
+                            break;
+                    }
+                    
                     // Create the table row
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${leave.user_id}</td>
+                        <td>${employeeName}</td>
                         <td><span class="leave-type type-${leave.leave_type}">${formatLeaveType(leave.leave_type)}</span></td>
                         <td>${leave.duration_days} day${leave.duration_days !== 1 ? 's' : ''}</td>
                         <td>${startDate} - ${endDate}</td>
+                        <td><span class="badge ${statusClass}">${capitalizeFirstLetter(leave.status)}</span></td>
                         <td>${formatDate(leave.created_at, true)}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leave.id}">
+                            <button class="btn btn-sm btn-outline view-leave-btn" data-id="${leaveId}">
                                 View
                             </button>
-                            <button class="btn btn-sm btn-success approve-leave-btn" data-id="${leave.id}">
-                                Approve
-                            </button>
+                            ${leave.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success approve-leave-btn" data-id="${leaveId}">
+                                    Approve
+                                </button>
+                            ` : ''}
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -1521,11 +1487,11 @@
                 });
                 
             } catch (error) {
-                console.error('Error loading pending approvals:', error);
-                document.getElementById('pendingApprovalsLoading').style.display = 'none';
-                document.getElementById('pendingApprovalsEmpty').style.display = 'block';
-                document.querySelector('#pendingApprovalsEmpty h3').textContent = 'Error Loading Pending Approvals';
-                document.querySelector('#pendingApprovalsEmpty p').textContent = 'Failed to load pending leave approvals. Please try again later.';
+                console.error('Error loading all leave requests:', error);
+                document.getElementById('allLeavesLoading').style.display = 'none';
+                document.getElementById('allLeavesEmpty').style.display = 'block';
+                document.querySelector('#allLeavesEmpty h3').textContent = 'Error Loading Leave Requests';
+                document.querySelector('#allLeavesEmpty p').textContent = 'Failed to load all leave requests. Please try again later.';
             }
         }
         
@@ -1643,8 +1609,8 @@
                     modalFooter.innerHTML += `<button class="btn btn-danger" id="cancelLeaveDetailsBtn">Cancel Request</button>`;
                 }
                 
-                // If user is a manager and leave is pending, add approve/reject buttons
-                const isManager = window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole);
+                // If user is a manager or dev_manager (not team_lead) and leave is pending, add approve/reject buttons
+                const isManager = window.userRole && ['admin', 'manager', 'dev_manager'].includes(window.userRole);
                 if (isManager && leave.status === 'pending' && leave.user_id !== window.currentUser?.id) {
                     modalFooter.innerHTML += `
                         <button class="btn btn-danger" id="rejectLeaveDetailsBtn">Reject</button>
@@ -1814,7 +1780,6 @@
                 showToast(leaveId ? 'Leave request updated successfully' : 'Leave request submitted successfully');
                 
                 // Refresh data
-                await loadLeaveBalances();
                 await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
                 
             } catch (error) {
@@ -1848,7 +1813,6 @@
                 showToast('Leave request cancelled successfully');
                 
                 // Refresh data
-                await loadLeaveBalances();
                 await loadMyLeaves(document.getElementById('myLeaveStatusFilter').value);
                 
             } catch (error) {
@@ -1933,8 +1897,10 @@
                 // Show success message
                 showToast(`Leave request ${action} successfully`);
                 
-                // Refresh data
-                await loadPendingApprovals();
+                // Refresh data - reload all leaves for managers
+                if (window.userRole && ['admin', 'manager', 'dev_manager'].includes(window.userRole)) {
+                    await loadAllLeaves(document.getElementById('allLeaveStatusFilter')?.value);
+                }
                 
             } catch (error) {
                 console.error('Error processing leave request:', error);
@@ -2013,6 +1979,14 @@
             document.getElementById('myLeaveStatusFilter').addEventListener('change', function() {
                 loadMyLeaves(this.value);
             });
+            
+            // Filter all leave requests (for managers)
+            const allLeaveStatusFilter = document.getElementById('allLeaveStatusFilter');
+            if (allLeaveStatusFilter) {
+                allLeaveStatusFilter.addEventListener('change', function() {
+                    loadAllLeaves(this.value);
+                });
+            }
             
             // Leave form events
             document.getElementById('cancelLeaveBtn').addEventListener('click', function() {

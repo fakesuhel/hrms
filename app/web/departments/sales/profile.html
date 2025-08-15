@@ -1468,7 +1468,7 @@
         async function downloadAllDocuments() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/users/documents/download-all?token=${token}`, '_blank');
+                window.open(`/profile/documents/download-all?token=${token}`, '_blank');
                 showToast('Preparing documents for download...');
             } catch (error) {
                 console.error('Download all error:', error);
@@ -1886,7 +1886,7 @@
                     formData.append('category', category);
                     
                     const token = localStorage.getItem('bhoomitechzone_token');
-                    const response = await fetch('/users/documents/upload', {
+                    const response = await fetch('/profile/documents/upload', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -1913,7 +1913,7 @@
         async function loadDocuments() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users/documents', {
+                const response = await fetch('/profile/documents', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2036,7 +2036,7 @@
         async function viewDocument(documentId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/users/documents/${documentId}/download?token=${token}`, '_blank');
+                window.open(`/profile/documents/${documentId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('View error:', error);
                 showToast('Failed to view document', 'error');
@@ -2046,7 +2046,7 @@
         async function downloadDocument(documentId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/users/documents/${documentId}/download?token=${token}`, '_blank');
+                window.open(`/profile/documents/${documentId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('Download error:', error);
                 showToast('Download failed', 'error');
@@ -2066,7 +2066,7 @@
                 // Show loading state
                 showToast('Deleting document...', 'info');
                 
-                const response = await fetch(`/users/documents/${documentId}`, {
+                const response = await fetch(`/profile/documents/${documentId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -2091,7 +2091,7 @@
         async function updateDocumentCounts() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users/documents/categories', {
+                const response = await fetch('/profile/documents/categories', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2118,7 +2118,7 @@
         async function loadSalarySlips() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users/salary-slips', {
+                const response = await fetch('/profile/salary-slips', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2187,7 +2187,7 @@
         async function downloadSalarySlip(slipId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/users/salary-slips/${slipId}/download?token=${token}`, '_blank');
+                window.open(`/profile/salary-slips/${slipId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('Download error:', error);
                 showToast('Download failed', 'error');
@@ -2197,7 +2197,7 @@
         async function downloadCurrentMonthSlip() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users/salary-slips/current', {
+                const response = await fetch('/profile/salary-slips/current', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

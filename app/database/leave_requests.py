@@ -48,7 +48,18 @@ class LeaveRequestInDB(LeaveRequestBase):
     approved_at: Optional[datetime] = None
     duration_days: int = 1
     
+    # Optional employee details for display purposes (not stored in DB)
+    employee_name: Optional[str] = None
+    employee_first_name: Optional[str] = None
+    employee_last_name: Optional[str] = None
+    
     class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            date: lambda d: d.isoformat() if d else None,
+            datetime: lambda dt: dt.isoformat() if dt else None
+        }
         json_schema_extra = {
             "example": {
                 "_id": "60d21b4967d0d8820c43e666",
@@ -104,6 +115,19 @@ class LeaveRequestResponse(BaseModel):
     updated_at: datetime
     approved_at: Optional[datetime] = None
     duration_days: int
+    
+    # Optional employee details for display purposes
+    employee_name: Optional[str] = None
+    employee_first_name: Optional[str] = None
+    employee_last_name: Optional[str] = None
+    
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            date: lambda d: d.isoformat() if d else None,
+            datetime: lambda dt: dt.isoformat() if dt else None
+        }
 
 class DatabaseLeaveRequests:
     collection: Collection = leave_requests_collection
@@ -121,7 +145,15 @@ class DatabaseLeaveRequests:
             updated_at=get_kolkata_now()
         )
         
-        result = cls.collection.insert_one(leave_in_db.dict(by_alias=True))
+        # Convert to dict for MongoDB insertion with manual date handling
+        leave_dict = leave_in_db.dict(by_alias=True)
+        # Ensure dates are properly converted to strings for MongoDB
+        if 'start_date' in leave_dict and isinstance(leave_dict['start_date'], date):
+            leave_dict['start_date'] = leave_dict['start_date'].isoformat()
+        if 'end_date' in leave_dict and isinstance(leave_dict['end_date'], date):
+            leave_dict['end_date'] = leave_dict['end_date'].isoformat()
+            
+        result = cls.collection.insert_one(leave_dict)
         leave_in_db.id = result.inserted_id
         return leave_in_db
     
@@ -209,13 +241,65 @@ class DatabaseLeaveRequests:
         team_members = await DatabaseUsers.get_team_members_by_manager(approver_id)
         member_ids = [member.id for member in team_members]
         
+        # Create a mapping of user_id to user details
+        user_map = {str(member.id): {
+            'first_name': member.first_name,
+            'last_name': member.last_name,
+            'full_name': f"{member.first_name or ''} {member.last_name or ''}".strip() or member.username
+        } for member in team_members}
+        
         # Then get leave requests for these members
         cursor = cls.collection.find({
             "user_id": {"$in": member_ids},
             "status": "pending"
         }).sort("created_at", 1)
         
-        return [LeaveRequestInDB(**leave) for leave in cursor]
+        leave_requests = []
+        for leave_data in cursor:
+            leave = LeaveRequestInDB(**leave_data)
+            # Add user information to the leave request
+            user_info = user_map.get(str(leave.user_id), {})
+            leave.employee_name = user_info.get('full_name', str(leave.user_id))
+            leave.employee_first_name = user_info.get('first_name', '')
+            leave.employee_last_name = user_info.get('last_name', '')
+            leave_requests.append(leave)
+        
+        return leave_requests
+    
+    @classmethod
+    async def get_all_team_leaves(cls, manager_id: str, status_filter: str = None) -> List[LeaveRequestInDB]:
+        """Get all leave requests for team members under a manager"""
+        # First get the team members under this manager
+        from app.database.users import DatabaseUsers
+        team_members = await DatabaseUsers.get_team_members_by_manager(manager_id)
+        member_ids = [member.id for member in team_members]
+        
+        # Create a mapping of user_id to user details
+        user_map = {str(member.id): {
+            'first_name': member.first_name,
+            'last_name': member.last_name,
+            'full_name': f"{member.first_name or ''} {member.last_name or ''}".strip() or member.username
+        } for member in team_members}
+        
+        # Build query filter
+        query_filter = {"user_id": {"$in": member_ids}}
+        if status_filter:
+            query_filter["status"] = status_filter
+        
+        # Get leave requests for these members
+        cursor = cls.collection.find(query_filter).sort("created_at", -1)
+        
+        leave_requests = []
+        for leave_data in cursor:
+            leave = LeaveRequestInDB(**leave_data)
+            # Add user information to the leave request
+            user_info = user_map.get(str(leave.user_id), {})
+            leave.employee_name = user_info.get('full_name', str(leave.user_id))
+            leave.employee_first_name = user_info.get('first_name', '')
+            leave.employee_last_name = user_info.get('last_name', '')
+            leave_requests.append(leave)
+        
+        return leave_requests
     
     @classmethod
     async def get_leave_balance(cls, user_id: str) -> Dict[str, Any]:

@@ -244,33 +244,40 @@ async def update_user(user_update: UserUpdate, current_user = Depends(get_curren
         detail="Failed to update user",
     )
 
-@router.get("/team", response_model=List[UserResponse])
-async def get_team_members(current_user = Depends(get_current_user)):
-    """Get team members for current user (if team lead or manager)"""
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access team information",
-        )
-    
-    team_members = await DatabaseUsers.get_team_members_by_manager(str(current_user.id))
-    response_members = []
-    for member in team_members:
-        if isinstance(member, dict):
-            _id = member.get("_id")
-            member_dict = member.copy()
-            member_dict["id"] = str(_id) if _id is not None else str(member_dict.get("id", ""))
-            member_dict.pop("_id", None)
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user_by_id(user_id: str, current_user = Depends(get_current_user)):
+    """Get user by ID - accessible to all authenticated users"""
+    try:
+        user = await DatabaseUsers.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Convert user data for response
+        if isinstance(user, dict):
+            _id = user.get("_id")
+            user_dict = user.copy()
+            user_dict["id"] = str(_id) if _id is not None else str(user_dict.get("id", ""))
+            user_dict.pop("_id", None)
         else:
-            _id = getattr(member, "_id", None)
-            member_dict = {field: getattr(member, field) for field in getattr(member, "__fields__", [])}
-            member_dict["id"] = str(_id) if _id is not None else str(getattr(member, "id", ""))
-            if "_id" in member_dict:
-                member_dict.pop("_id")
-        if "id" in member_dict and not isinstance(member_dict["id"], str):
-            member_dict["id"] = str(member_dict["id"])
-        response_members.append(UserResponse(**member_dict))
-    return response_members
+            _id = getattr(user, "_id", None)
+            user_dict = {field: getattr(user, field) for field in getattr(user, "__fields__", [])}
+            user_dict["id"] = str(_id) if _id is not None else str(getattr(user, "id", ""))
+            if "_id" in user_dict:
+                user_dict.pop("_id")
+        if "id" in user_dict and not isinstance(user_dict["id"], str):
+            user_dict["id"] = str(user_dict["id"])
+        
+        return UserResponse(**user_dict)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching user: {str(e)}"
+        )
 
 @router.put("/me/preferences", response_model=dict)
 async def update_user_preferences(
@@ -359,3 +366,55 @@ async def get_user_preferences(current_user = Depends(get_current_user)):
                 "sound_alerts": False
             }
         }
+
+@router.get("/states")
+async def get_indian_states(current_user = Depends(get_current_user)):
+    """Get list of Indian states"""
+    states = [
+        "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+        "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+        "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+        "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+        "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+        "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+        "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+    ]
+    return {"states": sorted(states)}
+
+@router.get("/postal-code/{pincode}")
+async def get_postal_info(pincode: str, current_user = Depends(get_current_user)):
+    """Get city and state info from pincode using Indian Postal API"""
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"https://api.postalpincode.in/pincode/{pincode}")
+            data = response.json()
+            
+            if data and len(data) > 0 and data[0]["Status"] == "Success":
+                post_office = data[0]["PostOffice"][0]
+                
+                # Get all cities/areas for this pincode
+                cities = []
+                for office in data[0]["PostOffice"]:
+                    cities.append({
+                        "name": office["Name"],
+                        "district": office["District"],
+                        "state": office["State"]
+                    })
+                
+                return {
+                    "success": True,
+                    "pincode": pincode,
+                    "state": post_office["State"],
+                    "district": post_office["District"],
+                    "country": post_office["Country"],
+                    "cities": cities,
+                    "primary_city": post_office["Name"]
+                }
+            else:
+                raise HTTPException(status_code=404, detail="Invalid pincode or no data found")
+    
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Postal service temporarily unavailable")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching postal info: {str(e)}")
