@@ -4,17 +4,17 @@ from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
 
 # Get leads collection
 leads_collection = db["leads"]
 
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -76,8 +76,8 @@ class LeadInDB(LeadBase):
     last_contact_date: Optional[datetime] = None
     expected_closure_date: Optional[str] = None  # ISO date string
     deal_value: Optional[float] = None
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -108,8 +108,8 @@ class LeadActivity(BaseModel):
     activity_type: str  # "call", "email", "meeting", "proposal", "follow_up", "note"
     subject: str
     description: Optional[str] = None
-    activity_date: datetime = Field(default_factory=get_ist_now)
-    created_at: datetime = Field(default_factory=get_ist_now)
+    activity_date: datetime = Field(default_factory=get_kolkata_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -130,8 +130,8 @@ class DatabaseLeads:
     async def create_lead(cls, lead_data: LeadCreate) -> LeadInDB:
         """Create a new lead"""
         lead_dict = lead_data.model_dump()
-        lead_dict["created_at"] = get_ist_now()
-        lead_dict["updated_at"] = get_ist_now()
+        lead_dict["created_at"] = get_kolkata_now()
+        lead_dict["updated_at"] = get_kolkata_now()
         lead_dict["status"] = "new"
         lead_dict["lead_score"] = 0
         
@@ -178,7 +178,7 @@ class DatabaseLeads:
         """Update a lead"""
         try:
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             result = cls.collection.update_one(
                 {"_id": ObjectId(lead_id)},
@@ -259,11 +259,11 @@ class DatabaseLeadActivities:
         activity_dict.update({
             "lead_id": lead_id,
             "user_id": user_id,
-            "created_at": get_ist_now()
+            "created_at": get_kolkata_now()
         })
         
         if not activity_dict.get("activity_date"):
-            activity_dict["activity_date"] = get_ist_now()
+            activity_dict["activity_date"] = get_kolkata_now()
         
         result = cls.collection.insert_one(activity_dict)
         activity_dict["_id"] = result.inserted_id

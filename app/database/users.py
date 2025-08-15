@@ -5,22 +5,19 @@ from bson import ObjectId
 from app.database import db
 from passlib.context import CryptContext
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
 
 # Get users collection
 users_collection = db["users"]
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
-
-
-
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -133,8 +130,8 @@ class UserInDB(UserBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     hashed_password: Optional[str] = None  # Make it optional to handle existing records
     password: Optional[str] = None  # Legacy field for backward compatibility
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -207,12 +204,12 @@ class DatabaseUsers:
         if not employee_id:
             # Generate a unique employee ID (EMP + timestamp + random)
             import random
-            timestamp = str(int(get_ist_now().timestamp()))[-6:]
+            timestamp = str(int(get_kolkata_now().timestamp()))[-6:]
             random_num = str(random.randint(100, 999))
             employee_id = f"EMP{timestamp}{random_num}"
         
         # Create user document
-        now = get_ist_now()
+        now = get_kolkata_now()
         user_dict = user_data.dict(exclude={"password"})
         user_dict.update({
             "employee_id": employee_id,
@@ -243,7 +240,7 @@ class DatabaseUsers:
             update_data["hashed_password"] = pwd_context.hash(update_data.pop("password"))
         
         if update_data:
-            update_data["updated_at"] = get_ist_now()
+            update_data["updated_at"] = get_kolkata_now()
             
             # Update user
             users_collection.update_one(
@@ -277,7 +274,7 @@ class DatabaseUsers:
         else:
             id_obj = user_id
         
-        now = get_ist_now()
+        now = get_kolkata_now()
         
         result = users_collection.update_one(
             {"_id": id_obj},

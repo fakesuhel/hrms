@@ -5,6 +5,14 @@ from bson import ObjectId
 from pymongo.collection import Collection
 from app.database import settings_collection
 from app.utils.helpers import PyObjectId
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class UserSettings(BaseModel):
     user_id: PyObjectId
@@ -29,8 +37,8 @@ class UserSettings(BaseModel):
 
 class UserSettingsInDB(UserSettings):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         json_schema_extra = {
@@ -94,8 +102,8 @@ class SystemSettings(BaseModel):
 
 class SystemSettingsInDB(SystemSettings):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         json_schema_extra = {
@@ -145,8 +153,8 @@ class DatabaseSettings:
                 "browser_notifications": True,
                 "sound_alerts": False
             },
-            "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "created_at": get_kolkata_now(),
+            "updated_at": get_kolkata_now()
         }
         
         result = cls.collection.insert_one(settings_dict)
@@ -161,7 +169,7 @@ class DatabaseSettings:
         
         # Prepare update data, excluding None values
         update_data = {k: v for k, v in settings_data.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.now()
+        update_data["updated_at"] = get_kolkata_now()
         
         # Handle notification preferences merging if they exist
         if "notification_preferences" in update_data and current_settings:
@@ -195,7 +203,7 @@ class DatabaseSettings:
                     "browser_notifications": True,
                     "sound_alerts": False
                 },
-                "created_at": datetime.now()
+                "created_at": get_kolkata_now()
             }
             
             # Merge defaults with update data
@@ -223,7 +231,7 @@ class DatabaseSettings:
         """Set a system setting with upsert logic"""
         update_data = {
             "setting_value": value,
-            "updated_at": datetime.now()
+            "updated_at": get_kolkata_now()
         }
         
         if description:
@@ -233,7 +241,7 @@ class DatabaseSettings:
         default_data = {
             "setting_key": key,
             "setting_type": "system",
-            "created_at": datetime.now()
+            "created_at": get_kolkata_now()
         }
         
         result = cls.collection.update_one(

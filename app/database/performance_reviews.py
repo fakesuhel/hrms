@@ -5,6 +5,14 @@ from bson import ObjectId
 from pymongo.collection import Collection
 from app.database import performance_reviews_collection
 from app.utils.helpers import PyObjectId
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PerformanceRating(BaseModel):
     category: str  # technical_skills, communication, teamwork, leadership, etc.
@@ -42,8 +50,8 @@ class PerformanceReviewInDB(PerformanceReviewBase):
     overall_rating: Optional[float] = None
     goals_for_next_period: List[str] = []
     status: str = "draft"  # draft, in_progress, completed, acknowledged
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     completed_at: Optional[datetime] = None
     acknowledged_by_user: bool = False
     acknowledged_at: Optional[datetime] = None
@@ -208,8 +216,8 @@ class DatabasePerformanceReviews:
         
         review_in_db = PerformanceReviewInDB(
             **review_dict,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=get_kolkata_now(),
+            updated_at=get_kolkata_now()
         )
         
         # Convert to dict for MongoDB insertion, ensuring proper serialization
@@ -239,11 +247,11 @@ class DatabasePerformanceReviews:
         """Update a review's information with upsert logic for missing fields"""
         # Create update operations
         update_data = {k: v for k, v in review_data.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.now()
+        update_data["updated_at"] = get_kolkata_now()
         
         # If status is being updated to completed, add completed_at timestamp
         if update_data.get("status") == "completed":
-            update_data["completed_at"] = datetime.now()
+            update_data["completed_at"] = get_kolkata_now()
         
         # Use $set for existing fields and $setOnInsert for default values if document doesn't exist
         set_data = update_data.copy()
@@ -254,7 +262,7 @@ class DatabasePerformanceReviews:
             "goals_for_next_period": [],
             "status": "draft",
             "acknowledged_by_user": False,
-            "created_at": datetime.now()
+            "created_at": get_kolkata_now()
         }
         
         result = cls.collection.update_one(
@@ -275,9 +283,9 @@ class DatabasePerformanceReviews:
         """User acknowledges a review"""
         update_data = {
             "acknowledged_by_user": True,
-            "acknowledged_at": datetime.now(),
+            "acknowledged_at": get_kolkata_now(),
             "user_comments": acknowledgement.user_comments,
-            "updated_at": datetime.now()
+            "updated_at": get_kolkata_now()
         }
         
         result = cls.collection.update_one(

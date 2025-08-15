@@ -4,17 +4,17 @@ from pydantic import BaseModel, Field
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
 # Get documents collection
 documents_collection = db["documents"]
 
-
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -53,8 +53,8 @@ class DocumentUpdate(BaseModel):
 
 class DocumentInDB(DocumentBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -76,8 +76,8 @@ class DatabaseDocuments:
     @staticmethod
     async def create_document(document_data: DocumentCreate) -> DocumentInDB:
         document_dict = document_data.model_dump()
-        document_dict["created_at"] = get_ist_now()
-        document_dict["updated_at"] = get_ist_now()
+        document_dict["created_at"] = get_kolkata_now()
+        document_dict["updated_at"] = get_kolkata_now()
         
         result = documents_collection.insert_one(document_dict)
         document_dict["_id"] = result.inserted_id
@@ -139,7 +139,7 @@ class DatabaseDocuments:
         try:
             id_obj = ObjectId(document_id) if isinstance(document_id, str) else document_id
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             result = documents_collection.update_one(
                 {"_id": id_obj},

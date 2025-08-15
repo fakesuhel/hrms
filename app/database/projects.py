@@ -5,18 +5,18 @@ from bson import ObjectId
 from app.database import db
 import json
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
 
 # Get projects collection
 projects_collection = db["projects"]
 users_collection = db["users"]
 
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -42,8 +42,8 @@ class ProjectTask(BaseModel):
     status: str = "todo"  # "todo", "in_progress", "review", "completed"
     assigned_to: Optional[str] = None
     due_date: Optional[str] = None  # Store as ISO formatted string
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         populate_by_name = True
@@ -66,8 +66,8 @@ class Project(BaseModel):
     tasks: List[ProjectTask] = []
     budget: Optional[float] = None
     technologies: List[str] = []
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         populate_by_name = True
@@ -170,7 +170,7 @@ class DatabaseProjects:
         end_date = project_data.end_date if project_data.end_date else None
         
         # Current timestamp
-        now = get_ist_now()
+        now = get_kolkata_now()
         
         # Create new project
         new_project = {
@@ -264,8 +264,8 @@ class DatabaseProjects:
         upcoming_tasks = 0
         
         # Current date and dates for comparison
-        today = get_ist_now().date().isoformat()
-        seven_days_later = (get_ist_now() + timedelta(days=7)).date().isoformat()
+        today = get_kolkata_now().date().isoformat()
+        seven_days_later = (get_kolkata_now() + timedelta(days=7)).date().isoformat()
         
         for project in projects:
             for task in project.get("tasks", []):
@@ -282,7 +282,7 @@ class DatabaseProjects:
                         upcoming_tasks += 1
         
         # Get current timestamp - use the passed parameter
-        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_kolkata_now().strftime("%Y-%m-%d %H:%M:%S")
         
         # This object will be returned to the route handler, which will add any additional info
         return {
@@ -314,7 +314,7 @@ class DatabaseProjects:
             update_dict[field] = value
         
         # Add updated timestamp
-        update_dict["updated_at"] = get_ist_now()
+        update_dict["updated_at"] = get_kolkata_now()
         
         # Update project
         projects_collection.update_one(
@@ -343,7 +343,7 @@ class DatabaseProjects:
         due_date = task_data.due_date  # Already a string
         
         # Create new task
-        now = get_ist_now()
+        now = get_kolkata_now()
         new_task = {
             "_id": ObjectId(),
             "title": task_data.title,
@@ -382,8 +382,8 @@ class DatabaseProjects:
             update_dict[f"tasks.$.{field}"] = value
         
         # Add updated timestamp
-        update_dict["tasks.$.updated_at"] = get_ist_now()
-        update_dict["updated_at"] = get_ist_now()
+        update_dict["tasks.$.updated_at"] = get_kolkata_now()
+        update_dict["updated_at"] = get_kolkata_now()
         
         # Update task
         projects_collection.update_one(
@@ -406,7 +406,7 @@ class DatabaseProjects:
             return None
         
         # Remove task from project
-        now = get_ist_now()
+        now = get_kolkata_now()
         projects_collection.update_one(
             {"_id": ObjectId(project_id)},
             {
@@ -481,7 +481,7 @@ class DatabaseProjects:
         task_counts = {"todo": 0, "in_progress": 0, "review": 0, "completed": 0}
         overdue_tasks = 0
         upcoming_tasks = 0
-        today = get_ist_now().date().isoformat()
+        today = get_kolkata_now().date().isoformat()
         
         for project in projects:
             for task in project.get("tasks", []):
@@ -492,11 +492,11 @@ class DatabaseProjects:
                     task_due_date = task["due_date"]  # Already a string
                     if task_due_date < today and status != "completed":
                         overdue_tasks += 1
-                    elif task_due_date >= today and task_due_date <= (get_ist_now() + timedelta(days=7)).date().isoformat():
+                    elif task_due_date >= today and task_due_date <= (get_kolkata_now() + timedelta(days=7)).date().isoformat():
                         upcoming_tasks += 1
         
         # Get current timestamp
-        current_time = get_ist_now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = get_kolkata_now().strftime("%Y-%m-%d %H:%M:%S")
         
         return {
             "user_id": user_id,

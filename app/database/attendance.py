@@ -4,15 +4,20 @@ from pydantic import BaseModel, Field, field_validator
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
-
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
+from zoneinfo import ZoneInfo
 
 # Get attendance collection
 attendance_collection = db["attendance"]
 
-def ensure_timezone_aware(dt):
-    """Ensure a datetime object is timezone-aware (assume IST if naive)"""
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
+
+def ensure_kolkata_timezone(dt):
+    """Ensure a datetime object is in Asia/Kolkata timezone"""
     if dt is None:
         return None
         
@@ -27,13 +32,12 @@ def ensure_timezone_aware(dt):
                 # Final fallback
                 dt = datetime.fromisoformat(dt)
     
-    # If timezone-naive, assume it's in IST
+    # If timezone-naive, assume it's in Kolkata timezone
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=IST)
-    elif dt.tzinfo != IST:
-        # Convert to IST if it's in a different timezone
-        return dt.astimezone(IST)
-    return dt
+        return dt.replace(tzinfo=KOLKATA_TZ)
+    else:
+        # Convert to Kolkata timezone
+        return dt.astimezone(KOLKATA_TZ)
 
 def parse_datetime_field(value):
     """Custom parser for datetime fields that might contain invalid data"""
@@ -41,24 +45,33 @@ def parse_datetime_field(value):
         return None
     
     if isinstance(value, datetime):
-        return ensure_timezone_aware(value)
+        # If it's a naive datetime (from MongoDB), assume it's UTC and convert to Asia/Kolkata
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+            return value.astimezone(KOLKATA_TZ)
+        return value
     
+    # Handle string values
     if isinstance(value, str):
-        # Handle simple time strings like '09:00' by returning None (invalid data)
-        if len(value) <= 5 and ':' in value:
-            print(f"Warning: Invalid datetime format '{value}' - skipping this field")
-            return None
-        
         try:
-            # Try to parse as ISO datetime
-            return ensure_timezone_aware(datetime.fromisoformat(value.replace('Z', '+00:00')))
+            parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(KOLKATA_TZ)
         except ValueError:
             try:
-                # Try alternative parsing
-                return ensure_timezone_aware(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
+                parsed = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f")
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                return parsed.astimezone(KOLKATA_TZ)
             except ValueError:
-                print(f"Warning: Could not parse datetime '{value}' - setting to None")
-                return None
+                try:
+                    parsed = datetime.fromisoformat(value)
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    return parsed.astimezone(KOLKATA_TZ)
+                except ValueError:
+                    return None
     
     return None
 
@@ -106,8 +119,8 @@ class Attendance(BaseModel):
     is_complete: bool = False
     work_hours: Optional[float] = None
     status: str = "present"  # "present", "absent", "leave"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(IST))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(IST))
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     @field_validator('check_in', 'check_out', mode='before')
     @classmethod
@@ -118,8 +131,8 @@ class Attendance(BaseModel):
     @classmethod
     def validate_timestamp_fields(cls, v):
         if v is None:
-            return datetime.now(IST)
-        return parse_datetime_field(v) or datetime.now(IST)
+            return get_kolkata_now()
+        return parse_datetime_field(v) or get_kolkata_now()
     
     model_config = {
         "populate_by_name": True,
@@ -158,8 +171,8 @@ class AttendanceResponse(BaseModel):
     @classmethod
     def validate_timestamp_fields(cls, v):
         if v is None:
-            return datetime.now(IST)
-        return parse_datetime_field(v) or datetime.now(IST)
+            return get_kolkata_now()
+        return parse_datetime_field(v) or get_kolkata_now()
     
     model_config = {
         "populate_by_name": True,
@@ -204,8 +217,8 @@ class DatabaseAttendance:
         # Ensure date is properly formatted string
         attendance_date = check_in_data.date
         if not attendance_date:
-            # Use IST timezone for date
-            attendance_date = datetime.now(IST).date().isoformat()
+            # Use current timezone for date
+            attendance_date = get_kolkata_now().date().isoformat()
         
         # Check if already checked in
         existing_attendance = attendance_collection.find_one({
@@ -217,8 +230,8 @@ class DatabaseAttendance:
             if existing_attendance.get("check_in"):
                 raise ValueError("Already checked in for today")
             
-            # Update existing record with IST timezone
-            now = datetime.now(IST)
+            # Update existing record
+            now = get_kolkata_now()
             update_data = {
                 "check_in": now,
                 "check_in_location": check_in_data.check_in_location,
@@ -226,7 +239,7 @@ class DatabaseAttendance:
                 "updated_at": now
             }
             
-            # Check if late (after 10 AM IST)
+            # Check if late (after 10 AM)
             if now.hour > 10 or (now.hour == 10 and now.minute > 0):
                 update_data["is_late"] = True
             
@@ -238,8 +251,8 @@ class DatabaseAttendance:
             updated_attendance = attendance_collection.find_one({"_id": existing_attendance["_id"]})
             return Attendance(**updated_attendance)
         
-        # Create new attendance record with IST timezone
-        now = datetime.now(IST)
+        # Create new attendance record
+        now = get_kolkata_now()
         new_attendance = {
             "user_id": user_id,
             "date": attendance_date,
@@ -263,8 +276,8 @@ class DatabaseAttendance:
         # Ensure user_id is string
         user_id = str(user_id)
         
-        # Get today's date in ISO format with IST timezone
-        today = datetime.now(IST).date().isoformat()
+        # Get today's date in ISO format
+        today = get_kolkata_now().date().isoformat()
         
         # Find attendance record for today
         attendance = attendance_collection.find_one({
@@ -281,10 +294,15 @@ class DatabaseAttendance:
         if attendance.get("check_out"):
             raise ValueError("Already checked out for today")
         
-        # Calculate work hours - ensure check_in_time is timezone-aware
-        now = datetime.now(IST)
-        check_in_time = ensure_timezone_aware(attendance["check_in"])
-        # Ensure both times are in the same timezone for calculation
+        # Calculate work hours
+        now = get_kolkata_now()
+        check_in_time = attendance["check_in"]
+        
+        # Convert check_in_time to timezone-aware if it's naive (from MongoDB)
+        if check_in_time.tzinfo is None:
+            check_in_time = check_in_time.replace(tzinfo=timezone.utc).astimezone(KOLKATA_TZ)
+        
+        # Calculate work duration
         work_hours = (now - check_in_time).total_seconds() / 3600
         work_hours = round(work_hours, 2)
         
@@ -366,8 +384,8 @@ class DatabaseAttendance:
         existing_user_ids = [record["user_id"] for record in attendance_records]
         missing_user_ids = [id for id in team_ids if id not in existing_user_ids]
         
-        # Use IST timezone for current time
-        now = datetime.now(IST)
+        # Use current time
+        now = get_kolkata_now()
         for user_id in missing_user_ids:
             absent_record = {
                 "_id": ObjectId(),
@@ -407,8 +425,8 @@ class DatabaseAttendance:
         work_hours = [r.work_hours for r in attendance_records if r.work_hours is not None]
         avg_work_hours = sum(work_hours) / len(work_hours) if work_hours else 0
         
-        # Current date and user with IST timezone
-        current_date = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
+        # Current date and user
+        current_date = get_kolkata_now().strftime("%Y-%m-%d %H:%M:%S")
         current_user = "soherunot"
         
         return {
@@ -501,7 +519,7 @@ class DatabaseAttendance:
                         update_fields[key] = value
             
             # Add updated timestamp
-            update_fields['updated_at'] = datetime.now(IST)
+            update_fields['updated_at'] = get_kolkata_now()
             
             print(f"Updating attendance {attendance_id} with: {update_fields}")
             

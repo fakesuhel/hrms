@@ -3,6 +3,14 @@ from bson import ObjectId
 from typing import Optional
 from pydantic import BaseModel, Field
 from app.database import db
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 # Create the salary_slips collection
 salary_slips_collection = db["salary_slips"]
@@ -79,7 +87,7 @@ class DatabaseSalarySlips:
             {
                 "$set": {
                     "status": "paid",
-                    "pay_date": datetime.now(),
+                    "pay_date": get_kolkata_now(),
                     "paid_by": user_id
                 }
             }

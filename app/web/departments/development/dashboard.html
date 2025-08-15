@@ -2269,7 +2269,7 @@
                 if (isCheckedOut) {
                     workHours = formatWorkHours(new Date(today.check_in), new Date(today.check_out));
                 } else {
-                    workHours = formatWorkHours(new Date(today.check_in), new Date("2025-06-13 20:39:37"));
+                    workHours = formatWorkHours(new Date(today.check_in), new Date());
                 }
             }
             
@@ -3108,6 +3108,10 @@
                     
                     displayAttendance(attendanceData, containerId);
                     showToast('Successfully checked in');
+                    
+                    // Trigger storage event to notify other tabs/pages about attendance change
+                    localStorage.setItem('attendance_updated', Date.now().toString());
+                    setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
                 }
             } catch (error) {
                 console.error('Error checking in:', error);
@@ -3165,6 +3169,10 @@
                     
                     displayAttendance(attendanceData, containerId);
                     showToast('Successfully checked out');
+                    
+                    // Trigger storage event to notify other tabs/pages about attendance change
+                    localStorage.setItem('attendance_updated', Date.now().toString());
+                    setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
                 }
             } catch (error) {
                 console.error('Error checking out:', error);
@@ -3232,7 +3240,7 @@
         }
         
         function formatDateRelative(date) {
-            const now = new Date("2025-06-13 20:39:37");  // Use the provided timestamp
+            const now = new Date();  // Use current time instead of hardcoded date
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -3301,6 +3309,16 @@
             
             console.log("Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-06-13 20:50:06");
             console.log("Current User's Login: soheru");
+            
+            // Listen for attendance updates from other tabs/pages
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'attendance_updated') {
+                    // Refresh attendance data when notified of changes
+                    setTimeout(() => {
+                        loadUserData();
+                    }, 500);
+                }
+            });
         });
     </script>
 </body>

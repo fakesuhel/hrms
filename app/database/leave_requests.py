@@ -5,6 +5,14 @@ from bson import ObjectId
 from pymongo.collection import Collection
 from app.database import leave_requests_collection
 from app.utils.helpers import PyObjectId
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class LeaveRequestBase(BaseModel):
     user_id: PyObjectId
@@ -35,8 +43,8 @@ class LeaveRequestInDB(LeaveRequestBase):
     status: str = "pending"  # pending, approved, rejected, cancelled
     approver_id: Optional[PyObjectId] = None
     approver_comments: Optional[str] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     approved_at: Optional[datetime] = None
     duration_days: int = 1
     
@@ -109,8 +117,8 @@ class DatabaseLeaveRequests:
         leave_in_db = LeaveRequestInDB(
             **leave_data.dict(),
             duration_days=duration,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=get_kolkata_now(),
+            updated_at=get_kolkata_now()
         )
         
         result = cls.collection.insert_one(leave_in_db.dict(by_alias=True))
@@ -138,7 +146,7 @@ class DatabaseLeaveRequests:
                 end_date = update_data.get("end_date", leave.end_date)
                 update_data["duration_days"] = (end_date - start_date).days + 1
         
-        update_data["updated_at"] = datetime.now()
+        update_data["updated_at"] = get_kolkata_now()
         
         result = cls.collection.update_one(
             {"_id": ObjectId(leave_id)},
@@ -156,11 +164,11 @@ class DatabaseLeaveRequests:
             "status": approval_data.status,
             "approver_id": approval_data.approver_id,
             "approver_comments": approval_data.approver_comments,
-            "updated_at": datetime.now()
+            "updated_at": get_kolkata_now()
         }
         
         if approval_data.status == "approved":
-            update_data["approved_at"] = datetime.now()
+            update_data["approved_at"] = get_kolkata_now()
         
         result = cls.collection.update_one(
             {"_id": ObjectId(leave_id)},
@@ -178,7 +186,7 @@ class DatabaseLeaveRequests:
             {"_id": ObjectId(leave_id), "status": "pending"},
             {"$set": {
                 "status": "cancelled", 
-                "updated_at": datetime.now()
+                "updated_at": get_kolkata_now()
             }}
         )
         return result.modified_count > 0
@@ -257,7 +265,7 @@ class DatabaseLeaveRequests:
         return {
             "balances": balances,
             "total_available": sum(balances.values()),
-            "last_updated": datetime.now()
+            "last_updated": get_kolkata_now()
         }
         
     @staticmethod

@@ -5,11 +5,19 @@ from bson import ObjectId
 from pymongo.collection import Collection
 from app.database import teams_collection
 from app.utils.helpers import PyObjectId
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class TeamMember(BaseModel):
     user_id: PyObjectId
     role: str  # team_lead, developer, designer, etc.
-    joined_at: datetime = Field(default_factory=lambda: datetime.now())
+    joined_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         arbitrary_types_allowed = True
@@ -38,8 +46,8 @@ class TeamInDB(TeamBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     lead_id: PyObjectId
     members: List[TeamMember] = []
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         arbitrary_types_allowed = True
@@ -110,8 +118,8 @@ class DatabaseTeams:
         """Create a new team"""
         team_in_db = TeamInDB(
             **team_data.dict(),
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=get_kolkata_now(),
+            updated_at=get_kolkata_now()
         )
         
         result = cls.collection.insert_one(team_in_db.dict(by_alias=True))
@@ -138,7 +146,7 @@ class DatabaseTeams:
     async def update_team(cls, team_id: str, team_data: TeamUpdate) -> Optional[TeamInDB]:
         """Update a team's information"""
         update_data = {k: v for k, v in team_data.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.now()
+        update_data["updated_at"] = get_kolkata_now()
         
         result = cls.collection.update_one(
             {"_id": ObjectId(team_id)},
@@ -166,7 +174,7 @@ class DatabaseTeams:
             {"_id": ObjectId(team_id)},
             {
                 "$push": {"members": member_dict},
-                "$set": {"updated_at": datetime.now()}
+                "$set": {"updated_at": get_kolkata_now()}
             }
         )
         return result.modified_count > 0
@@ -178,7 +186,7 @@ class DatabaseTeams:
             {"_id": ObjectId(team_id)},
             {
                 "$pull": {"members": {"user_id": ObjectId(user_id)}},
-                "$set": {"updated_at": datetime.now()}
+                "$set": {"updated_at": get_kolkata_now()}
             }
         )
         return result.modified_count > 0

@@ -1356,7 +1356,7 @@ function showProjectManagementPage() {
         async function loadTodayStatus() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const today = formatDateInput(new Date());
+                const today = new Date().toISOString().split('T')[0]; // Use same format as dashboard
                 
                 const response = await fetch(`/attendance/history?start_date=${today}&end_date=${today}`, {
                     headers: {
@@ -1511,8 +1511,8 @@ function showProjectManagementPage() {
         async function loadAttendanceRecords(startDate, endDate) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const start = formatDateInput(startDate);
-                const end = formatDateInput(endDate);
+                const start = startDate.toISOString().split('T')[0]; // Use same format as dashboard
+                const end = endDate.toISOString().split('T')[0]; // Use same format as dashboard
                 
                 const response = await fetch(`/attendance/history?start_date=${start}&end_date=${end}`, {
                     headers: {
@@ -2045,6 +2045,10 @@ function showProjectManagementPage() {
                 // Update UI
                 await loadTodayStatus();
                 
+                // Trigger storage event to notify other tabs/pages about attendance change
+                localStorage.setItem('attendance_updated', Date.now().toString());
+                setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
+                
                 const startDateElement = document.getElementById('startDate');
                 const endDateElement = document.getElementById('endDate');
                 
@@ -2105,6 +2109,10 @@ function showProjectManagementPage() {
                 
                 // Update UI
                 await loadTodayStatus();
+                
+                // Trigger storage event to notify other tabs/pages about attendance change
+                localStorage.setItem('attendance_updated', Date.now().toString());
+                setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
                 
                 const startDateElement = document.getElementById('startDate');
                 const endDateElement = document.getElementById('endDate');
@@ -2400,6 +2408,24 @@ function showProjectManagementPage() {
         
         // Current timestamp and user info for logging
         console.log(`Attendance page loaded at ${formatISTDateTime(new Date())} by ${localStorage.getItem('username') || 'current user'}`);
+        
+        // Listen for attendance updates from other tabs/pages
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'attendance_updated') {
+                // Refresh attendance data when notified of changes
+                setTimeout(() => {
+                    loadTodayStatus();
+                    const startDateElement = document.getElementById('startDate');
+                    const endDateElement = document.getElementById('endDate');
+                    if (startDateElement && endDateElement) {
+                        loadAttendanceRecords(
+                            new Date(startDateElement.value),
+                            new Date(endDateElement.value)
+                        );
+                    }
+                }, 500);
+            }
+        });
     </script>
 </body>
 </html>

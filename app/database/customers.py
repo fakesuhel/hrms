@@ -1,20 +1,25 @@
-from datetime import datetime, date, timezone, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
 
 # Get customers collection
 customers_collection = db["customers"]
 
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -81,10 +86,10 @@ class CustomerInDB(CustomerBase):
     lead_id: Optional[str] = None
     status: str = "active"  # "active", "inactive", "potential", "churned"
     customer_value: float = 0.0  # Total business value
-    acquisition_date: datetime = Field(default_factory=get_ist_now)
+    acquisition_date: datetime = Field(default_factory=get_kolkata_now)
     last_interaction: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -115,11 +120,11 @@ class DatabaseCustomers:
     async def create_customer(cls, customer_data: CustomerCreate) -> CustomerInDB:
         """Create a new customer"""
         customer_dict = customer_data.model_dump()
-        customer_dict["created_at"] = get_ist_now()
-        customer_dict["updated_at"] = get_ist_now()
+        customer_dict["created_at"] = get_kolkata_now()
+        customer_dict["updated_at"] = get_kolkata_now()
         customer_dict["status"] = "active"
         customer_dict["customer_value"] = 0.0
-        customer_dict["acquisition_date"] = get_ist_now()
+        customer_dict["acquisition_date"] = get_kolkata_now()
         
         result = cls.collection.insert_one(customer_dict)
         customer_dict["_id"] = result.inserted_id
@@ -163,7 +168,7 @@ class DatabaseCustomers:
         """Update a customer"""
         try:
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             result = cls.collection.update_one(
                 {"_id": ObjectId(customer_id)},

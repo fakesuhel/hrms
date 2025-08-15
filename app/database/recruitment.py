@@ -4,19 +4,19 @@ from pydantic import BaseModel, Field
 from bson import ObjectId
 from app.database import db
 from pydantic_core import core_schema
+from zoneinfo import ZoneInfo
 
 # Get job_postings collection
 job_postings_collection = db["job_postings"]
 applications_collection = db["job_applications"]
 interviews_collection = db["interviews"]
 
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
 
-# IST timezone (UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_ist_now():
-    """Get current datetime in IST timezone"""
-    return datetime.now()
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -78,10 +78,10 @@ class JobPostingInDB(JobPostingBase):
     status: str = "active"  # "active", "paused", "closed", "draft"
     applications_count: int = 0
     views_count: int = 0
-    posted_date: datetime = Field(default_factory=get_ist_now)
+    posted_date: datetime = Field(default_factory=get_kolkata_now)
     closing_date: Optional[str] = None  # ISO date string
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -122,10 +122,10 @@ class JobApplicationInDB(JobApplicationBase):
     reviewer_id: Optional[str] = None
     reviewer_notes: Optional[str] = None
     rating: Optional[int] = None
-    applied_date: datetime = Field(default_factory=get_ist_now)
+    applied_date: datetime = Field(default_factory=get_kolkata_now)
     reviewed_date: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -170,8 +170,8 @@ class InterviewInDB(InterviewBase):
     feedback: Optional[str] = None
     rating: Optional[int] = None  # 1-5 rating
     attended: bool = False
-    created_at: datetime = Field(default_factory=get_ist_now)
-    updated_at: datetime = Field(default_factory=get_ist_now)
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     model_config = {
         "populate_by_name": True,
@@ -187,12 +187,12 @@ class DatabaseJobPostings:
     async def create_job_posting(cls, job_data: JobPostingCreate) -> JobPostingInDB:
         """Create a new job posting"""
         job_dict = job_data.model_dump()
-        job_dict["created_at"] = get_ist_now()
-        job_dict["updated_at"] = get_ist_now()
+        job_dict["created_at"] = get_kolkata_now()
+        job_dict["updated_at"] = get_kolkata_now()
         job_dict["status"] = "active"
         job_dict["applications_count"] = 0
         job_dict["views_count"] = 0
-        job_dict["posted_date"] = get_ist_now()
+        job_dict["posted_date"] = get_kolkata_now()
         
         result = cls.collection.insert_one(job_dict)
         job_dict["_id"] = result.inserted_id
@@ -226,7 +226,7 @@ class DatabaseJobPostings:
         """Update a job posting"""
         try:
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             result = cls.collection.update_one(
                 {"_id": ObjectId(job_id)},
@@ -258,10 +258,10 @@ class DatabaseJobApplications:
     async def create_application(cls, application_data: JobApplicationCreate) -> JobApplicationInDB:
         """Create a new job application"""
         app_dict = application_data.model_dump()
-        app_dict["created_at"] = get_ist_now()
-        app_dict["updated_at"] = get_ist_now()
+        app_dict["created_at"] = get_kolkata_now()
+        app_dict["updated_at"] = get_kolkata_now()
         app_dict["status"] = "submitted"
-        app_dict["applied_date"] = get_ist_now()
+        app_dict["applied_date"] = get_kolkata_now()
         
         result = cls.collection.insert_one(app_dict)
         app_dict["_id"] = result.inserted_id
@@ -303,10 +303,10 @@ class DatabaseJobApplications:
         """Update a job application"""
         try:
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             if update_data.status:
-                update_dict["reviewed_date"] = get_ist_now()
+                update_dict["reviewed_date"] = get_kolkata_now()
             
             result = cls.collection.update_one(
                 {"_id": ObjectId(application_id)},
@@ -328,8 +328,8 @@ class DatabaseInterviews:
     async def schedule_interview(cls, interview_data: InterviewCreate) -> InterviewInDB:
         """Schedule a new interview"""
         interview_dict = interview_data.model_dump()
-        interview_dict["created_at"] = get_ist_now()
-        interview_dict["updated_at"] = get_ist_now()
+        interview_dict["created_at"] = get_kolkata_now()
+        interview_dict["updated_at"] = get_kolkata_now()
         interview_dict["status"] = "scheduled"
         interview_dict["attended"] = False
         
@@ -361,7 +361,7 @@ class DatabaseInterviews:
         """Update an interview"""
         try:
             update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-            update_dict["updated_at"] = get_ist_now()
+            update_dict["updated_at"] = get_kolkata_now()
             
             result = cls.collection.update_one(
                 {"_id": ObjectId(interview_id)},

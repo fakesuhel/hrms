@@ -5,6 +5,14 @@ from bson import ObjectId
 from pymongo.collection import Collection
 from app.database import daily_reports_collection
 from app.utils.helpers import PyObjectId
+from zoneinfo import ZoneInfo
+
+# Asia/Kolkata timezone
+KOLKATA_TZ = ZoneInfo('Asia/Kolkata')
+
+def get_kolkata_now():
+    """Get current datetime in Asia/Kolkata timezone"""
+    return datetime.now(KOLKATA_TZ)
 
 class TaskItem(BaseModel):
     title: str
@@ -45,8 +53,8 @@ class ReportCreate(ReportBase):
 class ReportInDB(ReportBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     project_id: Optional[PyObjectId] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    updated_at: datetime = Field(default_factory=lambda: datetime.now())
+    created_at: datetime = Field(default_factory=get_kolkata_now)
+    updated_at: datetime = Field(default_factory=get_kolkata_now)
     
     class Config:
         arbitrary_types_allowed = True
@@ -146,8 +154,8 @@ class DatabaseDailyReports:
         # Create the database model
         report_in_db = ReportInDB(
             **report_dict,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=get_kolkata_now(),
+            updated_at=get_kolkata_now()
         )
         
         # Convert to dict for MongoDB and insert
@@ -185,7 +193,7 @@ class DatabaseDailyReports:
     async def update_report(cls, report_id: str, report_data: ReportUpdate) -> Optional[ReportInDB]:
         """Update a report"""
         update_data = {k: v for k, v in report_data.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.now()
+        update_data["updated_at"] = get_kolkata_now()
         
         result = cls.collection.update_one(
             {"_id": ObjectId(report_id)},

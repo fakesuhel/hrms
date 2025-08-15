@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.database.attendance import AttendanceCheckIn, AttendanceCheckOut, AttendanceResponse, DatabaseAttendance
 from app.utils.auth import get_current_user
-from app.utils.helpers import get_ist_now, get_ist_date_today, get_ist_date_iso, IST
+from app.utils.helpers import get_ist_now, get_ist_date_today, get_ist_date_iso
 
 import logging
 # Configure logging
