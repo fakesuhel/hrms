@@ -24,17 +24,16 @@ async def login_page(request: Request, current_user: UserInDB = Depends(get_curr
     if current_user:
         # User is already logged in, redirect based on department and role
         department = getattr(current_user, 'department', '').lower()
-        role = getattr(current_user, 'role', '').lower()
         
         if department == 'sales':
             return RedirectResponse(url="/app/sales/dashboard")
-        elif department == 'management' and role in ['hr', 'admin', 'director']:
+        elif department == 'human resources' or department == 'hr':
             return RedirectResponse(url="/app/hr/dashboard")
         elif department == 'development':
             return RedirectResponse(url="/app/it/dashboard")
         else:
             # Default redirect
-            return RedirectResponse(url="/app/sales/dashboard")
+            return RedirectResponse(url="/app/dashboard")
     
     return templates.TemplateResponse("login.html", {"request": request})
 

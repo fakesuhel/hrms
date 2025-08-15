@@ -1000,7 +1000,7 @@
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 // Try to get current user from API
-                const response = await fetch('/current-user', {
+                const response = await fetch('/users/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
