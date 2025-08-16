@@ -43,7 +43,7 @@ async def create_performance_review(
     current_user = Depends(get_current_user)
 ):
     # Verify user has permission to create reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'sales_manager', 'hr_manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to create performance reviews"
@@ -98,7 +98,7 @@ async def get_eligible_users_for_review(
 ):
     """Get all users that the current user can create performance reviews for"""
     # Verify user has permission to create reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'sales_manager', 'hr_manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to conduct performance reviews"
@@ -146,7 +146,12 @@ async def get_eligible_users_for_review(
 @router.get("/", response_model=List[PerformanceReviewResponse])
 async def get_my_performance_reviews(current_user = Depends(get_current_user)):
     """Get all performance reviews for the current user"""
-    reviews = await DatabasePerformanceReviews.get_user_reviews(str(current_user.id))
+    # For managers, show all reviews they can access
+    if current_user.role in ['dev_manager', 'sales_manager', 'hr_manager', 'admin', 'director']:
+        reviews = await DatabasePerformanceReviews.get_all_reviews_for_manager(current_user.role)
+    else:
+        # For regular users, show only their own reviews
+        reviews = await DatabasePerformanceReviews.get_user_reviews(str(current_user.id))
     
     response_reviews = []
     for review in reviews:
@@ -162,7 +167,7 @@ async def get_reviews_conducted(
 ):
     """Get all reviews conducted by the current user"""
     # Verify user can conduct reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'sales_manager', 'hr_manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to conduct performance reviews"
@@ -184,7 +189,7 @@ async def get_team_reviews(
 ):
     """Get all reviews for a team in a specific period"""
     # Verify user has permission to view team reviews
-    if current_user.role not in ['team_lead', 'manager', 'admin', 'director']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'sales_manager', 'hr_manager', 'admin', 'director']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view team reviews"
@@ -239,7 +244,7 @@ async def get_review_by_id(
         )
     
     # Check if user has permission to view this review
-    if str(review.user_id) != str(current_user.id) and str(review.reviewer_id) != str(current_user.id) and current_user.role not in ['admin']:
+    if str(review.user_id) != str(current_user.id) and str(review.reviewer_id) != str(current_user.id) and current_user.role not in ['admin', 'dev_manager', 'sales_manager', 'hr_manager']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this review"
@@ -255,32 +260,49 @@ async def update_review(
     current_user = Depends(get_current_user)
 ):
     """Update a performance review"""
-    # Check if review exists
-    review = await DatabasePerformanceReviews.get_review_by_id(review_id)
-    if not review:
+    try:
+        # Check if review exists
+        review = await DatabasePerformanceReviews.get_review_by_id(review_id)
+        if not review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review not found"
+            )
+        
+        # Verify user is the reviewer
+        if str(review.reviewer_id) != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the reviewer can update the review"
+            )
+        
+        # Only allow updates to non-completed reviews
+        if review.status == "completed" and review_data.status != "completed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot update completed reviews"
+            )
+        
+        updated_review = await DatabasePerformanceReviews.update_review(review_id, review_data)
+        
+        if not updated_review:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update review"
+            )
+        
+        response_data = convert_review_to_response(updated_review)
+        return PerformanceReviewResponse(**response_data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in update_review route: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Review not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
         )
-    
-    # Verify user is the reviewer
-    if str(review.reviewer_id) != str(current_user.id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the reviewer can update the review"
-        )
-    
-    # Only allow updates to non-completed reviews
-    if review.status == "completed" and review_data.status != "completed":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot update completed reviews"
-        )
-    
-    updated_review = await DatabasePerformanceReviews.update_review(review_id, review_data)
-    
-    response_data = convert_review_to_response(updated_review)
-    return PerformanceReviewResponse(**response_data)
 
 @router.post("/{review_id}/acknowledge", response_model=PerformanceReviewResponse)
 async def acknowledge_review(

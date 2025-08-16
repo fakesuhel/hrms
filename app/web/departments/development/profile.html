@@ -311,6 +311,34 @@
             background-color: var(--bg-light);
         }
         
+        .form-input.restricted-field {
+            background-color: #f3f4f6 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        
+        .form-input.restricted-field:hover {
+            background-color: #f3f4f6 !important;
+        }
+        
+        .card.restricted-section {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .card.restricted-section::after {
+            content: '🔒 Manager Only';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
         /* Button Styles */
         .btn {
             padding: 0.75rem 1.5rem;
@@ -895,9 +923,7 @@
                                     </select>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-
+                            
                     <!-- Address Information Section -->
                     <div class="card">
                         <div class="card-header">
@@ -940,7 +966,7 @@
                     </div>
 
                     <!-- Financial Details Section -->
-                    <div class="card">
+                    <div class="card" id="financialDetailsCard">
                         <div class="card-header">
                             <h2 class="card-title">Financial Details</h2>
                         </div>
@@ -980,7 +1006,7 @@
                     </div>
 
                     <!-- Employment Information Section -->
-                    <div class="card">
+                    <div class="card" id="employmentInfoCard">
                         <div class="card-header">
                             <h2 class="card-title">Employment Information</h2>
                         </div>
@@ -1013,18 +1039,16 @@
                                 <input type="date" class="form-input" id="joinDate" readonly>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Manager/Reporting To</label>
-                                <input type="text" class="form-input" id="reportingTo" name="reportingTo" readonly>
+                                <!-- Empty slot -->
                             </div>
                         </div>
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Performance Incentives</label>
-                                <input type="text" class="form-input" id="performanceIncentives" name="performanceIncentives" readonly>
+                                <!-- Empty slot -->
                             </div>
                             <div class="form-group">
-                                <!-- Empty slot for future fields -->
+                                <!-- Empty slot -->
                             </div>
                         </div>
                     </div>
@@ -1203,7 +1227,7 @@
                 
                 <!-- Salary Information Tab -->
                 <div class="tab-content" id="salary-tab">
-                    <div class="card">
+                    <div class="card" id="salaryInfoCard">
                         <div class="card-header">
                             <h2 class="card-title">Current Salary Information</h2>
                         </div>
@@ -1642,20 +1666,110 @@
         }
         
         function enableProfileEdit(enable) {
-            const inputs = document.querySelectorAll('#profileForm input:not(#employeeId), #profileForm select:not(#employeeId)');
             const editBtn = document.getElementById('editProfileBtn');
             const editActions = document.getElementById('editActions');
+            const userRole = window.currentUserRole || '';
             
-            inputs.forEach(input => {
-                if (input.tagName === 'SELECT') {
-                    input.disabled = !enable;
+            // Define manager roles that can edit all fields
+            const managerRoles = ['admin', 'director', 'manager', 'dev_manager', 'sales_manager', 'hr_manager'];
+            const isManager = managerRoles.includes(userRole);
+            
+            if (enable) {
+                if (isManager) {
+                    // Managers can edit ALL fields
+                    const allInputs = document.querySelectorAll('#profileForm input:not(#employeeId), #profileForm select:not(#employeeId)');
+                    allInputs.forEach(input => {
+                        if (input.tagName === 'SELECT') {
+                            input.disabled = false;
+                        } else {
+                            input.readOnly = false;
+                        }
+                        input.classList.remove('restricted-field');
+                    });
+                    
+                    // Remove restricted section styling
+                    const restrictedSections = document.querySelectorAll('.card.restricted-section');
+                    restrictedSections.forEach(section => {
+                        section.classList.remove('restricted-section');
+                    });
+                    
+                    showToast('Full profile editing enabled (Manager permissions)', 'success');
                 } else {
-                    input.readOnly = !enable;
+                    // Regular users can only edit Personal Information and Address Information
+                    const editableInputs = document.querySelectorAll(`
+                        #fullName, #email, #phoneNumber, #dateOfBirth, #gender,
+                        #address, #pincode, #city, #state, #country
+                    `);
+                    
+                    editableInputs.forEach(input => {
+                        if (input.tagName === 'SELECT') {
+                            input.disabled = false;
+                        } else {
+                            input.readOnly = false;
+                        }
+                        input.classList.remove('restricted-field');
+                    });
+                    
+                    // Explicitly disable Financial Details and Employment Details for regular users
+                    const restrictedInputs = document.querySelectorAll(`
+                        #bankName, #accountNumber, #ifscCode, #panNumber, #aadharNumber, #uanNumber,
+                        #department, #designation, #position, #employmentType, #joinDate, 
+                        #baseSalary, #netSalary, #hra, #allowances, #incentives,
+                        #pfDeduction, #taxDeduction, #penaltyDeductions
+                    `);
+                    
+                    restrictedInputs.forEach(input => {
+                        if (input.tagName === 'SELECT') {
+                            input.disabled = true;
+                        } else {
+                            input.readOnly = true;
+                        }
+                        input.classList.add('restricted-field');
+                    });
+                    
+                    // Add visual indicators to restricted sections
+                    const financialSection = document.getElementById('financialDetailsCard');
+                    const employmentSection = document.getElementById('employmentInfoCard');
+                    const salarySection = document.getElementById('salaryInfoCard');
+                    
+                    if (financialSection) {
+                        financialSection.classList.add('restricted-section');
+                    }
+                    if (employmentSection) {
+                        employmentSection.classList.add('restricted-section');
+                    }
+                    if (salarySection) {
+                        salarySection.classList.add('restricted-section');
+                    }
+                    
+                    showToast('Limited editing enabled - Personal & Address information only', 'info');
                 }
-            });
+            } else {
+                // Disable all fields when not in edit mode
+                const allInputs = document.querySelectorAll('#profileForm input:not(#employeeId), #profileForm select:not(#employeeId)');
+                allInputs.forEach(input => {
+                    if (input.tagName === 'SELECT') {
+                        input.disabled = true;
+                    } else {
+                        input.readOnly = true;
+                    }
+                    input.classList.remove('restricted-field');
+                });
+                
+                // Remove all restricted section styling
+                const restrictedSections = document.querySelectorAll('.card.restricted-section');
+                restrictedSections.forEach(section => {
+                    section.classList.remove('restricted-section');
+                });
+            }
             
             editBtn.style.display = enable ? 'none' : 'block';
             editActions.style.display = enable ? 'block' : 'none';
+            
+            // If enabling edit mode, setup the pincode listener for address auto-fill
+            if (enable) {
+                setupPincodeListener();
+            }
         }
         
         // Postal Code API Integration
@@ -1906,12 +2020,6 @@
             const joinDateEl = document.getElementById('joinDate');
             if (joinDateEl) joinDateEl.value = data.join_date || '';
             
-            const reportingToEl = document.getElementById('reportingTo');
-            if (reportingToEl) reportingToEl.value = data.reporting_to || '';
-            
-            const performanceIncentivesEl = document.getElementById('performanceIncentives');
-            if (performanceIncentivesEl) performanceIncentivesEl.value = data.performance_incentives || '';
-            
             // Salary information
             const baseSalaryEl = document.getElementById('baseSalary');
             if (baseSalaryEl) baseSalaryEl.value = data.base_salary ? `₹${data.base_salary}` : '';
@@ -1963,8 +2071,6 @@
                     position: document.getElementById('position').value,
                     employment_type: document.getElementById('employmentType').value,
                     join_date: document.getElementById('joinDate').value,
-                    reporting_to: document.getElementById('reportingTo').value,
-                    performance_incentives: document.getElementById('performanceIncentives').value,
                     base_salary: document.getElementById('baseSalary').value.replace('₹', '').replace(/,/g, ''),
                     net_salary: document.getElementById('netSalary').value.replace('₹', '').replace(/,/g, '')
                 };

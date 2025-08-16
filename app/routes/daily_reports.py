@@ -64,7 +64,7 @@ async def get_today_report(current_user = Depends(get_current_user)):
 async def get_team_reports(current_user = Depends(get_current_user)):
     """Get today's daily reports for team members"""
     # Verify user has permission to view team reports
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'admin']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view team reports"
@@ -101,7 +101,7 @@ async def get_report_by_id(report_id: str, current_user = Depends(get_current_us
         )
     
     # Ensure user has permission to view this report
-    if str(report.user_id) != str(current_user.id) and current_user.role not in ['team_lead', 'manager', 'admin']:
+    if str(report.user_id) != str(current_user.id) and current_user.role not in ['team_lead', 'manager', 'dev_manager', 'admin']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this report"
@@ -145,7 +145,7 @@ async def get_user_reports(
 @router.get("/team/today", response_model=List[ReportResponse])
 async def get_team_today_reports(current_user = Depends(get_current_user)):
     # Verify user has permission to view team reports
-    if current_user.role not in ['team_lead', 'manager', 'admin']:
+    if current_user.role not in ['team_lead', 'manager', 'dev_manager', 'admin']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view team reports"

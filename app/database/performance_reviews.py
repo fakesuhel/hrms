@@ -117,6 +117,8 @@ class PerformanceReviewInDB(PerformanceReviewBase):
         }
 
 class PerformanceReviewUpdate(BaseModel):
+    review_period: Optional[str] = None
+    review_type: Optional[str] = None
     ratings: Optional[List[PerformanceRating]] = None
     strengths: Optional[List[str]] = None
     areas_for_improvement: Optional[List[str]] = None
@@ -244,39 +246,97 @@ class DatabasePerformanceReviews:
     
     @classmethod
     async def update_review(cls, review_id: str, review_data: PerformanceReviewUpdate) -> Optional[PerformanceReviewInDB]:
-        """Update a review's information with upsert logic for missing fields"""
-        # Create update operations
-        update_data = {k: v for k, v in review_data.dict().items() if v is not None}
-        update_data["updated_at"] = get_kolkata_now()
-        
-        # If status is being updated to completed, add completed_at timestamp
-        if update_data.get("status") == "completed":
-            update_data["completed_at"] = get_kolkata_now()
-        
-        # Use $set for existing fields and $setOnInsert for default values if document doesn't exist
-        set_data = update_data.copy()
-        set_on_insert = {
-            "ratings": [],
-            "strengths": [],
-            "areas_for_improvement": [],
-            "goals_for_next_period": [],
-            "status": "draft",
-            "acknowledged_by_user": False,
-            "created_at": get_kolkata_now()
-        }
-        
-        result = cls.collection.update_one(
-            {"_id": ObjectId(review_id)},
-            {
-                "$set": set_data,
-                "$setOnInsert": set_on_insert
-            },
-            upsert=False  # Don't create new document, just update existing
-        )
-        
-        if result.matched_count > 0:  # Check if document was found and potentially modified
-            return await cls.get_review_by_id(review_id)
-        return None
+        """Update a review's information"""
+        try:
+            # Convert ObjectId if review_id is invalid
+            try:
+                review_object_id = ObjectId(review_id)
+            except Exception as e:
+                print(f"Invalid ObjectId: {review_id}, error: {e}")
+                return None
+            
+            # Create simple update data - only include fields that have values
+            update_data = {}
+            
+            # Handle review_period and review_type first
+            if review_data.review_period is not None:
+                update_data["review_period"] = review_data.review_period
+            
+            if review_data.review_type is not None:
+                update_data["review_type"] = review_data.review_type
+            
+            # Handle each field individually to avoid conflicts
+            if review_data.ratings is not None:
+                print(f"Processing ratings: {review_data.ratings}")
+                try:
+                    # Handle rating serialization more carefully
+                    if isinstance(review_data.ratings, list):
+                        processed_ratings = []
+                        for rating in review_data.ratings:
+                            if hasattr(rating, 'dict'):
+                                processed_ratings.append(rating.dict())
+                            elif hasattr(rating, 'model_dump'):
+                                processed_ratings.append(rating.model_dump())
+                            elif isinstance(rating, dict):
+                                processed_ratings.append(rating)
+                            else:
+                                processed_ratings.append(rating)
+                        update_data["ratings"] = processed_ratings
+                    else:
+                        update_data["ratings"] = review_data.ratings
+                    print(f"Processed ratings: {update_data['ratings']}")
+                except Exception as e:
+                    print(f"Error processing ratings: {e}")
+                    # Fall back to simple assignment
+                    update_data["ratings"] = review_data.ratings
+            
+            if review_data.strengths is not None:
+                update_data["strengths"] = review_data.strengths
+            
+            if review_data.areas_for_improvement is not None:
+                update_data["areas_for_improvement"] = review_data.areas_for_improvement
+            
+            if review_data.overall_comments is not None:
+                update_data["overall_comments"] = review_data.overall_comments
+            
+            if review_data.overall_rating is not None:
+                update_data["overall_rating"] = review_data.overall_rating
+            
+            if review_data.goals_for_next_period is not None:
+                update_data["goals_for_next_period"] = review_data.goals_for_next_period
+            
+            if review_data.status is not None:
+                update_data["status"] = review_data.status
+                # If status is being updated to completed, add completed_at timestamp
+                if review_data.status == "completed":
+                    update_data["completed_at"] = get_kolkata_now()
+            
+            # Always update the timestamp
+            update_data["updated_at"] = get_kolkata_now()
+            
+            print(f"About to update review {review_id} with data: {update_data}")
+            
+            # Simple update operation with only $set
+            result = cls.collection.update_one(
+                {"_id": review_object_id},
+                {"$set": update_data}
+            )
+            
+            print(f"Update result - matched: {result.matched_count}, modified: {result.modified_count}")
+            
+            if result.matched_count > 0:  # Check if document was found and potentially modified
+                updated_review = await cls.get_review_by_id(review_id)
+                print(f"Retrieved updated review: {updated_review.id if updated_review else 'None'}")
+                return updated_review
+            else:
+                print(f"No document matched for review_id: {review_id}")
+            return None
+            
+        except Exception as e:
+            print(f"Error in update_review: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
     
     @classmethod
     async def acknowledge_review(cls, review_id: str, acknowledgement: UserAcknowledgement) -> Optional[PerformanceReviewInDB]:
@@ -379,3 +439,53 @@ class DatabasePerformanceReviews:
             "last_review_date": reviews[0].completed_at if reviews else None,
             "last_period": reviews[0].review_period if reviews else None
         }
+    
+    @classmethod
+    async def get_all_reviews_for_manager(cls, user_role: str, status: Optional[str] = None) -> List[PerformanceReviewInDB]:
+        """Get all reviews that a manager can see based on their role"""
+        from app.database.users import DatabaseUsers  # Import here to avoid circular imports
+        
+        # Build query
+        query = {}
+        
+        # Add status filter if provided
+        if status:
+            query["status"] = status
+        
+        # For dev_manager, sales_manager, hr_manager - they can see all reviews in their department
+        if user_role in ['dev_manager', 'sales_manager', 'hr_manager']:
+            # Get users from their department
+            department_map = {
+                'dev_manager': 'development',
+                'sales_manager': 'sales', 
+                'hr_manager': 'hr'
+            }
+            department = department_map.get(user_role)
+            
+            if department:
+                # Get users from the specific department
+                users_in_dept = await DatabaseUsers.get_users_by_department(department)
+                user_ids = [str(user.id) for user in users_in_dept]
+                
+                # Include reviews for users in their department
+                query["$or"] = [
+                    {"user_id": {"$in": user_ids}},  # Reviews for users in their department
+                    {"reviewer_id": {"$in": user_ids}}  # Reviews conducted by users in their department
+                ]
+        
+        # Admin and director can see all reviews
+        elif user_role in ['admin', 'director']:
+            # No additional filters for admin/director
+            pass
+        else:
+            # Regular users only see their own reviews
+            return []
+        
+        reviews = list(cls.collection.find(query).sort([("created_at", -1)]))
+        
+        result = []
+        for review_data in reviews:
+            if review_data:
+                review_data = cls._convert_dates_from_db(review_data)
+                result.append(PerformanceReviewInDB(**review_data))
+        return result

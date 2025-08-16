@@ -1320,7 +1320,7 @@ async function loadUserData() {
         
         // Show/hide team reports tab based on role
         const teamReportsTab = document.getElementById('teamReportsTab');
-        if (!['team_lead', 'manager', 'admin'].includes(userData.role)) {
+        if (!['team_lead', 'manager', 'dev_manager', 'admin'].includes(userData.role)) {
             teamReportsTab.style.display = 'none';
         }
         

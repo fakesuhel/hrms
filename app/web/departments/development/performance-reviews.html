@@ -597,6 +597,17 @@
             border-color: var(--primary-light);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
+        
+        .form-control[readonly] {
+            background-color: var(--bg-light);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+        
+        .form-control[readonly]:focus {
+            border-color: var(--border-color);
+            box-shadow: none;
+        }
 
         /* Modal Styles */
         .modal {
@@ -829,8 +840,9 @@
                 
                 <!-- Tabs -->
                 <div class="tabs" id="reviewTabs">
-                    <div class="tab active" data-tab="myReviews">My Reviews</div>
+                    <div class="tab active" data-tab="myReviews" id="myReviewsTab">My Reviews</div>
                     <div class="tab" data-tab="conductingReviews" id="conductingReviewsTab" style="display: none;">Team Reviews</div>
+                    <div class="tab" data-tab="allReviews" id="allReviewsTab" style="display: none;">All Reviews</div>
                 </div>
                 
                 <!-- My Reviews Tab -->
@@ -907,6 +919,50 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- All Reviews Tab (for dev_manager) -->
+                <div class="tab-content" id="allReviews">
+                    <div id="allReviewsLoading">
+                        <div class="skeleton-loading" style="height: 300px;"></div>
+                    </div>
+                    
+                    <div id="allReviewsList" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div class="form-group" style="max-width: 300px;">
+                                <label class="form-label">Filter by Status</label>
+                                <select class="form-control" id="allReviewsStatusFilter">
+                                    <option value="">All</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="acknowledged">Acknowledged</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <table class="reviews-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Reviewer</th>
+                                    <th>Review Period</th>
+                                    <th>Type</th>
+                                    <th>Overall Rating</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allReviewsTableBody">
+                                <!-- Reviews will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="allReviewsEmpty" style="display: none;" class="empty-state">
+                        <h3>No Reviews Available</h3>
+                        <p>No performance reviews found in the system.</p>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -947,8 +1003,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" for="reviewPeriod">Review Period</label>
-                        <input type="text" class="form-control" id="reviewPeriod" placeholder="e.g. 2025-H1" required>
+                        <label class="form-label" for="reviewPeriod">Review Period <small style="color: var(--text-secondary);"></small></label>
+                        <input type="text" class="form-control" id="reviewPeriod" placeholder="Select start and end dates to auto-calculate" readonly required>
                     </div>
                     
                     <div class="form-group">
@@ -1311,19 +1367,42 @@
                 console.log("Current User's Login: user");
                 
                 // Initialize UI with user data
-                await loadUserData();
+                try {
+                    await loadUserData();
+                } catch (error) {
+                    console.error('Error loading user data, continuing with defaults:', error);
+                }
                 
                 // Load performance stats
-                await loadPerformanceStats();
+                try {
+                    await loadPerformanceStats();
+                } catch (error) {
+                    console.error('Error loading performance stats:', error);
+                }
                 
                 // Load reviews data
-                await loadMyReviews();
+                try {
+                    await loadMyReviews();
+                } catch (error) {
+                    console.error('Error loading reviews:', error);
+                }
                 
                 // Setup event listeners
                 setupEventListeners();
                 
-                // Load team reviews data if user is manager/team lead
-                if (window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole)) {
+                // Configure tabs and load data based on user role
+                if (window.userRole === 'dev_manager') {
+                    // For dev_manager: Show only "All Reviews" tab
+                    document.getElementById('managerActions').style.display = 'block';
+                    document.getElementById('myReviewsTab').style.display = 'none';
+                    document.getElementById('conductingReviewsTab').style.display = 'none';
+                    document.getElementById('allReviewsTab').style.display = 'block';
+                    document.getElementById('allReviewsTab').classList.add('active');
+                    document.getElementById('myReviews').classList.remove('active');
+                    document.getElementById('allReviews').classList.add('active');
+                    await loadAllReviews();
+                } else if (window.userRole && ['admin', 'manager', 'team_lead'].includes(window.userRole)) {
+                    // For other managers: Show both "My Reviews" and "Team Reviews" tabs
                     document.getElementById('managerActions').style.display = 'block';
                     document.getElementById('conductingReviewsTab').style.display = 'block';
                     await loadConductingReviews();
@@ -1359,11 +1438,28 @@
                 window.currentUser = userData;
                 window.userRole = userData.role;
                 
-                // Update UI with user info - using the required values
-                document.getElementById('userInitials').textContent = 'S';
-                document.getElementById('userTimeDisplay').textContent = `${getCurrentTimeFormatted()} - ${formatUserDisplayName(currentUser)}`;
-                document.getElementById('sidebar-username').textContent = formatUserDisplayName(currentUser);
-                document.getElementById('sidebar-position').textContent = userData.position || 'Team';
+                // Update UI with user info - using safe element access with timeout
+                setTimeout(() => {
+                    const userInitialsEl = document.getElementById('userInitials');
+                    if (userInitialsEl) {
+                        userInitialsEl.textContent = 'S';
+                    }
+                    
+                    const userTimeDisplayEl = document.getElementById('userTimeDisplay');
+                    if (userTimeDisplayEl) {
+                        userTimeDisplayEl.textContent = `${getCurrentTimeFormatted()} - ${formatUserDisplayName(userData)}`;
+                    }
+                    
+                    const sidebarUsernameEl = document.getElementById('sidebar-username');
+                    if (sidebarUsernameEl) {
+                        sidebarUsernameEl.textContent = formatUserDisplayName(userData);
+                    }
+                    
+                    const sidebarPositionEl = document.getElementById('sidebar-position');
+                    if (sidebarPositionEl) {
+                        sidebarPositionEl.textContent = userData.position || 'Team';
+                    }
+                }, 10); // Small delay to ensure DOM is ready
                 
                 // Log the timestamp and username as required
                 console.log(`Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): ${new Date().toISOString().replace('T', ' ').split('.')[0]}`);
@@ -1681,11 +1777,174 @@
             }
         }
         
+        async function loadAllReviews(status = '') {
+            try {
+                const token = localStorage.getItem('bhoomitechzone_token');
+                
+                // Load both personal reviews and conducting reviews
+                let personalReviews = [];
+                let conductingReviews = [];
+                
+                // Get personal reviews
+                const personalResponse = await fetch('/performance-reviews', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (personalResponse.ok) {
+                    personalReviews = await personalResponse.json();
+                }
+                
+                // Get conducting reviews
+                let conductingUrl = '/performance-reviews/conducting';
+                if (status) {
+                    conductingUrl += `?status=${status}`;
+                }
+                const conductingResponse = await fetch(conductingUrl, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (conductingResponse.ok) {
+                    conductingReviews = await conductingResponse.json();
+                }
+                
+                // Combine all reviews
+                let allReviews = [];
+                
+                // Add personal reviews (where current user is the subject)
+                personalReviews.forEach(review => {
+                    allReviews.push({
+                        ...review,
+                        reviewType: 'received', // Mark as received review
+                        employeeName: 'Me', // Current user is the employee
+                        reviewerName: review.reviewer_name || 'Manager'
+                    });
+                });
+                
+                // Add conducting reviews (where current user is the reviewer)
+                conductingReviews.forEach(review => {
+                    allReviews.push({
+                        ...review,
+                        reviewType: 'conducting', // Mark as conducting review
+                        employeeName: review.employee_name || 'Employee',
+                        reviewerName: 'Me' // Current user is the reviewer
+                    });
+                });
+                
+                // Sort by updated date (newest first)
+                allReviews.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                
+                // Filter by status if specified
+                if (status) {
+                    allReviews = allReviews.filter(review => review.status === status);
+                }
+                
+                // Hide loading state
+                document.getElementById('allReviewsLoading').style.display = 'none';
+                
+                // Check if there are any reviews
+                if (allReviews.length === 0) {
+                    document.getElementById('allReviewsEmpty').style.display = 'block';
+                    return;
+                }
+                
+                // Show reviews list
+                document.getElementById('allReviewsList').style.display = 'block';
+                
+                // Populate reviews table
+                const tableBody = document.getElementById('allReviewsTableBody');
+                tableBody.innerHTML = '';
+                
+                allReviews.forEach(review => {
+                    // Format the status for display
+                    let statusClass = 'badge-draft';
+                    
+                    switch(review.status) {
+                        case 'in_progress':
+                            statusClass = 'badge-in-progress';
+                            break;
+                        case 'completed':
+                            statusClass = 'badge-completed';
+                            break;
+                        case 'acknowledged':
+                            statusClass = 'badge-acknowledged';
+                            break;
+                    }
+                    
+                    // Format the date for display
+                    const dateStr = new Date(review.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${review.employeeName}</td>
+                        <td>${review.reviewerName}</td>
+                        <td>${review.review_period}</td>
+                        <td>${capitalizeFirstLetter(review.review_type.replace('_', ' '))}</td>
+                        <td>${review.overall_rating ? review.overall_rating.toFixed(1) : 'N/A'}</td>
+                        <td><span class="badge ${statusClass}">${formatStatus(review.status)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline view-all-review-btn" data-id="${review._id}">
+                                View
+                            </button>
+                            ${review.reviewType === 'conducting' && (review.status === 'draft' || review.status === 'in_progress') ?
+                                `<button class="btn btn-sm btn-primary edit-all-review-btn" data-id="${review._id}">
+                                    Edit
+                                </button>` : ''
+                            }
+                            ${review.reviewType === 'received' && review.status === 'completed' && !review.acknowledged_by_user ?
+                                `<button class="btn btn-sm btn-primary acknowledge-all-review-btn" data-id="${review._id}">
+                                    Acknowledge
+                                </button>` : ''
+                            }
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-all-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        viewReviewDetails(reviewId);
+                    });
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-all-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        editReview(reviewId);
+                    });
+                });
+                
+                // Add event listeners to acknowledge buttons
+                document.querySelectorAll('.acknowledge-all-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = this.getAttribute('data-id');
+                        openAcknowledgeModal(reviewId);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading all reviews:', error);
+                document.getElementById('allReviewsLoading').style.display = 'none';
+                document.getElementById('allReviewsEmpty').style.display = 'block';
+                document.querySelector('#allReviewsEmpty h3').textContent = 'Error Loading Reviews';
+                document.querySelector('#allReviewsEmpty p').textContent = 'Failed to load reviews. Please try again later.';
+            }
+        }
+        
         async function viewReviewDetails(reviewId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch(`/performance-reviews/${reviewId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+                const response = await fetch(`/performance-reviews/${reviewId}?t=${timestamp}`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
                 });
                 
                 if (!response.ok) {
@@ -1693,6 +1952,8 @@
                 }
                 
                 const review = await response.json();
+                
+                console.log("Loaded review for viewing:", review); // Debug log
                 
                 // Store the review data for potential actions
                 window.currentReview = review;
@@ -1912,10 +2173,14 @@
                 }
                 
                 if (reviewId) {
-                    // Load review data
+                    // Load review data with cache-busting
                     const token = localStorage.getItem('bhoomitechzone_token');
-                    const response = await fetch(`/performance-reviews/${reviewId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                    const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+                    const response = await fetch(`/performance-reviews/${reviewId}?t=${timestamp}`, {
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Cache-Control': 'no-cache'
+                        }
                     });
                     
                     if (!response.ok) {
@@ -1924,10 +2189,13 @@
                     
                     const review = await response.json();
                     
+                    console.log("Loaded review data for editing:", review); // Debug log
+                    
                     // Populate form fields
                     document.getElementById('employeeSelect').value = review.user_id;
                     document.getElementById('employeeSelect').disabled = true; // Cannot change employee on edit
                     document.getElementById('reviewPeriod').value = review.review_period;
+                    document.getElementById('reviewPeriod').setAttribute('data-original-period', review.review_period); // Store original period
                     document.getElementById('reviewType').value = review.review_type;
                     document.getElementById('startDate').value = formatDateForInput(review.start_date);
                     document.getElementById('endDate').value = formatDateForInput(review.end_date);
@@ -1940,9 +2208,11 @@
                     
                     // Add ratings
                     if (review.ratings && review.ratings.length > 0) {
+                        console.log("Populating ratings:", review.ratings); // Debug log
                         ratingsContainer.innerHTML = '';
                         
-                        review.ratings.forEach(rating => {
+                        review.ratings.forEach((rating, index) => {
+                            console.log(`Setting rating ${index}:`, rating); // Debug log
                             const ratingDiv = createRatingInput();
                             ratingDiv.querySelector('.rating-category-select').value = rating.category;
                             ratingDiv.querySelector('.rating-value-select').value = rating.rating;
@@ -1954,6 +2224,8 @@
                     // For new review, load team members
                     await loadTeamMembers();
                     document.getElementById('employeeSelect').disabled = false;
+                    document.getElementById('reviewPeriod').value = ''; // Clear review period for new review
+                    document.getElementById('reviewPeriod').removeAttribute('data-original-period'); // Remove any stored period
                 }
                 
                 // Show modal
@@ -2004,38 +2276,86 @@
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const reviewId = document.getElementById('reviewId').value;
                 
-                // Gather form data
+                // Validate required fields
                 const userId = document.getElementById('employeeSelect').value;
                 const reviewPeriod = document.getElementById('reviewPeriod').value;
                 const reviewType = document.getElementById('reviewType').value;
                 const startDate = document.getElementById('startDate').value;
                 const endDate = document.getElementById('endDate').value;
-                const overallRating = parseFloat(document.getElementById('overallRating').value) || null;
-                const strengths = document.getElementById('strengths').value.split('\n').filter(s => s.trim());
-                const improvementAreas = document.getElementById('improvementAreas').value.split('\n').filter(s => s.trim());
-                const goals = document.getElementById('goals').value.split('\n').filter(s => s.trim());
-                const overallComments = document.getElementById('overallComments').value;
-                const status = document.getElementById('reviewStatus').value;
+                
+                // Basic validation
+                if (!reviewId && !userId) {
+                    showToast('Please select an employee');
+                    return;
+                }
+                if (!reviewPeriod) {
+                    showToast('Please select start and end dates to calculate review period');
+                    return;
+                }
+                if (!reviewType) {
+                    showToast('Please select a review type');
+                    return;
+                }
+                if (!startDate || !endDate) {
+                    showToast('Please select both start and end dates');
+                    return;
+                }
+                
+                // Get current user info
+                const currentUser = window.currentUser;
+                if (!currentUser || (!currentUser.id && !currentUser._id)) {
+                    showToast('Error: Unable to identify current user. Please refresh and try again.');
+                    return;
+                }
+                
+                // Gather form data
+                const overallRating = document.getElementById('overallRating')?.value ? 
+                    parseFloat(document.getElementById('overallRating').value) : null;
+                const strengths = document.getElementById('strengths')?.value ? 
+                    document.getElementById('strengths').value.split('\n').filter(s => s.trim()) : [];
+                const improvementAreas = document.getElementById('improvementAreas')?.value ? 
+                    document.getElementById('improvementAreas').value.split('\n').filter(s => s.trim()) : [];
+                const goals = document.getElementById('goals')?.value ? 
+                    document.getElementById('goals').value.split('\n').filter(s => s.trim()) : [];
+                const overallComments = document.getElementById('overallComments')?.value || '';
+                const status = document.getElementById('reviewStatus')?.value || 'draft';
                 
                 // Gather ratings
                 const ratings = [];
                 document.querySelectorAll('.rating-input').forEach(ratingEl => {
-                    const category = ratingEl.querySelector('.rating-category-select').value;
-                    const rating = parseFloat(ratingEl.querySelector('.rating-value-select').value);
-                    const comments = ratingEl.querySelector('.rating-comments').value;
+                    const categoryEl = ratingEl.querySelector('.rating-category-select');
+                    const ratingEl2 = ratingEl.querySelector('.rating-value-select');
+                    const commentsEl = ratingEl.querySelector('.rating-comments');
                     
-                    ratings.push({
-                        category,
-                        rating,
-                        comments: comments.trim() || null
-                    });
+                    if (categoryEl && ratingEl2) {
+                        const category = categoryEl.value;
+                        const rating = parseFloat(ratingEl2.value);
+                        const comments = commentsEl ? commentsEl.value.trim() : '';
+                        
+                        if (category && !isNaN(rating)) {
+                            ratings.push({
+                                category,
+                                rating,
+                                comments: comments || null
+                            });
+                        }
+                    }
                 });
+                
+                console.log("Collected ratings:", ratings); // Debug log
                 
                 let response;
                 
                 if (reviewId) {
                     // Update existing review
+                    const reviewPeriod = document.getElementById('reviewPeriod')?.value || '';
+                    const reviewType = document.getElementById('reviewType')?.value || '';
+                    
+                    console.log("Review period:", reviewPeriod, "Review type:", reviewType); // Debug log
+                    
                     const reviewData = {
+                        review_period: reviewPeriod,
+                        review_type: reviewType,
                         ratings,
                         strengths,
                         areas_for_improvement: improvementAreas,
@@ -2045,6 +2365,8 @@
                         status
                     };
                     
+                    console.log("Updating review with data:", reviewData); // Debug log
+                    
                     response = await fetch(`/performance-reviews/${reviewId}`, {
                         method: 'PUT',
                         headers: {
@@ -2053,6 +2375,14 @@
                         },
                         body: JSON.stringify(reviewData)
                     });
+                    
+                    console.log("Update response status:", response.status);
+                    console.log("Update response headers:", response.headers);
+                    
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        console.log("Update successful, response data:", responseData);
+                    }
                 } else {
                     // Create new review
                     // IMPORTANT: Include reviewer_id for new reviews
@@ -2085,11 +2415,33 @@
                 }
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("API Error:", errorData); // Log the full error
-                    throw new Error(errorData.detail ? 
-                        (Array.isArray(errorData.detail) ? errorData.detail[0].msg : errorData.detail) 
-                        : 'Failed to save review');
+                    let errorMessage = `HTTP ${response.status}: Failed to save review`;
+                    
+                    // Clone response to read body multiple times if needed
+                    const responseClone = response.clone();
+                    
+                    try {
+                        // Try to parse JSON error response
+                        const errorData = await response.json();
+                        console.error("API Error:", errorData); // Log the full error
+                        
+                        if (errorData.detail) {
+                            errorMessage = Array.isArray(errorData.detail) ? 
+                                errorData.detail[0].msg : errorData.detail;
+                        }
+                    } catch (parseError) {
+                        // If JSON parsing fails, try to get text response from clone
+                        try {
+                            const errorText = await responseClone.text();
+                            console.error("API Error (non-JSON):", errorText.substring(0, 500)); // Log first 500 chars
+                            errorMessage = `Server Error: ${response.status} ${response.statusText}`;
+                        } catch (textError) {
+                            console.error("Failed to parse error response:", textError);
+                            errorMessage = `Network Error: ${response.status} ${response.statusText}`;
+                        }
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
                 
                 // Close modal
@@ -2098,11 +2450,18 @@
                 // Show success message
                 showToast(reviewId ? 'Review updated successfully' : 'Review created successfully');
                 
-                // Reload reviews
-                if (reviewId) {
-                    await loadConductingReviews(document.getElementById('statusFilter').value);
+                // Reload reviews based on user role and current tab
+                if (window.userRole === 'dev_manager') {
+                    const statusFilter = document.getElementById('allReviewsStatusFilter');
+                    await loadAllReviews(statusFilter ? statusFilter.value : '');
                 } else {
-                    await loadConductingReviews('');
+                    // For other roles, reload conducting reviews
+                    const statusFilter = document.getElementById('statusFilter');
+                    if (reviewId) {
+                        await loadConductingReviews(statusFilter ? statusFilter.value : '');
+                    } else {
+                        await loadConductingReviews('');
+                    }
                 }
                 
             } catch (error) {
@@ -2160,6 +2519,87 @@
             return ratingDiv;
         }
         
+        function calculateReviewPeriod() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const reviewPeriodInput = document.getElementById('reviewPeriod');
+            
+            if (!startDateInput.value || !endDateInput.value) {
+                return; // Don't calculate if either date is missing
+            }
+            
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            // Validate that end date is after start date
+            if (endDate <= startDate) {
+                reviewPeriodInput.value = 'Invalid: End date must be after start date';
+                reviewPeriodInput.style.color = 'var(--danger)';
+                return;
+            } else {
+                reviewPeriodInput.style.color = ''; // Reset color
+            }
+            
+            // Calculate the period based on the date range
+            const startYear = startDate.getFullYear();
+            const endYear = endDate.getFullYear();
+            const startMonth = startDate.getMonth();
+            const endMonth = endDate.getMonth();
+            
+            // Calculate total days for additional context
+            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            
+            let period = '';
+            
+            // If same year
+            if (startYear === endYear) {
+                // Check for common patterns
+                if (startMonth === 0 && endMonth === 11) {
+                    // January to December = Annual
+                    period = `${startYear} Annual`;
+                } else if (startMonth === 0 && endMonth === 5) {
+                    // January to June = H1 (First Half)
+                    period = `${startYear} H1`;
+                } else if (startMonth === 6 && endMonth === 11) {
+                    // July to December = H2 (Second Half)  
+                    period = `${startYear} H2`;
+                } else if (Math.abs(endMonth - startMonth) === 2) {
+                    // 3-month period = Quarterly
+                    const quarter = Math.floor(startMonth / 3) + 1;
+                    period = `${startYear} Q${quarter}`;
+                } else if (totalDays <= 31) {
+                    // Monthly review
+                    const months = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    period = `${months[startMonth]} ${startYear}`;
+                } else {
+                    // Custom period with month names
+                    const months = [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+                    period = `${months[startMonth]} - ${months[endMonth]} ${startYear}`;
+                }
+            } else {
+                // Multi-year period
+                if (startMonth === 0 && endMonth === 11) {
+                    // Full years
+                    period = `${startYear} - ${endYear} Annual`;
+                } else {
+                    // Custom multi-year period
+                    const months = [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+                    period = `${months[startMonth]} ${startYear} - ${months[endMonth]} ${endYear}`;
+                }
+            }
+            
+            reviewPeriodInput.value = period;
+        }
+        
         function setupEventListeners() {
             // Menu toggle
             const menuToggle = document.getElementById('menuToggle');
@@ -2212,6 +2652,14 @@
                 loadConductingReviews(this.value);
             });
             
+            // All reviews status filter
+            const allReviewsStatusFilter = document.getElementById('allReviewsStatusFilter');
+            if (allReviewsStatusFilter) {
+                allReviewsStatusFilter.addEventListener('change', function() {
+                    loadAllReviews(this.value);
+                });
+            }
+            
             // Create review button
             document.getElementById('createReviewBtn').addEventListener('click', function() {
                 editReview(); // No ID means create new
@@ -2249,6 +2697,10 @@
                 const ratingDiv = createRatingInput();
                 document.getElementById('ratingsContainer').appendChild(ratingDiv);
             });
+            
+            // Auto-calculate review period when dates change
+            document.getElementById('startDate').addEventListener('change', calculateReviewPeriod);
+            document.getElementById('endDate').addEventListener('change', calculateReviewPeriod);
             
             // Close acknowledge modal
             document.getElementById('closeAcknowledgeModal').addEventListener('click', function() {

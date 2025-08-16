@@ -75,7 +75,6 @@ class UserBase(BaseModel):
     base_salary: Optional[float] = None
     hra: Optional[float] = None
     allowances: Optional[float] = None
-    performance_incentives: Optional[float] = None
     pf_deduction: Optional[float] = None
     tax_deduction: Optional[float] = None
     penalty_deductions: Optional[float] = None
@@ -108,6 +107,11 @@ class UserUpdate(BaseModel):
     salary: Optional[float] = None
     programming_language: Optional[str] = None
     developer_type: Optional[str] = None
+    # Sales-specific fields
+    sales_specialization: Optional[str] = None
+    experience_level: Optional[str] = None
+    target_markets: Optional[List[str]] = None
+    sales_tools: Optional[List[str]] = None
     role: Optional[str] = None
     manager_id: Optional[str] = None
     is_active: Optional[bool] = None
@@ -125,7 +129,6 @@ class UserUpdate(BaseModel):
     base_salary: Optional[float] = None
     hra: Optional[float] = None
     allowances: Optional[float] = None
-    performance_incentives: Optional[float] = None
     pf_deduction: Optional[float] = None
     tax_deduction: Optional[float] = None
     penalty_deductions: Optional[float] = None
@@ -380,4 +383,17 @@ class DatabaseUsers:
         print(f"No team members found for manager {manager_id}")
         return []
     
+    @classmethod
+    async def get_users_by_department(cls, department: str) -> List[UserInDB]:
+        """Get all users in a specific department"""
+        try:
+            cursor = users_collection.find({
+                "department": department,
+                "is_active": True
+            })
+            users = list(cursor)
+            return [UserInDB(**user) for user in users]
+        except Exception as e:
+            print(f"Error getting users by department {department}: {e}")
+            return []
    

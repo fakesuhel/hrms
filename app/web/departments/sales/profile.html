@@ -112,7 +112,7 @@
         
         .nav-link i {
             margin-right: 0.75rem;
-            width: 20px;
+            width: 24px;
             text-align: center;
         }
         
@@ -309,6 +309,41 @@
         
         .form-input:read-only {
             background-color: var(--bg-light);
+        }
+        
+        .form-select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-select:disabled {
+            background-color: var(--bg-light);
+            cursor: not-allowed;
+        }
+        
+        .form-select[multiple] {
+            min-height: 120px;
+            padding: 0.5rem;
+        }
+        
+        .form-select[multiple] option {
+            padding: 0.5rem;
+            margin: 0.125rem 0;
+        }
+        
+        .form-select[multiple] option:checked {
+            background: var(--primary) !important;
+            color: white !important;
         }
         
         /* Button Styles */
@@ -954,20 +989,10 @@
                                 <input type="date" class="form-input" id="joinDate" readonly>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Manager/Reporting To</label>
-                                <input type="text" class="form-input" id="reportingTo" name="reportingTo" readonly>
+                                <!-- Empty slot -->
                             </div>
                         </div>
                         
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Performance Incentives</label>
-                                <input type="text" class="form-input" id="performanceIncentives" name="performanceIncentives" readonly>
-                            </div>
-                            <div class="form-group">
-                                <!-- Empty slot for future fields -->
-                            </div>
-                        </div>
                     </div>
                     </form>
                     
@@ -1267,7 +1292,7 @@
             setTimeout(() => {
                 const token = localStorage.getItem("bhoomitechzone_token");
                 if (token && window.universalSidebar) {
-                    fetch("/api/users/me", {
+                    fetch("/users/me", {
                         headers: { "Authorization": `Bearer ${token}` }
                     })
                     .then(response => response.json())
@@ -1407,7 +1432,7 @@
             try {
                 showToast('Fetching location data...');
                 
-                const response = await fetch(`/users/postal-code/${pincode}`);
+                const response = await fetch(`/api/sales/profile/postal-code/${pincode}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -1445,7 +1470,7 @@
         
         async function loadStates() {
             try {
-                const response = await fetch('/users/states');
+                const response = await fetch('/api/sales/profile/states');
                 if (response.ok) {
                     const data = await response.json();
                     const stateSelect = document.getElementById('state');
@@ -1468,7 +1493,7 @@
         async function downloadAllDocuments() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/profile/documents/download-all?token=${token}`, '_blank');
+                window.open(`/api/sales/profile/documents/download-all?token=${token}`, '_blank');
                 showToast('Preparing documents for download...');
             } catch (error) {
                 console.error('Download all error:', error);
@@ -1655,7 +1680,7 @@
         async function loadProfileData() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/users/profile', {
+                const response = await fetch('/api/sales/profile', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1752,12 +1777,6 @@
             const joinDateEl = document.getElementById('joinDate');
             if (joinDateEl) joinDateEl.value = data.join_date || '';
             
-            const reportingToEl = document.getElementById('reportingTo');
-            if (reportingToEl) reportingToEl.value = data.reporting_to || '';
-            
-            const performanceIncentivesEl = document.getElementById('performanceIncentives');
-            if (performanceIncentivesEl) performanceIncentivesEl.value = data.performance_incentives || '';
-            
             // Salary information
             const baseSalaryEl = document.getElementById('baseSalary');
             if (baseSalaryEl) baseSalaryEl.value = data.base_salary ? `₹${data.base_salary}` : '';
@@ -1808,8 +1827,6 @@
                     position: document.getElementById('position').value,
                     employment_type: document.getElementById('employmentType').value,
                     join_date: document.getElementById('joinDate').value,
-                    reporting_to: document.getElementById('reportingTo').value,
-                    performance_incentives: document.getElementById('performanceIncentives').value,
                     base_salary: document.getElementById('baseSalary') ? document.getElementById('baseSalary').value.replace('₹', '').replace(/,/g, '') : '',
                     hra: document.getElementById('hra') ? document.getElementById('hra').value.replace('₹', '').replace(/,/g, '') : '',
                     allowances: document.getElementById('allowances') ? document.getElementById('allowances').value.replace('₹', '').replace(/,/g, '') : '',
@@ -1819,7 +1836,7 @@
                     net_salary: document.getElementById('netSalary') ? document.getElementById('netSalary').value.replace('₹', '').replace(/,/g, '') : ''
                 };
                 
-                const response = await fetch('/users/profile', {
+                const response = await fetch('/api/sales/profile', {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1886,7 +1903,7 @@
                     formData.append('category', category);
                     
                     const token = localStorage.getItem('bhoomitechzone_token');
-                    const response = await fetch('/profile/documents/upload', {
+                    const response = await fetch('/api/sales/profile/documents/upload', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -1913,7 +1930,7 @@
         async function loadDocuments() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/profile/documents', {
+                const response = await fetch('/api/sales/profile/documents', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2036,7 +2053,7 @@
         async function viewDocument(documentId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/profile/documents/${documentId}/download?token=${token}`, '_blank');
+                window.open(`/api/sales/profile/documents/${documentId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('View error:', error);
                 showToast('Failed to view document', 'error');
@@ -2046,7 +2063,7 @@
         async function downloadDocument(documentId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/profile/documents/${documentId}/download?token=${token}`, '_blank');
+                window.open(`/api/sales/profile/documents/${documentId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('Download error:', error);
                 showToast('Download failed', 'error');
@@ -2066,7 +2083,7 @@
                 // Show loading state
                 showToast('Deleting document...', 'info');
                 
-                const response = await fetch(`/profile/documents/${documentId}`, {
+                const response = await fetch(`/api/sales/profile/documents/${documentId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -2091,7 +2108,7 @@
         async function updateDocumentCounts() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/profile/documents/categories', {
+                const response = await fetch('/api/sales/profile/documents/categories', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2118,7 +2135,7 @@
         async function loadSalarySlips() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/profile/salary-slips', {
+                const response = await fetch('/api/sales/profile/salary-slips', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -2187,7 +2204,7 @@
         async function downloadSalarySlip(slipId) {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                window.open(`/profile/salary-slips/${slipId}/download?token=${token}`, '_blank');
+                window.open(`/api/sales/profile/salary-slips/${slipId}/download?token=${token}`, '_blank');
             } catch (error) {
                 console.error('Download error:', error);
                 showToast('Download failed', 'error');
@@ -2197,7 +2214,7 @@
         async function downloadCurrentMonthSlip() {
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
-                const response = await fetch('/profile/salary-slips/current', {
+                const response = await fetch('/api/sales/profile/salary-slips/current', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

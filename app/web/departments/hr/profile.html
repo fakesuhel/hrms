@@ -1084,18 +1084,16 @@
                                 <input type="date" class="form-input" id="joinDate" readonly>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Manager/Reporting To</label>
-                                <input type="text" class="form-input" id="reportingTo" name="reportingTo" readonly>
+                                <!-- Empty slot -->
                             </div>
                         </div>
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Performance Incentives</label>
-                                <input type="text" class="form-input" id="performanceIncentives" name="performanceIncentives" readonly>
+                                <!-- Empty slot -->
                             </div>
                             <div class="form-group">
-                                <!-- Empty slot for future fields -->
+                                <!-- Empty slot -->
                             </div>
                         </div>
                     </div>
@@ -1852,12 +1850,6 @@
             const joinDateEl = document.getElementById('joinDate');
             if (joinDateEl) joinDateEl.value = data.join_date || '';
             
-            const reportingToEl = document.getElementById('reportingTo');
-            if (reportingToEl) reportingToEl.value = data.reporting_to || '';
-            
-            const performanceIncentivesEl = document.getElementById('performanceIncentives');
-            if (performanceIncentivesEl) performanceIncentivesEl.value = data.performance_incentives || '';
-            
             // Salary information
             const baseSalaryEl = document.getElementById('baseSalary');
             if (baseSalaryEl) baseSalaryEl.value = data.base_salary ? `₹${data.base_salary}` : '';
@@ -1908,8 +1900,6 @@
                     position: document.getElementById('position').value,
                     employment_type: document.getElementById('employmentType').value,
                     join_date: document.getElementById('joinDate').value,
-                    reporting_to: document.getElementById('reportingTo').value,
-                    performance_incentives: document.getElementById('performanceIncentives').value,
                     base_salary: document.getElementById('baseSalary').value.replace('₹', '').replace(/,/g, ''),
                     net_salary: document.getElementById('netSalary').value.replace('₹', '').replace(/,/g, '')
                 };
