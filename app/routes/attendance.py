@@ -206,13 +206,15 @@ async def get_team_attendance(
     try:
         # Debug logging
         print(f"Team attendance request: User: {current_user.username}, Role: {current_user.role}")
-        
         # Case-insensitive role check
         user_role = str(current_user.role).lower().strip() if current_user.role else ""
-        valid_roles = ['team_lead', 'teamlead', 'team lead', 'manager', 'admin']
-        
-        if not any(role.lower() == user_role or role.lower().replace(' ', '') == user_role.replace(' ', '')
-                for role in valid_roles):
+        # Include sales_manager so sales department managers can access team attendance
+        valid_roles = ['team_lead', 'teamlead', 'team lead', 'manager', 'admin', 'sales_manager', 'sales manager', 'salesmanager']
+
+        if not any(
+            role.lower() == user_role or role.lower().replace(' ', '') == user_role.replace(' ', '')
+            for role in valid_roles
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Not authorized to access team attendance. Your role: {current_user.role}"
