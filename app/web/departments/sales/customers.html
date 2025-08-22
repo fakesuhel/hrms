@@ -572,10 +572,7 @@
             
             <main class="page-main">
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title">Sales Customers</h1>
-                        <p class="page-subtitle">Manage your converted customers and ongoing relationships</p>
-                    </div>
+                    
                     <button class="btn" id="addCustomerBtn">
                         <span>➕</span>
                         Add Customer
@@ -636,6 +633,7 @@
             await initializePage();
             
             // Setup event listeners
+            setupEventListeners();
             
             // Load customers
             await loadCustomers();
@@ -728,7 +726,7 @@
                     const searchableText = [
                         customer.contact_person,
                         customer.company_name,
-                        customer.phone_number,
+                        customer.phone,  // Changed from phone_number to phone
                         customer.email
                     ].join(' ').toLowerCase();
                     
@@ -739,6 +737,44 @@
             });
             
             renderCustomers();
+        }
+        
+        function setupEventListeners() {
+            // Status filter dropdown
+            document.getElementById('statusFilter').addEventListener('change', filterCustomers);
+            
+            // Search input with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(filterCustomers, 300); // 300ms debounce
+            });
+            
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', async function() {
+                await loadCustomers();
+            });
+            
+            // Add customer button
+            document.getElementById('addCustomerBtn').addEventListener('click', function() {
+                openAddCustomerModal();
+            });
+            
+            // Menu toggle button
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-hidden');
+            });
+            
+            // User dropdown toggle
+            document.getElementById('userInitials').addEventListener('click', function() {
+                document.getElementById('userDropdown').classList.toggle('active');
+            });
+            
+            // Add customer form submission
+            document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleAddCustomer(e);
+            });
         }
         
         function renderCustomers() {
@@ -773,7 +809,7 @@
                         <div class="customer-info">
                             <div class="customer-name">${customer.contact_person}</div>
                             ${customer.company_name ? `<div class="customer-company">${customer.company_name}</div>` : ''}
-                            <div class="customer-contact">📞 ${customer.phone_number}</div>
+                            <div class="customer-contact">📞 ${customer.phone}</div>
                             ${customer.email ? `<div class="customer-contact">✉️ ${customer.email}</div>` : ''}
                         </div>
                         <div class="customer-status ${statusClass}">
@@ -937,7 +973,6 @@
         }
 
         async function handleAddCustomer(event) {
-            event.preventDefault();
             
             const formData = new FormData(event.target);
             const customerData = {

@@ -70,7 +70,7 @@ async def get_all_users(current_user = Depends(get_current_user)):
     Get all users in the system.
     This endpoint is used for admin purposes to list all users.
     """
-    if current_user.role not in ['admin', 'manager', 'team_lead', 'hr']:
+    if current_user.role not in ['admin', 'manager', 'team_lead', 'hr', 'dev_manager']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access user information",

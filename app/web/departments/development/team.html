@@ -1760,7 +1760,7 @@
             if (!currentUser || !project) return false;
             
             // Admins, directors, managers, team leads can manage team members
-            if (['admin', 'director', 'manager', 'team_lead', 'hr'].includes(currentUser.role)) {
+            if (['admin', 'director', 'manager', 'team_lead', 'hr', 'dev_manager'].includes(currentUser.role)) {
                 return true;
             }
             

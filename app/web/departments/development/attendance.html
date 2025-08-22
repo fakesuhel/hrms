@@ -751,7 +751,7 @@
             
             <main class="dashboard-main">
                 <div class="attendance-header">
-                    <h2>Attendance Dashboard</h2>
+                    <!-- <h2>Attendance Dashboard</h2> -->
                     
                     <button class="btn btn-primary" id="checkInOutBtn">
                         <i>🕒</i> <span id="attendanceActionText">Check In</span>
@@ -1161,6 +1161,12 @@
             ]
         };
 
+        // Show Project Management page and sidebar
+        function showProjectManagementPage() {
+            // Navigate to the actual projects page instead of creating a placeholder
+            window.location.href = '/app/it/projects';
+        }
+
         // Generate navigation menu based on user role
         function generateNavigationMenu(userRole) {
             let menuItems = navigationConfig[userRole] || navigationConfig.employee;
@@ -1182,47 +1188,53 @@
                 if (item.label === 'Projects') {
                     a.addEventListener('click', function(e) {
                         e.preventDefault();
+                        e.stopPropagation();
                         showProjectManagementPage();
-                        // Ensure sidebar is visible
-                        const sidebar = document.querySelector('.sidebar');
-                        if (sidebar) sidebar.style.display = '';
                     });
                 } else if (item.label === 'Attendance') {
                     a.addEventListener('click', function(e) {
                         e.preventDefault();
-                        // Show attendance main section and ensure sidebar is visible
-                        document.querySelectorAll('.main-section').forEach(el => el.style.display = 'none');
-                        const mainContent = document.querySelector('.main-content');
-                        if (mainContent) mainContent.style.display = '';
-                        const attendanceSection = document.querySelector('.dashboard-main');
-                        if (attendanceSection) attendanceSection.style.display = '';
-                        const sidebar = document.querySelector('.sidebar');
-                        if (sidebar) sidebar.style.display = '';
+                        e.stopPropagation();
+                        // Already on attendance page, just refresh or scroll to top
+                        window.scrollTo(0, 0);
+                    });
+                } else if (item.label === 'Dashboard') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = '/app/it/dashboard';
+                    });
+                } else if (item.label === 'Daily Reports') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = '/app/it/daily-reports';
+                    });
+                } else if (item.label === 'Team') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = '/app/it/team';
+                    });
+                } else if (item.label === 'Profile') {
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = '/app/it/profile';
+                    });
+                } else {
+                    // Default navigation for other menu items
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (item.href && item.href !== '#') {
+                            window.location.href = item.href;
+                        }
                     });
                 }
                 li.appendChild(a);
                 navigationMenu.appendChild(li);
             });
-// Show Project Management page and sidebar
-function showProjectManagementPage() {
-    // Hide all main content sections except project management
-    document.querySelectorAll('.main-section').forEach(el => el.style.display = 'none');
-    let projectSection = document.getElementById('projectManagementSection');
-    if (!projectSection) {
-        projectSection = document.createElement('div');
-        projectSection.id = 'projectManagementSection';
-        projectSection.className = 'main-section';
-        projectSection.innerHTML = `
-            <h2>Project Management</h2>
-            <p>Welcome to the Project Management page. Here you can manage your projects.</p>
-        `;
-        document.body.appendChild(projectSection);
-    }
-    projectSection.style.display = 'block';
-    // Ensure sidebar is visible
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) sidebar.style.display = '';
-}
         }
 
         // Setup role-based UI elements
@@ -1241,7 +1253,6 @@ function showProjectManagementPage() {
                 }
             }
             // Log user role for debugging
-            console.log('User role detected:', userRole);
         }
 
         // Function to format user display name
@@ -1378,14 +1389,14 @@ function showProjectManagementPage() {
                 // Load today's attendance status
                 await loadTodayStatus();
                 
+                // Generate calendar first (before loading records that update calendar data)
+                generateCalendar(currentDateTime);
+                
                 // Load attendance records
                 await loadAttendanceRecords(startDate, currentDateTime);
                 
                 // Load attendance statistics
                 await loadAttendanceStats('month');
-                
-                // Generate calendar
-                generateCalendar(currentDateTime);
                 
                 // Load team attendance (if user has permission)
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
@@ -1396,7 +1407,7 @@ function showProjectManagementPage() {
                 // Setup event listeners
                 setupEventListeners();
                 
-                console.log(`Attendance page loaded at ${new Date().toISOString().replace('T', ' ').substring(0, 19)} by ${currentUser}`);
+                // Page initialization completed
             } catch (error) {
                 console.error('Error during initialization:', error);
             }
@@ -1831,18 +1842,15 @@ function showProjectManagementPage() {
                 let filteredRecords = records;
                 const currentUser = window.currentUser;
                 
-                console.log('Team attendance filtering debug:');
-                console.log('- Current user:', currentUser);
-                console.log('- Team member IDs:', teamMemberIds);
-                console.log('- Total records:', records.length);
+                // Team attendance filtering for role-based access
                 
                 if (currentUser && (currentUser.role === 'team_lead' || currentUser.role === 'manager' || currentUser.role === 'dev_manager') && teamMemberIds.length > 0) {
                     filteredRecords = records.filter(record => 
                         teamMemberIds.includes(record.user_id)
                     );
-                    console.log('- Filtered records:', filteredRecords.length);
+                    // Filtered to show only team member records
                 } else {
-                    console.log('- No filtering applied (not team lead/manager or no team members)');
+                    // No filtering applied - show all records
                 }
                 
                 if (filteredRecords.length === 0) {
@@ -1991,7 +1999,7 @@ function showProjectManagementPage() {
             // Get all calendar days
             const calendarDays = document.querySelectorAll('#calendarGrid .calendar-day');
             if (!calendarDays.length) {
-                console.error('Calendar days elements not found');
+                // Calendar hasn't been generated yet or is hidden, this is not an error
                 return;
             }
             
@@ -2154,8 +2162,8 @@ function showProjectManagementPage() {
                 const location = locationInput ? locationInput.value || 'Office' : 'Office';
                 const note = noteInput ? noteInput.value || '' : '';
                 
-                console.log('Sending check-in request...');
-                console.log(`User: ${localStorage.getItem('username') || 'current user'}, Time: ${formatISTDateTime(new Date())}`);
+                // Sending check-in request
+                // User check-in process initiated
                 
                 // Get user_id from currentUser or localStorage
                 let userId = null;
@@ -2227,8 +2235,8 @@ function showProjectManagementPage() {
                 const summary = summaryInput ? summaryInput.value || '' : '';
                 const note = noteInput ? noteInput.value || '' : '';
                 
-                console.log('Sending check-out request...');
-                console.log(`User: ${localStorage.getItem('username') || 'current user'}, Time: ${formatISTDateTime(new Date())}`);
+                // Sending check-out request
+                // User check-out process initiated
                 
                 const response = await fetch('/attendance/check-out', {
                     method: 'POST',
@@ -2424,15 +2432,15 @@ function showProjectManagementPage() {
                         const buttonText = checkInOutBtn.textContent.trim();
                         const actionText = attendanceActionText ? attendanceActionText.textContent.trim() : '';
                         
-                        console.log('Action triggered:', buttonText, actionText);
+                        // Action triggered: check-in or check-out
                         
                         // Check both the button text and the action text to determine which modal to show
                         if (buttonText.includes('Check In') || actionText === 'Check In') {
                             checkInModal.style.display = 'flex';
-                            console.log('Opening check-in modal');
+                            // Opening check-in modal
                         } else if (buttonText.includes('Check Out') || actionText === 'Check Out') {
                             checkOutModal.style.display = 'flex';
-                            console.log('Opening check-out modal');
+                            // Opening check-out modal
                         }
                     });
                 }
@@ -2499,7 +2507,7 @@ function showProjectManagementPage() {
                     });
                 }
                 
-                console.log('All event listeners set up successfully');
+                // Event listeners setup completed
                 
             } catch (error) {
                 console.error('Error setting up event listeners:', error);
@@ -2600,7 +2608,7 @@ function showProjectManagementPage() {
         }
         
         // Current timestamp and user info for logging
-        console.log(`Attendance page loaded at ${formatISTDateTime(new Date())} by ${localStorage.getItem('username') || 'current user'}`);
+        // Attendance page initialization completed
         
         // Listen for attendance updates from other tabs/pages
         window.addEventListener('storage', function(e) {

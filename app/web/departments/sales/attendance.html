@@ -1401,14 +1401,14 @@ function showCustomersManagementPage() {
                 // Load today's attendance status
                 await loadTodayStatus();
                 
+                // Generate calendar first (before loading records that update calendar data)
+                generateCalendar(currentDateTime);
+                
                 // Load attendance records
                 await loadAttendanceRecords(startDate, currentDateTime);
                 
                 // Load attendance statistics
                 await loadAttendanceStats('month');
-                
-                // Generate calendar
-                generateCalendar(currentDateTime);
                 
                 // Load team attendance (if user has permission)
                 const teamAttendanceSection = document.getElementById('teamAttendanceSection');
@@ -2021,7 +2021,7 @@ function showCustomersManagementPage() {
             // Get all calendar days
             const calendarDays = document.querySelectorAll('#calendarGrid .calendar-day');
             if (!calendarDays.length) {
-                console.error('Calendar days elements not found');
+                // Calendar hasn't been generated yet or is hidden, this is not an error
                 return;
             }
             
