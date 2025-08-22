@@ -1459,10 +1459,6 @@
             </header>
             
             <main class="page-main">
-                <div class="page-header">
-                    <h1 class="page-title">Sales Leads</h1>
-                    <p class="page-subtitle">Manage and track your sales leads</p>
-                </div>
                 
                 <div class="controls-bar">
                     <div class="filters">
@@ -1530,7 +1526,10 @@
                     
                     <div class="form-group">
                         <label class="form-label" for="phoneNumber">Phone Number *</label>
-                        <input type="tel" class="form-input" id="phoneNumber" required>
+                        <input type="tel" class="form-input" id="phoneNumber" required 
+                               placeholder="Enter phone number" 
+                               minlength="5"
+                               title="Please enter a valid phone number">
                     </div>
                 </div>
                 
@@ -1742,6 +1741,7 @@
             await initializePage();
             
             // Setup event listeners
+            setupFilterEventListeners();
             
             // Load leads
             await loadLeads();
@@ -1823,6 +1823,8 @@
             const assignedFilter = document.getElementById('assignedFilter').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             
+            console.log('Filtering leads with:', { statusFilter, assignedFilter, searchTerm });
+            
             filteredLeads = allLeads.filter(lead => {
                 // Status filter
                 if (statusFilter && lead.status !== statusFilter) return false;
@@ -1846,7 +1848,82 @@
                 return true;
             });
             
+            console.log('Filtered results:', filteredLeads.length, 'of', allLeads.length);
             renderLeads();
+        }
+        
+        function setupFilterEventListeners() {
+            // Status filter dropdown
+            document.getElementById('statusFilter').addEventListener('change', filterLeads);
+            
+            // Assignment filter dropdown
+            document.getElementById('assignedFilter').addEventListener('change', filterLeads);
+            
+            // Search input with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(filterLeads, 300); // 300ms debounce
+            });
+            
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', async function() {
+                await loadLeads();
+            });
+            
+            // Add lead button
+            document.getElementById('addLeadBtn').addEventListener('click', function() {
+                openAddLeadModal();
+            });
+            
+            // Menu toggle button
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-hidden');
+            });
+            
+            // Modal close buttons
+            document.getElementById('closeModalBtn').addEventListener('click', function() {
+                closeModal('leadModal');
+            });
+            
+            document.getElementById('closeDetailsModalBtn').addEventListener('click', function() {
+                closeModal('leadDetailsModal');
+            });
+            
+            document.getElementById('cancelBtn').addEventListener('click', function() {
+                closeModal('leadModal');
+            });
+            
+            // User dropdown toggle
+            document.getElementById('userInitials').addEventListener('click', function() {
+                document.getElementById('userDropdown').classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const userDropdown = document.getElementById('userDropdown');
+                const userInitials = document.getElementById('userInitials');
+                
+                if (!userDropdown.contains(event.target) && !userInitials.contains(event.target)) {
+                    userDropdown.classList.remove('active');
+                }
+            });
+            
+            // Lead form submission
+            document.getElementById('leadForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleFormSubmit(e);
+            });
+            
+            // Phone number field debugging
+            document.getElementById('phoneNumber').addEventListener('input', function(e) {
+                console.log('Phone number input changed:', e.target.value);
+            });
+            
+            document.getElementById('phoneNumber').addEventListener('blur', function(e) {
+                console.log('Phone number field lost focus:', e.target.value);
+                console.log('Field validity:', e.target.validity);
+            });
         }
         
         function renderLeads() {
@@ -1965,6 +2042,27 @@
                 notes: document.getElementById('notes').value || null
             };
             
+            // Debug logging
+            console.log('Form data being sent:', formData);
+            console.log('Phone number value:', document.getElementById('phoneNumber').value);
+            console.log('Phone number length:', document.getElementById('phoneNumber').value.length);
+            console.log('Phone number after trim:', document.getElementById('phoneNumber').value.trim());
+            
+            // Client-side validation
+            if (!formData.contact_person.trim()) {
+                showToast('Contact person is required', 'error');
+                return;
+            }
+            
+            const phoneValue = formData.phone_number.trim();
+            if (!phoneValue) {
+                showToast('Phone number is required', 'error');
+                return;
+            }
+            
+            // Update the phone number in formData to be trimmed
+            formData.phone_number = phoneValue;
+            
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 const url = leadId ? `/api/sales/leads/${leadId}` : '/api/sales/leads';
@@ -1985,7 +2083,16 @@
                     await loadLeads();
                 } else {
                     const error = await response.json();
-                    throw new Error(error.detail || 'Failed to save lead');
+                    console.error('Server error response:', error);
+                    
+                    // Handle validation errors more specifically
+                    if (error.detail && typeof error.detail === 'object') {
+                        // Handle FastAPI validation errors
+                        const validationErrors = error.detail.map(err => err.msg).join(', ');
+                        throw new Error(`Validation error: ${validationErrors}`);
+                    } else {
+                        throw new Error(error.detail || error.message || 'Failed to save lead');
+                    }
                 }
             } catch (error) {
                 console.error('Error saving lead:', error);

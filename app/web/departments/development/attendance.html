@@ -1009,7 +1009,7 @@
     <div id="toast" class="toast"></div>
     
         <script>
-        // IST timezone conversion (UTC +5:30) - Improved implementation
+        // IST timezone conversion (UTC +5:30) - Fixed implementation
         function getCurrentTimeFormatted() {
             const now = new Date();
             // Convert to IST (UTC+5:30)
@@ -1017,19 +1017,29 @@
             return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
         }
         
-        // Convert any date to IST (UTC+5:30)
+        // Convert any date to IST (UTC+5:30) - Proper timezone handling
         function convertToIST(date) {
-            // getTimezoneOffset() returns the difference in minutes between UTC and local time
-            // It's positive for time zones behind UTC and negative for time zones ahead of UTC
-            // This formula directly converts any local time to IST in one step:
-            // 1. date.getTime() - the timestamp in local timezone
-            // 2. + 5.5 hours to shift to IST
-            // 3. - getTimezoneOffset() to remove the local timezone offset
-            return new Date(date.getTime() + (5.5 * 60 * 60 * 1000) - (date.getTimezoneOffset() * 60 * 1000));
+            if (!date) return null;
+            
+            // If the date string contains timezone info, parse it properly
+            if (typeof date === 'string') {
+                // Handle ISO strings with timezone (e.g., "2025-08-22T07:19:19.332Z")
+                if (date.includes('T') && (date.includes('Z') || date.includes('+') || date.includes('-'))) {
+                    date = new Date(date);
+                } else {
+                    // Handle date-only strings (e.g., "2025-08-22")
+                    date = new Date(date + 'T00:00:00.000Z');
+                }
+            }
+            
+            // Convert UTC time to IST by adding 5:30 hours
+            const istTime = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+            return istTime;
         }
         
         // Format date and time in IST
         function formatISTDateTime(date) {
+            if (!date) return '';
             const istDate = convertToIST(date);
             const options = { 
                 year: 'numeric', 
@@ -1038,7 +1048,8 @@
                 hour: '2-digit', 
                 minute: '2-digit', 
                 second: '2-digit',
-                hour12: false 
+                hour12: false,
+                timeZone: 'UTC' // Use UTC since we already converted to IST
             };
             return istDate.toLocaleString('en-IN', options) + ' IST';
         }
@@ -1046,17 +1057,33 @@
         // Format time only in IST for display
         function formatISTTime(dateTimeString) {
             if (!dateTimeString) return '';
+            
+            // If the datetime string is already in IST format (contains +05:30), extract time directly
+            if (typeof dateTimeString === 'string' && dateTimeString.includes('+05:30')) {
+                const timePart = dateTimeString.split('T')[1];
+                if (timePart) {
+                    return timePart.split('+')[0].slice(0, 5); // Extract HH:MM
+                }
+            }
+            
+            // For UTC times or other formats, convert to IST
             const date = new Date(dateTimeString);
             const istDate = convertToIST(date);
-            return istDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+            return istDate.toLocaleTimeString('en-IN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false,
+                timeZone: 'UTC' // Use UTC since we already converted to IST
+            });
         }
         
         // Format date in IST for input fields (YYYY-MM-DD)
         function formatDateInputIST(date) {
+            if (!date) return '';
             const istDate = convertToIST(date);
-            const year = istDate.getFullYear();
-            const month = String(istDate.getMonth() + 1).padStart(2, '0');
-            const day = String(istDate.getDate()).padStart(2, '0');
+            const year = istDate.getUTCFullYear(); // Use UTC methods since we converted to IST
+            const month = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(istDate.getUTCDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
 
@@ -2505,21 +2532,63 @@ function showProjectManagementPage() {
             return (diffMs / (1000 * 60 * 60)).toFixed(1);
         }
         
-        // Utility functions
+        // Utility functions - Fixed IST timezone handling
         function formatDate(dateString) {
             if (!dateString) return '';
-            const date = new Date(dateString);
+            
+            // Handle different date formats
+            let date;
+            if (typeof dateString === 'string' && dateString.includes('T')) {
+                // ISO datetime string
+                date = new Date(dateString);
+            } else {
+                // Date-only string or Date object
+                date = new Date(dateString);
+            }
+            
             const istDate = convertToIST(date);
-            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                timeZone: 'UTC' // Use UTC since we already converted to IST
+            };
             return istDate.toLocaleDateString('en-IN', options);
         }
         
         function formatDateTime(dateTimeString) {
             if (!dateTimeString) return '';
-            const date = new Date(dateTimeString);
-            const istDate = convertToIST(date);
-            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-            return istDate.toLocaleString('en-IN', options) + ' IST';
+            
+            // Parse the datetime - handle IST format responses from API
+            let date;
+            if (typeof dateTimeString === 'string' && dateTimeString.includes('+05:30')) {
+                // Already in IST format from API response
+                date = new Date(dateTimeString);
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false 
+                };
+                return date.toLocaleString('en-IN', options) + ' IST';
+            } else {
+                // UTC format from database, convert to IST
+                date = new Date(dateTimeString);
+                const istDate = convertToIST(date);
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false,
+                    timeZone: 'UTC' // Use UTC since we already converted to IST
+                };
+                return istDate.toLocaleString('en-IN', options) + ' IST';
+            }
         }
         
         function formatTime(dateTimeString) {

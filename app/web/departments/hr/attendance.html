@@ -524,6 +524,143 @@
     
     <script src="/static/js/hr-utils.js?v=3"></script>
     <script>
+        // IST timezone conversion (UTC +5:30) - Fixed implementation
+        function getCurrentTimeFormatted() {
+            const now = new Date();
+            // Convert to IST (UTC+5:30)
+            const istTime = convertToIST(now);
+            return istTime.toTimeString().split(' ')[0].slice(0, 5); // HH:MM format
+        }
+        
+        // Convert any date to IST (UTC+5:30) - Proper timezone handling
+        function convertToIST(date) {
+            if (!date) return null;
+            
+            // If the date string contains timezone info, parse it properly
+            if (typeof date === 'string') {
+                // Handle ISO strings with timezone (e.g., "2025-08-22T07:19:19.332Z")
+                if (date.includes('T') && (date.includes('Z') || date.includes('+') || date.includes('-'))) {
+                    date = new Date(date);
+                } else {
+                    // Handle date-only strings (e.g., "2025-08-22")
+                    date = new Date(date + 'T00:00:00.000Z');
+                }
+            }
+            
+            // Convert UTC time to IST by adding 5:30 hours
+            const istTime = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+            return istTime;
+        }
+        
+        // Format date and time in IST
+        function formatISTDateTime(date) {
+            if (!date) return '';
+            const istDate = convertToIST(date);
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false,
+                timeZone: 'UTC' // Use UTC since we already converted to IST
+            };
+            return istDate.toLocaleString('en-IN', options) + ' IST';
+        }
+        
+        // Format time only in IST for display
+        function formatISTTime(dateTimeString) {
+            if (!dateTimeString) return '';
+            
+            // If the datetime string is already in IST format (contains +05:30), extract time directly
+            if (typeof dateTimeString === 'string' && dateTimeString.includes('+05:30')) {
+                const timePart = dateTimeString.split('T')[1];
+                if (timePart) {
+                    return timePart.split('+')[0].slice(0, 5); // Extract HH:MM
+                }
+            }
+            
+            // For UTC times or other formats, convert to IST
+            const date = new Date(dateTimeString);
+            const istDate = convertToIST(date);
+            return istDate.toLocaleTimeString('en-IN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false,
+                timeZone: 'UTC' // Use UTC since we already converted to IST
+            });
+        }
+        
+        // Format date in IST for input fields (YYYY-MM-DD)
+        function formatDateInputIST(date) {
+            if (!date) return '';
+            const istDate = convertToIST(date);
+            const year = istDate.getUTCFullYear(); // Use UTC methods since we converted to IST
+            const month = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(istDate.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Utility functions - Fixed IST timezone handling
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            // Handle different date formats
+            let date;
+            if (typeof dateString === 'string' && dateString.includes('T')) {
+                // ISO datetime string
+                date = new Date(dateString);
+            } else {
+                // Date-only string or Date object
+                date = new Date(dateString);
+            }
+            
+            const istDate = convertToIST(date);
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                timeZone: 'UTC' // Use UTC since we already converted to IST
+            };
+            return istDate.toLocaleDateString('en-IN', options);
+        }
+        
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '';
+            
+            // Parse the datetime - handle IST format responses from API
+            let date;
+            if (typeof dateTimeString === 'string' && dateTimeString.includes('+05:30')) {
+                // Already in IST format from API response
+                date = new Date(dateTimeString);
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false 
+                };
+                return date.toLocaleString('en-IN', options) + ' IST';
+            } else {
+                // UTC format from database, convert to IST
+                date = new Date(dateTimeString);
+                const istDate = convertToIST(date);
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false,
+                    timeZone: 'UTC' // Use UTC since we already converted to IST
+                };
+                return istDate.toLocaleString('en-IN', options) + ' IST';
+            }
+        }
+        
         let attendanceData = [];
         let filteredAttendanceData = [];
         let employees = [];
@@ -733,6 +870,7 @@
                 const checkOut = record.check_out ? record.check_out.substring(0, 5) : '-';
                 
                 let hoursWorked = '-';
+                let hoursWorkedId = `hours-${record._id || record.id || Math.random()}`;
                 if (record.check_in && record.check_out) {
                     const checkInTime = new Date(`2000-01-01T${record.check_in}`);
                     const checkOutTime = new Date(`2000-01-01T${record.check_out}`);
@@ -740,15 +878,43 @@
                     const hours = Math.floor(diffMs / (1000 * 60 * 60));
                     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                     hoursWorked = `${hours}h ${minutes}m`;
+                } else if (record.check_in && !record.check_out) {
+                    // Live calculation for ongoing work
+                    const checkInTime = new Date(`2000-01-01T${record.check_in}`);
+                    const currentTime = new Date();
+                    const currentTimeFormatted = new Date(`2000-01-01T${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}:${currentTime.getSeconds().toString().padStart(2, '0')}`);
+                    const diffMs = currentTimeFormatted - checkInTime;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    hoursWorked = `${hours}h ${minutes}m (live)`;
+                    
+                    // Set up live update
+                    setTimeout(() => {
+                        const hoursElement = document.getElementById(hoursWorkedId);
+                        if (hoursElement) {
+                            const interval = setInterval(() => {
+                                const newCurrentTime = new Date();
+                                const newCurrentTimeFormatted = new Date(`2000-01-01T${newCurrentTime.getHours().toString().padStart(2, '0')}:${newCurrentTime.getMinutes().toString().padStart(2, '0')}:${newCurrentTime.getSeconds().toString().padStart(2, '0')}`);
+                                const newDiffMs = newCurrentTimeFormatted - checkInTime;
+                                const newHours = Math.floor(newDiffMs / (1000 * 60 * 60));
+                                const newMinutes = Math.floor((newDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+                                if (hoursElement) {
+                                    hoursElement.textContent = `${newHours}h ${newMinutes}m (live)`;
+                                } else {
+                                    clearInterval(interval);
+                                }
+                            }, 1000);
+                        }
+                    }, 100);
                 }
                 
                 row.innerHTML = `
                     <td>${record.employee_name || 'Unknown'}</td>
                     <td>${record.department || '-'}</td>
-                    <td>${new Date(record.date).toLocaleDateString()}</td>
+                    <td>${formatDate(record.date)}</td>
                     <td>${checkIn}</td>
                     <td>${checkOut}</td>
-                    <td>${hoursWorked}</td>
+                    <td id="${hoursWorkedId}">${hoursWorked}</td>
                     <td><span class="badge ${statusBadge}">${statusText}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline" onclick="editAttendance('${record._id || record.id}')">

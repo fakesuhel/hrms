@@ -16,6 +16,8 @@ def get_kolkata_now():
     """Get current datetime in Asia/Kolkata timezone"""
     return datetime.now(KOLKATA_TZ)
 
+print(get_kolkata_now())
+
 def ensure_kolkata_timezone(dt):
     """Ensure a datetime object is in Asia/Kolkata timezone"""
     if dt is None:
@@ -49,28 +51,32 @@ def parse_datetime_field(value):
         if value.tzinfo is None:
             value = value.replace(tzinfo=timezone.utc)
             return value.astimezone(KOLKATA_TZ)
-        return value
+        # If it's already timezone-aware, convert to Asia/Kolkata
+        return value.astimezone(KOLKATA_TZ)
     
     # Handle string values
     if isinstance(value, str):
         try:
+            # Parse ISO format with Z (UTC indicator)
             parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=timezone.utc)
             return parsed.astimezone(KOLKATA_TZ)
         except ValueError:
             try:
+                # Parse without timezone info, assume UTC
                 parsed = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f")
-                if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
+                parsed = parsed.replace(tzinfo=timezone.utc)
                 return parsed.astimezone(KOLKATA_TZ)
             except ValueError:
                 try:
+                    # Final fallback for different formats
                     parsed = datetime.fromisoformat(value)
                     if parsed.tzinfo is None:
                         parsed = parsed.replace(tzinfo=timezone.utc)
                     return parsed.astimezone(KOLKATA_TZ)
                 except ValueError:
+                    print(f"Warning: Could not parse datetime value: {value}")
                     return None
     
     return None
@@ -139,7 +145,7 @@ class Attendance(BaseModel):
         "arbitrary_types_allowed": True,
         "json_encoders": {
             ObjectId: str,
-            datetime: lambda v: v.isoformat(),
+            datetime: lambda v: v.astimezone(KOLKATA_TZ).isoformat() if v and v.tzinfo else v.isoformat() if v else None,
             date: lambda v: v.isoformat()
         }
     }
@@ -174,10 +180,30 @@ class AttendanceResponse(BaseModel):
             return get_kolkata_now()
         return parse_datetime_field(v) or get_kolkata_now()
     
+    def model_dump(self, **kwargs):
+        """Override model_dump to format datetime fields in IST"""
+        data = super().model_dump(**kwargs)
+        
+        # Convert datetime fields to IST format strings for JSON response
+        datetime_fields = ['check_in', 'check_out', 'created_at', 'updated_at']
+        for field in datetime_fields:
+            if data.get(field):
+                dt = data[field]
+                if isinstance(dt, datetime):
+                    # Ensure it's in IST timezone
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc).astimezone(KOLKATA_TZ)
+                    elif dt.tzinfo != KOLKATA_TZ:
+                        dt = dt.astimezone(KOLKATA_TZ)
+                    # Format as ISO string with timezone info
+                    data[field] = dt.isoformat()
+        
+        return data
+    
     model_config = {
         "populate_by_name": True,
         "json_encoders": {
-            datetime: lambda v: v.isoformat()
+            datetime: lambda v: v.astimezone(KOLKATA_TZ).isoformat() if v else None
         }
     }
 

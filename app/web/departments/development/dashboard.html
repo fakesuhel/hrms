@@ -624,6 +624,17 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Processing state for attendance buttons to prevent double-clicks */
+        .btn.processing {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .btn.processing::after {
+            content: " ⏳";
+        }
     </style>
 </head>
 <body>
@@ -713,7 +724,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Upcoming Tasks</h2>
-                                    <a href="/static/projects.html" class="card-action">View All</a>
+                                    <a href="/app/it/projects" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="upcomingTasks">
                                     <!-- Tasks will be loaded from API -->
@@ -740,7 +751,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Daily Report</h2>
-                                    <a href="/static/daily-reports.html" class="card-action">View All</a>
+                                    <a href="/app/it/daily-reports" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="dailyReports">
                                     <!-- Daily reports will be loaded from API -->
@@ -753,7 +764,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Leave Requests</h2>
-                                    <a href="/static/leave-requests.html" class="card-action">View All</a>
+                                    <a href="/app/it/leave-requests" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="leaveRequests">
                                     <!-- Leave requests will be loaded from API -->
@@ -794,7 +805,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Active Projects</h2>
-                                    <a href="/static/projects.html" class="card-action">View All</a>
+                                    <a href="/app/it/projects" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="activeProjects">
                                     <!-- Projects will be loaded from API -->
@@ -819,7 +830,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Daily Report</h2>
-                                    <a href="/static/daily-reports.html" class="card-action">Create/View</a>
+                                    <a href="/app/it/daily-reports" class="card-action">Create/View</a>
                                 </div>
                                 <div class="card-body" id="teamLeadDailyReport">
                                     <!-- Daily report will be loaded from API -->
@@ -898,7 +909,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Department Projects</h2>
-                                    <a href="/static/projects.html" class="card-action">View All</a>
+                                    <a href="/app/it/projects" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="departmentProjects">
                                     <!-- Department projects will be loaded from API -->
@@ -923,7 +934,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">Daily Report</h2>
-                                    <a href="/static/daily-reports.html" class="card-action">Create/View</a>
+                                    <a href="/app/it/daily-reports" class="card-action">Create/View</a>
                                 </div>
                                 <div class="card-body" id="managerDailyReport">
                                     <!-- Daily report will be loaded from API -->
@@ -990,7 +1001,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title">All Projects Status</h2>
-                                    <a href="/static/projects.html" class="card-action">View All</a>
+                                    <a href="/app/it/projects" class="card-action">View All</a>
                                 </div>
                                 <div class="card-body" id="allProjects">
                                     <!-- All projects will be loaded from API -->
@@ -1258,7 +1269,7 @@
                 // Check auth token
                 const token = localStorage.getItem('bhoomitechzone_token');
                 if (!token) {
-                    window.location.href = '/static/login.html';
+                    window.location.href = '/app/login';
                     return;
                 }
                 
@@ -1278,6 +1289,65 @@
                 
                 // Load user data
                 await loadUserData();
+                
+                // Setup global event delegation for attendance buttons to prevent double-click issues
+                document.addEventListener('click', function(e) {
+                    // Check if clicked element is a check-in button
+                    if (e.target.id && e.target.id.includes('CheckInBtn')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Prevent double clicks
+                        if (e.target.disabled || e.target.classList.contains('processing')) {
+                            return;
+                        }
+                        
+                        // Add processing class to prevent multiple clicks
+                        e.target.classList.add('processing');
+                        e.target.disabled = true;
+                        e.target.textContent = 'Checking in...';
+                        
+                        handleCheckIn().then(() => {
+                            console.log('Check-in completed successfully');
+                            // The displayAttendance function will handle UI updates
+                            // Don't restore button state here as it will be replaced by new UI
+                        }).catch((error) => {
+                            console.error('Check-in failed:', error);
+                            // Restore button state on error
+                            e.target.classList.remove('processing');
+                            e.target.disabled = false;
+                            e.target.innerHTML = '<i>➡️</i> Check In';
+                        });
+                    }
+                    
+                    // Check if clicked element is a check-out button
+                    if (e.target.id && e.target.id.includes('CheckOutBtn')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Prevent double clicks
+                        if (e.target.disabled || e.target.classList.contains('processing')) {
+                            return;
+                        }
+                        
+                        // Add processing class to prevent multiple clicks
+                        e.target.classList.add('processing');
+                        e.target.disabled = true;
+                        e.target.textContent = 'Checking out...';
+                        
+                        handleCheckOut().then(() => {
+                            console.log('Check-out completed successfully');
+                            // The displayAttendance function will handle UI updates
+                            // Don't restore button state here as it will be replaced by new UI
+                        }).catch((error) => {
+                            console.error('Check-out failed:', error);
+                            // Restore button state on error
+                            e.target.classList.remove('processing');
+                            e.target.disabled = false;
+                            e.target.innerHTML = '<i>⬅️</i> Check Out';
+                        });
+                    }
+                });
                 
                 // Add event listeners
                 setupEventListeners();
@@ -1334,7 +1404,7 @@
                 if (!response.ok) {
                     if (response.status === 401) {
                         localStorage.removeItem('bhoomitechzone_token');
-                        window.location.href = '/static/login.html';
+                        window.location.href = '/app/login';
                         return;
                     }
                     throw new Error('Failed to fetch user data');
@@ -1482,7 +1552,8 @@
                         </button>
                     </div>
                 `;
-                document.getElementById('checkInBtn').addEventListener('click', handleCheckIn);
+                // Event listeners are now handled by global event delegation
+                // No need to add individual listeners here
             }
             
             // Load employee stats directly from the projects/stats/summary endpoint
@@ -1588,7 +1659,7 @@
                     </div>
                 `;
                 document.getElementById('requestLeaveBtn')?.addEventListener('click', () => {
-                    window.location.href = '/static/leave-requests.html';
+                    window.location.href = '/app/it/leave-requests';
                 });
             }
             
@@ -1626,7 +1697,7 @@
                         </div>
                     `;
                     document.getElementById('createDailyReportBtn').addEventListener('click', () => {
-                        window.location.href = '/static/daily-reports.html?action=create';
+                        window.location.href = '/app/it/daily-reports?action=create';
                     });
                 }
             } catch (error) {
@@ -1640,7 +1711,7 @@
                     </div>
                 `;
                 document.getElementById('createDailyReportBtn').addEventListener('click', () => {
-                    window.location.href = '/static/daily-reports.html?action=create';
+                    window.location.href = '/app/it/daily-reports?action=create';
                 });
             }
         }
@@ -1671,7 +1742,8 @@
                         </button>
                     </div>
                 `;
-                document.getElementById('tlCheckInBtn').addEventListener('click', handleCheckIn);
+                // Event listeners are now handled by global event delegation
+                // No need to add individual listeners here
             }
             
             // Load team members from current active projects where user is project manager
@@ -1918,7 +1990,7 @@
                         </div>
                     `;
                     document.getElementById('tlCreateReportBtn').addEventListener('click', () => {
-                        window.location.href = '/static/daily-reports.html?action=create';
+                        window.location.href = '/app/it/daily-reports?action=create';
                     });
                 }
             } catch (error) {
@@ -1932,7 +2004,7 @@
                     </div>
                 `;
                 document.getElementById('tlCreateReportBtn').addEventListener('click', () => {
-                    window.location.href = '/static/daily-reports.html?action=create';
+                    window.location.href = '/app/it/daily-reports?action=create';
                 });
             }
         }
@@ -1963,7 +2035,8 @@
                         </button>
                     </div>
                 `;
-                document.getElementById('mgrCheckInBtn').addEventListener('click', handleCheckIn);
+                // Event listeners are now handled by global event delegation
+                // No need to add individual listeners here
             }
             
             // Load department projects
@@ -2083,7 +2156,7 @@
                         </div>
                     `;
                     document.getElementById('mgrCreateReportBtn').addEventListener('click', () => {
-                        window.location.href = '/static/daily-reports.html?action=create';
+                        window.location.href = '/app/it/daily-reports?action=create';
                     });
                 }
             } catch (error) {
@@ -2097,7 +2170,7 @@
                     </div>
                 `;
                 document.getElementById('mgrCreateReportBtn').addEventListener('click', () => {
-                    window.location.href = '/static/daily-reports.html?action=create';
+                    window.location.href = '/app/it/daily-reports?action=create';
                 });
             }
         }
@@ -2128,7 +2201,8 @@
                         </button>
                     </div>
                 `;
-                document.getElementById('dirCheckInBtn').addEventListener('click', handleCheckIn);
+                // Event listeners are now handled by global event delegation
+                // No need to add individual listeners here
             }
             
             // Load all projects
@@ -2235,7 +2309,8 @@
                             </button>
                         </div>
                     `;
-                    document.getElementById('hrCheckInBtn').addEventListener('click', handleCheckIn);
+                    // Event listeners are now handled by global event delegation
+                    // No need to add individual listeners here
                 }
                 
                 // Load all users
@@ -2306,7 +2381,7 @@
                             </div>
                         `;
                         document.getElementById('hrCreateReportBtn').addEventListener('click', () => {
-                            window.location.href = '/static/daily-reports.html?action=create';
+                            window.location.href = '/app/it/daily-reports?action=create';
                         });
                     }
                 } catch (error) {
@@ -2320,7 +2395,7 @@
                         </div>
                     `;
                     document.getElementById('hrCreateReportBtn').addEventListener('click', () => {
-                        window.location.href = '/static/daily-reports.html?action=create';
+                        window.location.href = '/app/it/daily-reports?action=create';
                     });
                 }
                 
@@ -2418,7 +2493,19 @@
         }
         
         function displayAttendance(data, containerId) {
+            console.log('displayAttendance called with:', { data, containerId });
+            
             const attendanceContainer = document.getElementById(containerId);
+            if (!attendanceContainer) {
+                console.error('Attendance container not found:', containerId);
+                return;
+            }
+            
+            // Clear any existing interval for this container
+            if (window.attendanceIntervals && window.attendanceIntervals[containerId]) {
+                clearInterval(window.attendanceIntervals[containerId]);
+                delete window.attendanceIntervals[containerId];
+            }
             
             // If no data found
             if (!data || data.length === 0) {
@@ -2433,7 +2520,8 @@
                     </div>
                 `;
                 
-                document.getElementById(`${containerId}CheckInBtn`).addEventListener('click', handleCheckIn);
+                // Event listeners are now handled by global event delegation
+                // No need to add individual listeners here
                 return;
             }
             
@@ -2479,7 +2567,7 @@
                     </div>
                     <div>
                         <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">Working hours</div>
-                        <div style="font-size: 1.125rem; font-weight: 500;">${workHours}</div>
+                        <div style="font-size: 1.125rem; font-weight: 500;" id="${containerId}WorkHours">${workHours}</div>
                     </div>
                     <div>
                         <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">Status</div>
@@ -2499,14 +2587,34 @@
                 </div>
             `;
             
-            // Add event listeners
-            if (!isCheckedIn) {
-                document.getElementById(`${containerId}CheckInBtn`).addEventListener('click', handleCheckIn);
+            // Event listeners are now handled by global event delegation
+            // No need to add individual listeners here
+            
+            // Start live working hours update if user is checked in but not out
+            if (isCheckedIn && !isCheckedOut) {
+                if (!window.attendanceIntervals) {
+                    window.attendanceIntervals = {};
+                }
+                
+                window.attendanceIntervals[containerId] = setInterval(() => {
+                    const workHoursElement = document.getElementById(`${containerId}WorkHours`);
+                    if (workHoursElement && isCheckedIn && !isCheckedOut) {
+                        const currentWorkHours = formatWorkHours(new Date(today.check_in), new Date());
+                        workHoursElement.textContent = currentWorkHours;
+                    } else {
+                        // Clear interval if element no longer exists or user checked out
+                        clearInterval(window.attendanceIntervals[containerId]);
+                        delete window.attendanceIntervals[containerId];
+                    }
+                }, 1000); // Update every second
             }
             
-            if (isCheckedIn && !isCheckedOut) {
-                document.getElementById(`${containerId}CheckOutBtn`).addEventListener('click', handleCheckOut);
-            }
+            console.log('displayAttendance completed successfully. New UI state:', {
+                isCheckedIn,
+                isCheckedOut,
+                status,
+                workHours
+            });
         }
         
         function displayTasks(projectsData) {
@@ -2608,7 +2716,7 @@
                 `;
                 
                 document.getElementById(`${containerId}CreateBtn`).addEventListener('click', () => {
-                    window.location.href = '/static/daily-reports.html?action=create';
+                    window.location.href = '/app/it/daily-reports?action=create';
                 });
                 return;
             }
@@ -2630,12 +2738,12 @@
                         ${report.summary ? `<div style="margin-top: 0.5rem;">${report.summary}</div>` : ''}
                     </div>
                     <div class="list-item-action">
-                        <a href="/static/daily-reports.html?id=${report._id}" class="card-action">View</a>
+                        <a href="/app/it/daily-reports?id=${report._id}" class="card-action">View</a>
                     </div>
                 </div>
                 
                 <div style="margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="window.location.href='/static/daily-reports.html?id=${report._id}&edit=true'">
+                    <button class="btn btn-primary" onclick="window.location.href='/app/it/daily-reports?id=${report._id}&edit=true'">
                         <i>✏️</i> Update Report
                     </button>
                 </div>
@@ -2713,7 +2821,7 @@
                 `;
                 
                 document.getElementById('requestLeaveBtn').addEventListener('click', () => {
-                    window.location.href = '/static/leave-requests.html';
+                    window.location.href = '/app/it/leave-requests';
                 });
                 
                 return;
@@ -2767,7 +2875,7 @@
             leaveContainer.appendChild(requestBtn);
             
             document.getElementById('requestLeaveBtn').addEventListener('click', () => {
-                window.location.href = '/static/leave-requests.html';
+                window.location.href = '/app/it/leave-requests';
             });
         }
         
@@ -3014,7 +3122,7 @@
                         ${report.summary ? `<div style="margin-top: 0.5rem; font-size: 0.875rem;">${report.summary}</div>` : ''}
                     </div>
                     <div class="list-item-action">
-                        <a href="/static/daily-reports.html?id=${report._id}" class="card-action">View</a>
+                        <a href="/app/it/daily-reports?id=${report._id}" class="card-action">View</a>
                     </div>
                 `;
                 
@@ -3239,6 +3347,8 @@
         // Event handlers
         
         async function handleCheckIn() {
+            console.log('handleCheckIn called');
+            
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 
@@ -3259,6 +3369,9 @@
                     check_in_note: 'Checked in via dashboard',
                     date: isoTodayDate
                 };
+                
+                console.log('Sending check-in request with payload:', payload);
+                
                 const response = await fetch('/attendance/check-in', {
                     method: 'POST',
                     headers: {
@@ -3269,45 +3382,104 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to check in');
+                    const errorData = await response.text();
+                    console.error('Check-in API error:', response.status, errorData);
+                    throw new Error(`Failed to check in: ${response.status}`);
                 }
                 
-                // Refresh attendance data for the current user role
-                // Get the role from window.currentUser that was set during loadUserData
+                const responseData = await response.json();
+                console.log('Check-in API response:', responseData);
+                
+                // Show success message immediately
+                showToast('Successfully checked in');
+                
+                // Determine the correct container based on user role
                 const role = window.userRole;
-                
-                const todayDate = formatDate(new Date());
-                const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (attendanceResponse.ok) {
-                    const attendanceData = await attendanceResponse.json();
-                    
-                    // Choose the appropriate container ID based on the role
-                    let containerId = 'todayAttendance';
-                    if (role === 'team_lead') {
-                        containerId = 'teamLeadAttendance';
-                    } else if (role === 'manager' || role === 'hr' || role === 'HR') {
-                        containerId = 'managerAttendance';
-                    } else if (role === 'director' || role === 'admin') {
-                        containerId = 'directorAttendance';
-                    }
-                    
-                    displayAttendance(attendanceData, containerId);
-                    showToast('Successfully checked in');
-                    
-                    // Trigger storage event to notify other tabs/pages about attendance change
-                    localStorage.setItem('attendance_updated', Date.now().toString());
-                    setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
+                let containerId = 'todayAttendance';
+                if (role === 'team_lead') {
+                    containerId = 'teamLeadAttendance';
+                } else if (role === 'manager' || role === 'hr' || role === 'HR' || role === 'dev_manager') {
+                    containerId = 'managerAttendance';
+                } else if (role === 'director' || role === 'admin') {
+                    containerId = 'directorAttendance';
                 }
+                
+                console.log('Reloading attendance data for container:', containerId);
+                
+                // Reload attendance data from the history API to get the correct format
+                try {
+                    const todayDate = formatDate(new Date());
+                    const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (attendanceResponse.ok) {
+                        const attendanceData = await attendanceResponse.json();
+                        console.log('Check-in: Reloaded attendance data:', attendanceData);
+                        displayAttendance(attendanceData, containerId);
+                        console.log('Check-in: UI updated successfully');
+                    } else {
+                        console.error('Failed to reload attendance data:', attendanceResponse.status);
+                        throw new Error('Failed to reload attendance data');
+                    }
+                } catch (reloadError) {
+                    console.error('Error reloading attendance data after check-in:', reloadError);
+                    // Fallback: show a success message but indicate data needs refresh
+                    const attendanceContainer = document.getElementById(containerId);
+                    if (attendanceContainer) {
+                        attendanceContainer.innerHTML = `
+                            <div class="empty-state">
+                                <p>✅ Check-in successful! Please refresh the page to see updated data.</p>
+                                <button class="btn btn-primary" onclick="window.location.reload()">Refresh Page</button>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Trigger storage event to notify other tabs/pages about attendance change
+                localStorage.setItem('attendance_updated', Date.now().toString());
+                setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
+                
+                return true; // Indicate success
+                
             } catch (error) {
                 console.error('Error checking in:', error);
                 showToast('Error checking in. Please try again.');
+                
+                // Reload attendance data on error to restore original state
+                const role = window.userRole;
+                let containerId = 'todayAttendance';
+                if (role === 'team_lead') {
+                    containerId = 'teamLeadAttendance';
+                } else if (role === 'manager' || role === 'hr' || role === 'HR' || role == "dev_manager") {
+                    containerId = 'managerAttendance';
+                } else if (role === 'director' || role === 'admin') {
+                    containerId = 'directorAttendance';
+                }
+                
+                // Reload original attendance data
+                try {
+                    const token = localStorage.getItem('bhoomitechzone_token');
+                    const todayDate = formatDate(new Date());
+                    const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (attendanceResponse.ok) {
+                        const attendanceData = await attendanceResponse.json();
+                        displayAttendance(attendanceData, containerId);
+                    }
+                } catch (reloadError) {
+                    console.error('Error reloading attendance data:', reloadError);
+                }
+                
+                throw error; // Re-throw for the event handler to catch
             }
         }
         
         async function handleCheckOut() {
+            console.log('handleCheckOut called');
+            
             try {
                 const token = localStorage.getItem('bhoomitechzone_token');
                 
@@ -3315,6 +3487,8 @@
                 const location = 'Office';
                 
                 const isoTodayDate = new Date().toISOString().split('T')[0];
+                console.log('Sending check-out request for date:', isoTodayDate);
+                
                 const response = await fetch('/attendance/check-out', {
                     method: 'POST',
                     headers: {
@@ -3330,47 +3504,104 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to check out');
+                    const errorData = await response.text();
+                    console.error('Check-out API error:', response.status, errorData);
+                    throw new Error(`Failed to check out: ${response.status}`);
                 }
                 
-                // Refresh attendance data for the current user role
-                // Get the role from window.currentUser that was set during loadUserData
+                const responseData = await response.json();
+                console.log('Check-out API response:', responseData);
+                
+                // Show success message immediately
+                showToast('Successfully checked out');
+                
+                // Determine the correct container based on user role
                 const role = window.userRole;
-                
-                const todayDate = formatDate(new Date());
-                const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (attendanceResponse.ok) {
-                    const attendanceData = await attendanceResponse.json();
-                    
-                    // Choose the appropriate container ID based on the role
-                    let containerId = 'todayAttendance';
-                    if (role === 'team_lead') {
-                        containerId = 'teamLeadAttendance';
-                    } else if (role === 'manager' || role === 'hr' || role === 'HR') {
-                        containerId = 'managerAttendance';
-                    } else if (role === 'director' || role === 'admin') {
-                        containerId = 'directorAttendance';
-                    }
-                    
-                    displayAttendance(attendanceData, containerId);
-                    showToast('Successfully checked out');
-                    
-                    // Trigger storage event to notify other tabs/pages about attendance change
-                    localStorage.setItem('attendance_updated', Date.now().toString());
-                    setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
+                let containerId = 'todayAttendance';
+                if (role === 'team_lead') {
+                    containerId = 'teamLeadAttendance';
+                } else if (role === 'manager' || role === 'hr' || role === 'HR' || role === 'dev_manager') {
+                    containerId = 'managerAttendance';
+                } else if (role === 'director' || role === 'admin') {
+                    containerId = 'directorAttendance';
                 }
+                
+                console.log('Reloading attendance data for container:', containerId);
+                
+                // Reload attendance data from the history API to get the correct format
+                try {
+                    const todayDate = formatDate(new Date());
+                    const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (attendanceResponse.ok) {
+                        const attendanceData = await attendanceResponse.json();
+                        console.log('Check-out: Reloaded attendance data:', attendanceData);
+                        displayAttendance(attendanceData, containerId);
+                        console.log('Check-out: UI updated successfully');
+                    } else {
+                        console.error('Failed to reload attendance data:', attendanceResponse.status);
+                        throw new Error('Failed to reload attendance data');
+                    }
+                } catch (reloadError) {
+                    console.error('Error reloading attendance data after check-out:', reloadError);
+                    // Fallback: show a success message but indicate data needs refresh
+                    const attendanceContainer = document.getElementById(containerId);
+                    if (attendanceContainer) {
+                        attendanceContainer.innerHTML = `
+                            <div class="empty-state">
+                                <p>✅ Check-out successful! Please refresh the page to see updated data.</p>
+                                <button class="btn btn-primary" onclick="window.location.reload()">Refresh Page</button>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Trigger storage event to notify other tabs/pages about attendance change
+                localStorage.setItem('attendance_updated', Date.now().toString());
+                setTimeout(() => localStorage.removeItem('attendance_updated'), 1000);
+                
+                return true; // Indicate success
+                
             } catch (error) {
                 console.error('Error checking out:', error);
                 showToast('Error checking out. Please try again.');
+                
+                // Reload attendance data on error to restore original state
+                const role = window.userRole;
+                let containerId = 'todayAttendance';
+                if (role === 'team_lead') {
+                    containerId = 'teamLeadAttendance';
+                } else if (role === 'manager' || role === 'hr' || role === 'HR' || role === 'dev_manager') {
+                    containerId = 'managerAttendance';
+                } else if (role === 'director' || role === 'admin') {
+                    containerId = 'directorAttendance';
+                }
+                
+                // Reload original attendance data
+                try {
+                    const token = localStorage.getItem('bhoomitechzone_token');
+                    const todayDate = formatDate(new Date());
+                    const attendanceResponse = await fetch(`/attendance/history?start_date=${todayDate}&end_date=${todayDate}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (attendanceResponse.ok) {
+                        const attendanceData = await attendanceResponse.json();
+                        displayAttendance(attendanceData, containerId);
+                    }
+                } catch (reloadError) {
+                    console.error('Error reloading attendance data:', reloadError);
+                }
+                
+                throw error; // Re-throw for the event handler to catch
             }
         }
         
         function reviewLeave(leaveId) {
             // Navigate to leave request page with the ID
-            window.location.href = `/static/leave-requests.html?id=${leaveId}`;
+            window.location.href = `/app/it/leave-requests?id=${leaveId}`;
         }
         
         function setupEventListeners() {
@@ -3398,7 +3629,7 @@
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 localStorage.removeItem('bhoomitechzone_token');
-                window.location.href = '/static/login.html';
+                window.location.href = '/app/login';
             });
         }
         
@@ -3513,6 +3744,16 @@
                     }, 500);
                 }
             });
+        });
+        
+        // Cleanup function to clear intervals when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (window.attendanceIntervals) {
+                Object.values(window.attendanceIntervals).forEach(interval => {
+                    clearInterval(interval);
+                });
+                window.attendanceIntervals = {};
+            }
         });
     </script>
 </body>
